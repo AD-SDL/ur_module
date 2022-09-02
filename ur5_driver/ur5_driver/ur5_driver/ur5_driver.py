@@ -13,63 +13,31 @@ from sensor_msgs.msg import JointState
 import ur5_driver.robotiq_gripper as robotiq_gripper
 
 
-
-class PublisherJointTrajectory(Node):
+class UR5():
     def __init__(self):
         super().__init__("ur5_driver")
-        # Declare all parameters
-        self.declare_parameter("controller_name", "position_trajectory_controller")
-        self.declare_parameter("goal_names", ["pos1", "pos2"])
-        self.declare_parameter("gripper_close_pos", 255)
-        self.declare_parameter("joints")
-        self.declare_parameter("check_starting_point", False)
-        self.declare_parameter("starting_point_limits")
-
-        # Read parameters
-        controller_name = self.get_parameter("controller_name").value
-        goal_names = self.get_parameter("goal_names").value
-        self.joints = self.get_parameter("joints").value
-        self.check_starting_point = self.get_parameter("check_starting_point").value
+        
+        controller_name = "joint_trajectory_controller"
+        self.joints = ["shoulder_pan_joint", 
+                        "shoulder_lift_joint", 
+                        "elbow_joint", 
+                        "wrist_1_joint", 
+                        "wrist_2_joint", 
+                        "wrist_3_joint"
+                        ]
+        self.check_starting_point = False
         self.starting_point = {}
-        self.gripper_close_pos = self.get_parameter("gripper_close_pos").value
-        self.griper_open_pose = 0
-
-        if self.joints is None or len(self.joints) == 0:
-            raise Exception('"joints" parameter is not set!')
-
-        # starting point stuff
-        if self.check_starting_point:
-            # declare nested params
-            for name in self.joints:
-                param_name_tmp = "starting_point_limits" + "." + name
-                self.declare_parameter(param_name_tmp, [-2 * 3.14159, 2 * 3.14159])
-                self.starting_point[name] = self.get_parameter(param_name_tmp).value
-
-            for name in self.joints:
-                if len(self.starting_point[name]) != 2:
-                    raise Exception('"starting_point" parameter is not set correctly!')
-            self.joint_state_sub = self.create_subscription(
-                JointState, "joint_states", self.joint_state_callback, 10
-            )
-        # initialize starting point status
-        self.starting_point_ok = not self.check_starting_point
-
-        self.joint_state_msg_received = False
-
-        # Read all positions from parameters
+        self.gripper_close = 38
+        self.griper_open = 0
+        self.joint_limiter = {"shoulder_pan_joint": [-1.6,-1.5], 
+                            "shoulder_lift_joint": [-0.1,0.1], 
+                            "elbow_joint": [-2.3,-2.2], 
+                            "wrist_1_joint": [-0.9,-0.8], 
+                            "wrist_2_joint": [1.5,1.6],
+                            "wrist_3_joint": [-0.1,0.1]
+                            }
         self.goals = []
-        for name in goal_names:
-            self.declare_parameter(name)
-            goal = self.get_parameter(name).value
-            if goal is None or len(goal) == 0:
-                raise Exception(f'Values for goal "{name}" not set!')
 
-            float_goal = []
-            for value in goal:
-                float_goal.append(float(value))
-            self.goals.append(float_goal)
-
-        # Hardcoded gripper info
         ur_robot_ip = "192.168.1.102" 
         self.get_logger().info(
                 'Creating gripper...'
@@ -91,16 +59,45 @@ class PublisherJointTrajectory(Node):
 
         publish_topic = "/" + controller_name + "/" + "joint_trajectory"
 
-        self.get_logger().info(
-            'Publishing pick up from [{}] and put down at [{}] goals on topic "{}"'.format(
-                ','.join([str(n) for n in self.goals[0]]), ','.join([str(n) for n in self.goals[1]]), publish_topic
-            )
-        )
-
         self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
         self.positions_published = False
-        if not self.check_starting_point:
-            self.pick_up_and_put_down()
+
+        # if self.joints is None or len(self.joints) == 0:
+        #     raise Exception('"joints" parameter is not set!')
+
+        # starting point stuff
+        # if self.check_starting_point:
+            # declare nested params
+            # for name in self.joints:
+                # param_name_tmp = "starting_point_limits" + "." + name
+                # self.declare_parameter(param_name_tmp, [-2 * 3.14159, 2 * 3.14159])
+                # self.starting_point[name] = self.get_parameter(param_name_tmp).value
+
+            # for name in self.joints:
+            #     if len(self.starting_point[name]) != 2:
+            #         raise Exception('"starting_point" parameter is not set correctly!')
+            # self.joint_state_sub = self.create_subscription(
+            #     JointState, "joint_states", self.joint_state_callback, 10
+            # )
+        # initialize starting point status
+        # self.starting_point_ok = not self.check_starting_point
+
+        # self.joint_state_msg_received = False
+
+        # Read all positions from parameters
+        # for name in goal_names:
+        #     self.declare_parameter(name)
+        #     goal = self.get_parameter(name).value
+        #     if goal is None or len(goal) == 0:
+        #         raise Exception(f'Values for goal "{name}" not set!')
+
+        #     float_goal = []
+        #     for value in goal:
+        #         float_goal.append(float(value))
+        #     self.goals.append(float_goal)
+
+        # Hardcoded gripper info
+
 
 
     def create_trajectory(self, goal):
@@ -207,15 +204,15 @@ class PublisherJointTrajectory(Node):
             return
 
 
-def main(args=None):
-    rclpy.init(args=args)
+# def main(args=None):
+#     rclpy.init(args=args)
 
-    publisher_joint_trajectory = PublisherJointTrajectory()
+#     publisher_joint_trajectory = PublisherJointTrajectory()
 
-    rclpy.spin(publisher_joint_trajectory)
-    publisher_joint_trajectory.destroy_node()
-    rclpy.shutdown()
+#     rclpy.spin(publisher_joint_trajectory)
+#     publisher_joint_trajectory.destroy_node()
+#     rclpy.shutdown()
 
 
 if __name__ == "__main__":
-    main()
+    # main()
