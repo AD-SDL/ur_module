@@ -1,6 +1,6 @@
 
 sudo apt install python3-colcon-common-extensions python3-vcstool
-export COLCON_WS=~/workspace/ros_ur_driver
+export COLCON_WS=/ros_ur_driver
 mkdir -p $COLCON_WS/src
 cd $COLCON_WS
 git clone https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver
