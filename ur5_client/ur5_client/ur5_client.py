@@ -146,7 +146,7 @@ def main(args = None):
 
     NAME = "UR5_Client_Node"
     rclpy.init(args = args)  # initialize Ros2 communication
-    node = UR5ClientNode(NAME)
+    node = UR5ClientNode(NODE_NAME = NAME)
     rclpy.spin(node)     # keep Ros2 communication open for action node
     rclpy.shutdown()     # kill Ros2 communication
 

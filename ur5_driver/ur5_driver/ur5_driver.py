@@ -18,7 +18,7 @@ class UR5():
     commandLock = threading.Lock()
 
     def __init__(self):
-        super().__init__("ur5_driver")
+        
 
         controller_name = "joint_trajectory_controller"
         self.joints = ["shoulder_pan_joint", 
