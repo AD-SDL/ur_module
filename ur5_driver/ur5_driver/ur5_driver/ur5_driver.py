@@ -1,22 +1,25 @@
-
-from multiprocessing.connection import wait
 import rclpy
 from rclpy.node import Node
+import threading
+
 from builtin_interfaces.msg import Duration
+from multiprocessing.connection import wait
+
 import time
 
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
 
 
-
 import ur5_driver.robotiq_gripper as robotiq_gripper
 
 
 class UR5():
+    commandLock = threading.Lock()
+
     def __init__(self):
         super().__init__("ur5_driver")
-        
+
         controller_name = "joint_trajectory_controller"
         self.joints = ["shoulder_pan_joint", 
                         "shoulder_lift_joint", 
@@ -113,6 +116,9 @@ class UR5():
 
     def change_gripper_at_pos(self, goal, new_gripper_pos):
         '''Publish trajectories to move to above goal, move down to goal, move to new gripper position, and move back to above goal'''
+        self.commandLock.acquire()
+
+       
         # Publish above pick up position
         above_goal_pos = self.create_trajectory([-1.57,-1.03,-2.08,-1.60,1.57,0.0]) #TODO: get position + certain amount above
 
@@ -147,26 +153,28 @@ class UR5():
         self.publisher_.publish(above_goal_pos)
 
         time.sleep(4)
+        self.commandLock.release()
+
 
         #move to neutral position here?
 
 
-    def pick_up(self):
+    def pick_up(self, pick_goal):
         '''Pick up from first goal position'''
-        self.change_gripper_at_pos(self.goals[0], self.gripper_close_pos)
+        self.change_gripper_at_pos(pick_goal, self.gripper_close_pos)
     
 
-    def put_down(self):
+    def put_down(self, put_goal):
         '''Put down at second goal position'''
-        self.change_gripper_at_pos(self.goals[1], self.griper_open_pose)
+        self.change_gripper_at_pos(put_goal, self.griper_open_pose)
 
 
-    def pick_up_and_put_down(self):
+    def pick_up_and_put_down(self,pick_goal,put_goal):
         '''Pick up from first position and put down at second position'''
         self.positions_published = True
         if self.starting_point_ok:
-            self.pick_up()
-            self.put_down()
+            self.pick_up(pick_goal)
+            self.put_down(put_goal)
             self.get_logger().info(
                 'Finished publishing'
             )
@@ -177,6 +185,11 @@ class UR5():
         else:
             self.get_logger().warn("Start configuration is not within configured limits!")
 
+    def transfer(self, pos1, pos2):
+
+            self.pick_up(pos1)
+            self.put_down(pos2)
+            self.get_logger().info('Finished publishing')
 
     def joint_state_callback(self, msg):
         self.get_logger().info(
