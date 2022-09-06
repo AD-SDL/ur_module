@@ -42,21 +42,21 @@ class UR5():
         self.goals = []
 
         ur_robot_ip = "192.168.1.102" 
-        self.get_logger().info(
-                'Creating gripper...'
-            )
+        # self.get_logger().info(
+        #         'Creating gripper...'
+        #     )
         self.gripper = robotiq_gripper.RobotiqGripper()
-        self.get_logger().info(
-            'Connecting to gripper...'
-        )
+        # self.get_logger().info(
+        #     'Connecting to gripper...'
+        # )
         self.gripper.connect(ur_robot_ip, 63352)
-        self.get_logger().info(
-            'Activating gripper...'
-        )
+        # self.get_logger().info(
+        #     'Activating gripper...'
+        # )
         self.gripper.activate()
-        self.get_logger().info(
-            'Opening gripper...'
-        )
+        # self.get_logger().info(
+        #     'Opening gripper...'
+        # )
         self.gripper.move_and_wait_for_pos(0, 255, 255)
 
 
@@ -122,9 +122,9 @@ class UR5():
         # Publish above pick up position
         above_goal_pos = self.create_trajectory([-1.57,-1.03,-2.08,-1.60,1.57,0.0]) #TODO: get position + certain amount above
 
-        self.get_logger().info(
-            'Publishing above goal position'
-        )
+        # self.get_logger().info(
+        #     'Publishing above goal position'
+        # )
         self.publisher_.publish(above_goal_pos)
 
         time.sleep(4)
@@ -133,23 +133,23 @@ class UR5():
         # Publish pick up position
         goal_pos = self.create_trajectory(goal)
 
-        self.get_logger().info(
-            'Publishing goal position'
-        )
+        # self.get_logger().info(
+        #     'Publishing goal position'
+        # )
         self.publisher_.publish(goal_pos)
 
         time.sleep(4)
 
 
         # MOVE GRIPPER HERE
-        self.get_logger().info(
-            'Moving gripper...'
-        )
+        # self.get_logger().info(
+        #     'Moving gripper...'
+        # )
         self.gripper.move_and_wait_for_pos(new_gripper_pos, 255, 255)
 
-        self.get_logger().info(
-            'Publishing above goal position'
-        )
+        # self.get_logger().info(
+        #     'Publishing above goal position'
+        # )
         self.publisher_.publish(above_goal_pos)
 
         time.sleep(4)
@@ -175,26 +175,25 @@ class UR5():
         if self.starting_point_ok:
             self.pick_up(pick_goal)
             self.put_down(put_goal)
-            self.get_logger().info(
-                'Finished publishing'
-            )
+            # self.get_logger().info(
+            #     'Finished publishing'
+            # )
         elif self.check_starting_point and not self.joint_state_msg_received:
-            self.get_logger().warn(
-                'Start configuration could not be checked! Check "joint_state" topic!'
-            )
+            # self.get_logger().warn(
+            print('Start configuration could not be checked! Check "joint_state" topic!')
         else:
-            self.get_logger().warn("Start configuration is not within configured limits!")
+            print("Start configuration is not within configured limits!")
 
     def transfer(self, pos1, pos2):
 
             self.pick_up(pos1)
             self.put_down(pos2)
-            self.get_logger().info('Finished publishing')
+            # self.get_logger().info('Finished publishing')
 
     def joint_state_callback(self, msg):
-        self.get_logger().info(
-            'Entering Callback'
-        )
+        # self.get_logger().info(
+        #     'Entering Callback'
+        # )
         if not self.joint_state_msg_received:
             # check start state
             limit_exceeded = [False] * len(msg.name)
@@ -202,7 +201,7 @@ class UR5():
                 if (msg.position[idx] < self.starting_point[enum][0]) or (
                     msg.position[idx] > self.starting_point[enum][1]
                 ):
-                    self.get_logger().warn(f"Starting point limits exceeded for joint {enum} !")
+                    # self.get_logger().warn(f"Starting point limits exceeded for joint {enum} !")
                     limit_exceeded[idx] = True
 
             if any(limit_exceeded):
