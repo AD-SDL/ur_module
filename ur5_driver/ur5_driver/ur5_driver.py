@@ -14,11 +14,12 @@ from sensor_msgs.msg import JointState
 import ur5_driver.robotiq_gripper as robotiq_gripper
 
 
-class UR5():
+class UR5(Node):
     commandLock = threading.Lock()
 
     def __init__(self):
-        
+        super().__init__(node_name= "ur5_driver")
+
 
         controller_name = "joint_trajectory_controller"
         self.joints = ["shoulder_pan_joint", 
@@ -108,7 +109,7 @@ class UR5():
         return traj
 
 
-    def change_gripper_at_pos(self, goal, new_gripper_pos):
+    def change_gripper_at_pos(self, goal, new_gripper_pos= None):
         '''Publish trajectories to move to above goal, move down to goal, move to new gripper position, and move back to above goal'''
         self.commandLock.acquire()
 
@@ -153,12 +154,12 @@ class UR5():
 
     def pick_up(self, pick_goal):
         '''Pick up from first goal position'''
-        self.change_gripper_at_pos(pick_goal, self.gripper_close_pos)
+        self.change_gripper_at_pos(pick_goal)
     
 
     def put_down(self, put_goal):
         '''Put down at second goal position'''
-        self.change_gripper_at_pos(put_goal, self.griper_open_pose)
+        self.change_gripper_at_pos(put_goal)
 
 
     def pick_up_and_put_down(self,pick_goal,put_goal):
@@ -219,5 +220,12 @@ class UR5():
 
 
 if __name__ == "__main__":
-    pass
+    rclpy.init(args=None)
+    pos1= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
+    pos2= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
+    robot = UR5()
+    # rclpy.spin(robot)
+    robot.transfer(pos1,pos2)
+    robot.destroy_node()
+    rclpy.shutdown()
     # main()
