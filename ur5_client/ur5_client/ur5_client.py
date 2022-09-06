@@ -1,221 +1,154 @@
-from multiprocessing.connection import wait
-import rclpy
-from rclpy.node import Node
-from builtin_interfaces.msg import Duration
-import time
+#! /usr/bin/env python3
 
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from sensor_msgs.msg import JointState
+import rclpy                 # import Rospy
+from rclpy.node import Node  # import Rospy Node
+from std_msgs.msg import String
+from std_srvs.srv import Empty
 
-# import sys
-# # adding gripper folder to the system path
-# sys.path.insert(0, '/home/kendrick/gripper_workspace')
-import ur5_driver.robotiq_gripper as robotiq_gripper
+from ur5_driver.ur5_driver import UR5 
+from time import sleep
 
+# from pf400_module_services.srv import pf400WhereJ 
+# from pf400_module_services.srv import MoveJ 
+from wei_services.srv import WeiDescription 
+from wei_services.srv import WeiActions  
 
+class UR5ClientNode(Node):
+    '''
+    The jointControlNode inputs data from the 'action' topic, providing a set of commands for the driver to execute. It then receives feedback, 
+    based on the executed command and publishes the state of the peeler and a description of the peeler to the respective topics.
+    '''
+    def __init__(self, NODE_NAME="UR5_Client_Node"):
+        '''
+        The init function is neccesary for the peelerNode class to initialize all variables, parameters, and other functions.
+        Inside the function the parameters exist, and calls to other functions and services are made so they can be executed in main.
+        '''
 
-class PublisherJointTrajectory(Node):
-    def __init__(self):
-        super().__init__("ur5_client")
-        # Declare all parameters
-        self.declare_parameter("controller_name", "position_trajectory_controller")
-        self.declare_parameter("goal_names", ["pos1", "pos2"])
-        self.declare_parameter("gripper_close_pos", 255)
-        self.declare_parameter("joints")
-        self.declare_parameter("check_starting_point", False)
-        self.declare_parameter("starting_point_limits")
+        super().__init__(NODE_NAME)
+        
+        print("UR5 is online") 
 
-        # Read parameters
-        controller_name = self.get_parameter("controller_name").value
-        goal_names = self.get_parameter("goal_names").value
-        self.joints = self.get_parameter("joints").value
-        self.check_starting_point = self.get_parameter("check_starting_point").value
-        self.starting_point = {}
-        self.gripper_close_pos = self.get_parameter("gripper_close_pos").value
-        self.griper_open_pose = 0
+        self.state = "UNKNOWN"
+        self.client = UR5()
 
-        if self.joints is None or len(self.joints) == 0:
-            raise Exception('"joints" parameter is not set!')
+        # self.client.initialize_robot()
 
-        # starting point stuff
-        if self.check_starting_point:
-            # declare nested params
-            for name in self.joints:
-                param_name_tmp = "starting_point_limits" + "." + name
-                self.declare_parameter(param_name_tmp, [-2 * 3.14159, 2 * 3.14159])
-                self.starting_point[name] = self.get_parameter(param_name_tmp).value
+        timer_period = 0.5  # seconds
+        self.stateTimer = self.create_timer(timer_period, self.stateCallback)
 
-            for name in self.joints:
-                if len(self.starting_point[name]) != 2:
-                    raise Exception('"starting_point" parameter is not set correctly!')
-            self.joint_state_sub = self.create_subscription(
-                JointState, "joint_states", self.joint_state_callback, 10
-            )
-        # initialize starting point status
-        self.starting_point_ok = not self.check_starting_point
+        self.statePub = self.create_publisher(String, NODE_NAME + '/state', 10)
 
-        self.joint_state_msg_received = False
+        self.stateTimer = self.create_timer(timer_period, self.stateCallback)
 
-        # Read all positions from parameters
-        self.goals = []
-        for name in goal_names:
-            self.declare_parameter(name)
-            goal = self.get_parameter(name).value
-            if goal is None or len(goal) == 0:
-                raise Exception(f'Values for goal "{name}" not set!')
+   
+        self.action_handler = self.create_service(WeiActions, NODE_NAME + "/action_handler", self.actionCallback)
+        self.description_handler = self.create_service(WeiDescription, NODE_NAME + "/description_handler", self.descriptionCallback)
 
-            float_goal = []
-            for value in goal:
-                float_goal.append(float(value))
-            self.goals.append(float_goal)
-
-        # Hardcoded gripper info
-        ur_robot_ip = "192.168.1.102" 
-        self.get_logger().info(
-                'Creating gripper...'
-            )
-        self.gripper = robotiq_gripper.RobotiqGripper()
-        self.get_logger().info(
-            'Connecting to gripper...'
-        )
-        self.gripper.connect(ur_robot_ip, 63352)
-        self.get_logger().info(
-            'Activating gripper...'
-        )
-        self.gripper.activate()
-        self.get_logger().info(
-            'Opening gripper...'
-        )
-        self.gripper.move_and_wait_for_pos(0, 255, 255)
+        self.description={}
 
 
-        publish_topic = "/" + controller_name + "/" + "joint_trajectory"
+    def stateCallback(self):
+        '''
+        Publishes the peeler state to the 'state' topic. 
+        '''
+        msg = String()
+        msg.data = 'State: %s' % self.state
+        self.statePub.publish(msg)
+        self.get_logger().info('Publishing: "%s"' % msg.data)
+        self.state = "READY"
 
-        self.get_logger().info(
-            'Publishing pick up from [{}] and put down at [{}] goals on topic "{}"'.format(
-                ','.join([str(n) for n in self.goals[0]]), ','.join([str(n) for n in self.goals[1]]), publish_topic
-            )
-        )
+    def descriptionCallback(self, request, response):
+        """The descriptionCallback function is a service that can be called to showcase the available actions a robot
+        can preform as well as deliver essential information required by the master node.
 
-        self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
-        self.positions_published = False
-        if not self.check_starting_point:
-            self.pick_up_and_put_down()
+        Parameters:
+        -----------
+        request: str
+            Request to the robot to deliver actions
+        response: str
+            The actions a robot can do, will be populated during execution
 
+        Returns
+        -------
+        str
+            The robot steps it can do
+        """
+        response.description_response = str(self.description)
 
-    def create_trajectory(self, goal):
-        '''Creates a new trajectory with a given goal'''
-        traj = JointTrajectory()
-        traj.joint_names = self.joints
-        point = JointTrajectoryPoint()
-        point.positions = goal
-        point.time_from_start = Duration(sec=4) # Can change trajectory duration here
-        traj.points.append(point)
-        return traj
+        return response
 
+    def actionCallback(self, request, response):
+        '''
+        The actionCallback function is a service that can be called to execute the available actions the robot
+        can preform.
+        '''
+        
+        if request.action_handle=='transfer':
+            self.state = "BUSY"
+            self.stateCallback()
+            vars = eval(request.vars)
+            print(vars)
 
-    def change_gripper_at_pos(self, goal, new_gripper_pos):
-        '''Publish trajectories to move to above goal, move down to goal, move to new gripper position, and move back to above goal'''
-        # Publish above pick up position
-        above_goal_pos = self.create_trajectory([-1.57,-1.03,-2.08,-1.60,1.57,0.0]) #TODO: get position + certain amount above
+            if 'pos1' not in vars.keys() or 'pos2' not in vars.keys():
+                print('vars wrong')
+                return 
 
-        self.get_logger().info(
-            'Publishing above goal position'
-        )
-        self.publisher_.publish(above_goal_pos)
+            pos1 = vars.get('pos1')
+            print(pos1)
+            pos2 = vars.get('pos2')
+            print(pos2)
 
-        time.sleep(4)
+            self.client.transfer(pos1, pos2)
 
+        self.state = "COMPLETED"
 
-        # Publish pick up position
-        goal_pos = self.create_trajectory(goal)
+        return response
 
-        self.get_logger().info(
-            'Publishing goal position'
-        )
-        self.publisher_.publish(goal_pos)
+    def whereJCallback(self, request, response):
+        '''
+        The descriptionCallback function is a service that can be called to showcase the available actions a robot
+        can preform as well as deliver essential information required by the master node.
+        '''
 
-        time.sleep(4)
-
-
-        # MOVE GRIPPER HERE
-        self.get_logger().info(
-            'Moving gripper...'
-        )
-        self.gripper.move_and_wait_for_pos(new_gripper_pos, 255, 255)
-
-        self.get_logger().info(
-            'Publishing above goal position'
-        )
-        self.publisher_.publish(above_goal_pos)
-
-        time.sleep(4)
-
-        #move to neutral position here?
-
-
-    def pick_up(self):
-        '''Pick up from first goal position'''
-        self.change_gripper_at_pos(self.goals[0], self.gripper_close_pos)
-    
-
-    def put_down(self):
-        '''Put down at second goal position'''
-        self.change_gripper_at_pos(self.goals[1], self.griper_open_pose)
+        self.get_logger().info('What are my joint positions?')
+ 
+        var  = self.client.send_command("wherej")
+        print(var)
+        return response
 
 
-    def pick_up_and_put_down(self):
-        '''Pick up from first position and put down at second position'''
-        self.positions_published = True
-        if self.starting_point_ok:
-            self.pick_up()
-            self.put_down()
-            self.get_logger().info(
-                'Finished publishing'
-            )
-        elif self.check_starting_point and not self.joint_state_msg_received:
-            self.get_logger().warn(
-                'Start configuration could not be checked! Check "joint_state" topic!'
-            )
-        else:
-            self.get_logger().warn("Start configuration is not within configured limits!")
+    def moveJCallback(self, request, response):
+        '''
+        The descriptionCallback function is a service that can be called to showcase the available actions a robot
+        can preform as well as deliver essential information required by the master node.
+        '''
+
+        self.state = "BUSY"
+        self.stateCallback()
 
 
-    def joint_state_callback(self, msg):
-        self.get_logger().info(
-            'Entering Callback'
-        )
-        if not self.joint_state_msg_received:
-            # check start state
-            limit_exceeded = [False] * len(msg.name)
-            for idx, enum in enumerate(msg.name):
-                if (msg.position[idx] < self.starting_point[enum][0]) or (
-                    msg.position[idx] > self.starting_point[enum][1]
-                ):
-                    self.get_logger().warn(f"Starting point limits exceeded for joint {enum} !")
-                    limit_exceeded[idx] = True
+        profile = 2                                                                         # profile changes speed of arm
+        pos = request.joint_positions                                                       # Joint position taken from list given within request 
+        # cmd = "movej" + " " + str(profile) + " " + " ".join(map(str, pos))                  # Turns the list into a string to send cmd to pf400 driver
 
-            if any(limit_exceeded):
-                self.starting_point_ok = False
-            else:
-                self.starting_point_ok = True
+        print(pos)
+        pos1 = request.joint_positions[0:6]
+        print(pos1)
+        pos2 = request.joint_positions[6:12]
+        print(pos2)
 
-            self.joint_state_msg_received = True
-        else:
-            if not self.positions_published:
-                self.pick_up_and_put_down()
-            return
+        self.client.transfer(pos1, pos2)
+        self.state = "COMPLETED"
 
+        return response
 
-def main(args=None):
-    rclpy.init(args=args)
+def main(args = None):
 
-    publisher_joint_trajectory = PublisherJointTrajectory()
+    NAME = "UR5_Nodr"
+    rclpy.init(args = args)  # initialize Ros2 communication
+    node = UR5ClientNode(NODE_NAME = NAME)
+    rclpy.spin(node)     # keep Ros2 communication open for action node
+    rclpy.shutdown()     # kill Ros2 communication
 
-    rclpy.spin(publisher_joint_trajectory)
-    publisher_joint_trajectory.destroy_node()
-    rclpy.shutdown()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
