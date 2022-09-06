@@ -17,7 +17,7 @@ def generate_launch_description():
             namespace = 'ur5_client',
             executable = 'ur5_client',
             output = "screen",
-            name='ur5_Node'
+            name='UR5_Client_Node'
     )
 
     launch_d.add_action(ur5_client)
