@@ -11,7 +11,10 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
 
 
-import ur5_driver.robotiq_gripper as robotiq_gripper
+# import ur5_driver.robotiq_gripper as robotiq_gripper
+import robotiq_gripper
+from urx import Robot
+from copy import deepcopy
 
 
 class UR5(Node):
@@ -21,28 +24,15 @@ class UR5(Node):
         super().__init__(node_name= "ur5_driver")
 
 
-        controller_name = "joint_trajectory_controller"
-        self.joints = ["shoulder_pan_joint", 
-                        "shoulder_lift_joint", 
-                        "elbow_joint", 
-                        "wrist_1_joint", 
-                        "wrist_2_joint", 
-                        "wrist_3_joint"
-                        ]
-        self.check_starting_point = False
-        self.starting_point = {}
-        self.gripper_close = 38
-        self.griper_open = 0
-        self.joint_limiter = {"shoulder_pan_joint": [-1.6,-1.5], 
-                            "shoulder_lift_joint": [-0.1,0.1], 
-                            "elbow_joint": [-2.3,-2.2], 
-                            "wrist_1_joint": [-0.9,-0.8], 
-                            "wrist_2_joint": [1.5,1.6],
-                            "wrist_3_joint": [-0.1,0.1]
-                            }
-        self.goals = []
-
+        # ARM SETUP:
         ur_robot_ip = "192.168.1.102" 
+        self.robot = Robot(ur_robot_ip)
+        time.sleep(0.2)
+        self.acceleration = 0.10
+        self.velocity = 0.10
+
+
+        # GRIPPER SETUP:
         print('Creating gripper...')
         self.gripper = robotiq_gripper.RobotiqGripper()
         print('Connecting to gripper...')
@@ -52,100 +42,39 @@ class UR5(Node):
         self.gripper.activate()
         print('Opening gripper...')
 
-        self.gripper.move_and_wait_for_pos(0, 255, 255)
+        self.gripper_close = 110
+        self.griper_open = 0
+        self.gripper_speed = 255
+        self.gripper_force = 0
+
+        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
 
-        publish_topic = "/" + controller_name + "/" + "joint_trajectory"
-
-        self.publisher_ = self.create_publisher(JointTrajectory, publish_topic, 1)
-        self.positions_published = False
-
-        # if self.joints is None or len(self.joints) == 0:
-        #     raise Exception('"joints" parameter is not set!')
-
-        # starting point stuff
-        # if self.check_starting_point:
-            # declare nested params
-            # for name in self.joints:
-                # param_name_tmp = "starting_point_limits" + "." + name
-                # self.declare_parameter(param_name_tmp, [-2 * 3.14159, 2 * 3.14159])
-                # self.starting_point[name] = self.get_parameter(param_name_tmp).value
-
-            # for name in self.joints:
-            #     if len(self.starting_point[name]) != 2:
-            #         raise Exception('"starting_point" parameter is not set correctly!')
-            # self.joint_state_sub = self.create_subscription(
-            #     JointState, "joint_states", self.joint_state_callback, 10
-            # )
-        # initialize starting point status
-        # self.starting_point_ok = not self.check_starting_point
-
-        # self.joint_state_msg_received = False
-
-        # Read all positions from parameters
-        # for name in goal_names:
-        #     self.declare_parameter(name)
-        #     goal = self.get_parameter(name).value
-        #     if goal is None or len(goal) == 0:
-        #         raise Exception(f'Values for goal "{name}" not set!')
-
-        #     float_goal = []
-        #     for value in goal:
-        #         float_goal.append(float(value))
-        #     self.goals.append(float_goal)
-
-        # Hardcoded gripper info
-
-
-
-    def create_trajectory(self, goal):
-        '''Creates a new trajectory with a given goal'''
-        traj = JointTrajectory()
-        traj.joint_names = self.joints
-        point = JointTrajectoryPoint()
-        point.positions = goal
-        point.time_from_start = Duration(sec=4) # Can change trajectory duration here
-        traj.points.append(point)
-        return traj
-
-
-    def change_gripper_at_pos(self, goal, new_gripper_pos= None):
+    def change_gripper_at_pos(self, goal, new_gripper_pos = 0):
         '''Publish trajectories to move to above goal, move down to goal, move to new gripper position, and move back to above goal'''
         self.commandLock.acquire()
 
-       
-        # Publish above pick up position
-        above_goal_pos = self.create_trajectory([-1.57,-1.03,-2.08,-1.60,1.57,0.0]) #TODO: get position + certain amount above
 
-        
-        print('Publishing above goal position')
-        self.publisher_.publish(above_goal_pos)
-
-        time.sleep(4)
+        above_goal = deepcopy(goal)
+        above_goal[2]+=0.20
 
 
-        # Publish pick up position
-        goal_pos = self.create_trajectory(goal)
-
-        
-        print('Publishing goal position')
-    
-        self.publisher_.publish(goal_pos)
-
-        time.sleep(4)
+        print('Moving to above goal position')
+        self.robot.movel(above_goal, self.acceleration, self.velocity)
 
 
-        # MOVE GRIPPER HERE
-        
-        print('Moving gripper...')
-        
-        self.gripper.move_and_wait_for_pos(new_gripper_pos, 255, 255)
+        print('Moving to goal position')
+        self.robot.movel(goal, self.acceleration, self.velocity)
 
-        print('Publishing above goal position')
-    
-        self.publisher_.publish(above_goal_pos)
 
-        time.sleep(4)
+        print('Closing gripper')
+        self.gripper.move_and_wait_for_pos(new_gripper_pos, self.gripper_speed, self.gripper_force)
+
+
+        print('Moving back to above goal position"')
+        self.robot.movel(above_goal, self.acceleration, self.velocity)
+
+
         self.commandLock.release()
 
 
@@ -154,59 +83,19 @@ class UR5(Node):
 
     def pick_up(self, pick_goal):
         '''Pick up from first goal position'''
-        self.change_gripper_at_pos(pick_goal)
+        self.change_gripper_at_pos(pick_goal, self.gripper_close)
     
 
     def put_down(self, put_goal):
         '''Put down at second goal position'''
-        self.change_gripper_at_pos(put_goal)
+        self.change_gripper_at_pos(put_goal, self.griper_open)
 
-
-    def pick_up_and_put_down(self,pick_goal,put_goal):
-        '''Pick up from first position and put down at second position'''
-        self.positions_published = True
-        if self.starting_point_ok:
-            self.pick_up(pick_goal)
-            self.put_down(put_goal)
-        
-            print('Finished publishing')
-        
-        elif self.check_starting_point and not self.joint_state_msg_received:
-           
-            print('Start configuration could not be checked! Check "joint_state" topic!')
-        else:
-            print("Start configuration is not within configured limits!")
 
     def transfer(self, pos1, pos2):
 
             self.pick_up(pos1)
             self.put_down(pos2)
-            print('Finished publishing')
-
-    def joint_state_callback(self, msg):
-    
-        print('Entering Callback')
-    
-        if not self.joint_state_msg_received:
-            # check start state
-            limit_exceeded = [False] * len(msg.name)
-            for idx, enum in enumerate(msg.name):
-                if (msg.position[idx] < self.starting_point[enum][0]) or (
-                    msg.position[idx] > self.starting_point[enum][1]
-                ):
-                    print(f"Starting point limits exceeded for joint {enum} !")
-                    limit_exceeded[idx] = True
-
-            if any(limit_exceeded):
-                self.starting_point_ok = False
-            else:
-                self.starting_point_ok = True
-
-            self.joint_state_msg_received = True
-        else:
-            if not self.positions_published:
-                self.pick_up_and_put_down()
-            return
+            print('Finished transfer')
 
 
 # def main(args=None):
@@ -221,8 +110,8 @@ class UR5(Node):
 
 if __name__ == "__main__":
     rclpy.init(args=None)
-    pos1= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
-    pos2= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
+    pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    pos2= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
     # rclpy.spin(robot)
     robot.transfer(pos1,pos2)
