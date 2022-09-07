@@ -25,11 +25,22 @@ class UR5(Node):
 
 
         # ARM SETUP:
-        ur_robot_ip = "192.168.1.102" 
-        self.robot = Robot(ur_robot_ip)
-        time.sleep(0.2)
-        self.acceleration = 0.10
-        self.velocity = 0.10
+        ur_robot_ip = "192.168.1.102"
+        i = 1
+        while True:
+            try:
+                self.arm = Robot(ur_robot_ip)
+                time.sleep(0.2)
+                print('Successful arm connection on attempt #{}'.format(i))
+                break
+            except:
+                print('Failed attempt #{}'.format(i))
+                i+=1
+
+        self.acceleration = 1.0
+        self.velocity = 1.0
+
+        self.home_pos = (0.0, -0.200, 0.59262, 2.247, 2.196, 0.0)
 
 
         # GRIPPER SETUP:
@@ -38,15 +49,19 @@ class UR5(Node):
         print('Connecting to gripper...')
         
         self.gripper.connect(ur_robot_ip, 63352)
-        print('Activating gripper...')
-        self.gripper.activate()
-        print('Opening gripper...')
+        if self.gripper.is_active():
+            print('Gripper already active')
+        else:
+            print('Activating gripper...')
+            self.gripper.activate()
+        
 
-        self.gripper_close = 110
+        self.gripper_close = 110 # 0-255 (255 is closed)
         self.griper_open = 0
-        self.gripper_speed = 255
-        self.gripper_force = 0
+        self.gripper_speed = 150 # 0-255
+        self.gripper_force = 0 # 0-255
 
+        print('Opening gripper...')
         self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
 
@@ -60,25 +75,24 @@ class UR5(Node):
 
 
         print('Moving to above goal position')
-        self.robot.movel(above_goal, self.acceleration, self.velocity)
+        self.arm.movel(above_goal, self.acceleration, self.velocity)
 
 
         print('Moving to goal position')
-        self.robot.movel(goal, self.acceleration, self.velocity)
+        self.arm.movel(goal, self.acceleration, self.velocity)
 
 
         print('Closing gripper')
         self.gripper.move_and_wait_for_pos(new_gripper_pos, self.gripper_speed, self.gripper_force)
 
 
-        print('Moving back to above goal position"')
-        self.robot.movel(above_goal, self.acceleration, self.velocity)
+        print('Moving back to above goal position')
+        self.arm.movel(above_goal, self.acceleration, self.velocity)
 
+        print('Moving back to home position')
+        self.arm.movel(self.home_pos, self.acceleration, self.velocity)
 
         self.commandLock.release()
-
-
-        #move to neutral position here?
 
 
     def pick_up(self, pick_goal):
@@ -111,10 +125,13 @@ class UR5(Node):
 if __name__ == "__main__":
     rclpy.init(args=None)
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    pos2= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
     # rclpy.spin(robot)
     robot.transfer(pos1,pos2)
+    robot.transfer(pos2,pos1)
+    robot.arm.close()
     robot.destroy_node()
     rclpy.shutdown()
     # main()
+    print('end')
