@@ -177,12 +177,6 @@ class UR5(Node):
         else:
             print("Start configuration is not within configured limits!")
 
-    def transfer(self, pos1, pos2):
-
-            self.pick_up(pos1)
-            self.put_down(pos2)
-            print('Finished publishing')
-
     def joint_state_callback(self, msg):
     
         print('Entering Callback')
@@ -208,24 +202,21 @@ class UR5(Node):
                 self.pick_up_and_put_down()
             return
 
+    def transfer(self, pos1, pos2):
+            rclpy.init(args=None)
+            self.pick_up(pos1)
+            self.put_down(pos2)
+            print('Finished publishing')
+            self.destroy_node()
+            rclpy.shutdown()
 
-# def main(args=None):
-#     rclpy.init(args=args)
-
-#     publisher_joint_trajectory = PublisherJointTrajectory()
-
-#     rclpy.spin(publisher_joint_trajectory)
-#     publisher_joint_trajectory.destroy_node()
-#     rclpy.shutdown()
 
 
 if __name__ == "__main__":
-    rclpy.init(args=None)
+    
     pos1= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
     pos2= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
     robot = UR5()
-    # rclpy.spin(robot)
     robot.transfer(pos1,pos2)
-    robot.destroy_node()
-    rclpy.shutdown()
-    # main()
+
+
