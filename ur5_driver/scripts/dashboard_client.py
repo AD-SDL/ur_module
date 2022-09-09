@@ -5,7 +5,7 @@ class DashboardClient:
     def __init__(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(2)
-        self.s.connect(('192.168.1.102', 29999))
+        self.s.connect(('192.168.50.82', 29999))
 
     def send_command(self, cmd):
         cmd = cmd + '\n'
