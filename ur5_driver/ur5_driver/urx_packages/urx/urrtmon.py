@@ -13,6 +13,16 @@ from copy import deepcopy
 
 import numpy as np
 
+import path
+import sys
+ 
+# directory reach
+directory = path.Path(__file__).abspath()
+ 
+# setting path
+sys.path.append(directory.parent.parent)
+ 
+# importing
 import math3d as m3d
 
 __author__ = "Morten Lind, Olivier Roulet-Dubonnet"

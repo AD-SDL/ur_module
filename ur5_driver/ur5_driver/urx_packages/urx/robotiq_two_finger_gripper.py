@@ -44,7 +44,7 @@ import logging
 import os
 import time
 
-from urx.urscript import URScript
+from .urscript import URScript
 
 # Gripper Variables
 ACT = "ACT"

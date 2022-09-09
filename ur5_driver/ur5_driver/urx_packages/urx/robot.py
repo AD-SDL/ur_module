@@ -8,7 +8,7 @@ http://support.universal-robots.com/URRobot/RemoteAccess
 import math3d as m3d
 import numpy as np
 
-from urx.urrobot import URRobot
+from .urrobot import URRobot
 
 __author__ = "Olivier Roulet-Dubonnet"
 __copyright__ = "Copyright 2011-2016, Sintef Raufoss Manufacturing"

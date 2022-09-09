@@ -13,7 +13,7 @@ from sensor_msgs.msg import JointState
 
 # import ur5_driver.robotiq_gripper as robotiq_gripper
 import robotiq_gripper
-from urx import Robot
+from urx_packages.urx import Robot
 from copy import deepcopy
 
 
