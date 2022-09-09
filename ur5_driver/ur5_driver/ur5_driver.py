@@ -25,7 +25,7 @@ class UR5(Node):
 
 
         # ARM SETUP:
-        ur_robot_ip = "192.168.1.102"
+        ur_robot_ip = "192.168.50.82"
         i = 1
         while True:
             try:
