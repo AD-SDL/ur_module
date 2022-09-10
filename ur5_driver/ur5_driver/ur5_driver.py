@@ -17,23 +17,22 @@ from sensor_msgs.msg import JointState
 import robotiq_gripper
 from urx_packages.urx import Robot
 from copy import deepcopy
+from ur_dashboard import UR_DASHBOARD
 
-
-class UR5(Node):
+class UR5(UR_DASHBOARD):
     commandLock = threading.Lock()
 
-    def __init__(self):
-        super().__init__(node_name= "ur5_driver")
+    def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
 
-
-        # ARM SETUP:
-        ur_robot_ip = "192.168.50.82"
+        super().__init__(IP=IP, PORT=PORT)
+        
+        # ur5 SETUP:
         i = 1
         while True:
             try:
-                self.arm = Robot(ur_robot_ip)
+                self.ur5 = Robot(self.IP)
                 time.sleep(0.2)
-                print('Successful arm connection on attempt #{}'.format(i))
+                print('Successful ur5 connection on attempt #{}'.format(i))
                 break
             except:
                 print('Failed attempt #{}'.format(i))
@@ -42,7 +41,7 @@ class UR5(Node):
         self.acceleration = 1.0
         self.velocity = 1.0
 
-        self.home_pos = (0.0, -0.200, 0.59262, 2.247, 2.196, 0.0)
+        self.home = (0.0, -0.200, 0.59262, 2.247, 2.196, 0.0)
 
 
         # GRIPPER SETUP:
@@ -77,11 +76,11 @@ class UR5(Node):
 
 
         print('Moving to above goal position')
-        self.arm.movel(above_goal, self.acceleration, self.velocity)
+        self.ur5.movel(above_goal, self.acceleration, self.velocity)
 
 
         print('Moving to goal position')
-        self.arm.movel(goal, self.acceleration, self.velocity)
+        self.ur5.movel(goal, self.acceleration, self.velocity)
 
 
         print('Closing gripper')
@@ -89,10 +88,10 @@ class UR5(Node):
 
 
         print('Moving back to above goal position')
-        self.arm.movel(above_goal, self.acceleration, self.velocity)
+        self.ur5.movel(above_goal, self.acceleration, self.velocity)
 
         print('Moving back to home position')
-        self.arm.movel(self.home_pos, self.acceleration, self.velocity)
+        self.ur5.movel(self.home, self.acceleration, self.velocity)
 
         self.commandLock.release()
 
@@ -130,7 +129,7 @@ if __name__ == "__main__":
     robot = UR5()
     robot.transfer(pos1,pos2)
     robot.transfer(pos2,pos1)
-    robot.arm.close()
+    robot.ur5.close()
     robot.destroy_node()
     rclpy.shutdown()
     # main()
