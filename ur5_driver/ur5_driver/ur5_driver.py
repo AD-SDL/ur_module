@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import rclpy
-from rclpy.node import Node
 import threading
 
 from builtin_interfaces.msg import Duration
@@ -20,7 +18,8 @@ from copy import deepcopy
 from ur_dashboard import UR_DASHBOARD
 
 class UR5(UR_DASHBOARD):
-    commandLock = threading.Lock()
+    
+    # commandLock = threading.Lock()
 
     def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
 
@@ -49,7 +48,8 @@ class UR5(UR_DASHBOARD):
         self.gripper = robotiq_gripper.RobotiqGripper()
         print('Connecting to gripper...')
         
-        self.gripper.connect(ur_robot_ip, 63352)
+        self.gripper.connect(self.IP, 63352)
+
         if self.gripper.is_active():
             print('Gripper already active')
         else:
@@ -68,7 +68,7 @@ class UR5(UR_DASHBOARD):
 
     def change_gripper_at_pos(self, goal, new_gripper_pos = 0):
         '''Publish trajectories to move to above goal, move down to goal, move to new gripper position, and move back to above goal'''
-        self.commandLock.acquire()
+        # self.commandLock.acquire()
 
 
         above_goal = deepcopy(goal)
@@ -93,44 +93,76 @@ class UR5(UR_DASHBOARD):
         print('Moving back to home position')
         self.ur5.movel(self.home, self.acceleration, self.velocity)
 
-        self.commandLock.release()
+        # self.commandLock.release()
 
 
-    def pick_up(self, pick_goal):
+    def pick(self, pick_goal):
+
         '''Pick up from first goal position'''
-        self.change_gripper_at_pos(pick_goal, self.gripper_close)
+
+        above_goal = deepcopy(pick_goal)
+        above_goal[2] += 0.20
+
+        print('Moving to home position')
+        self.ur5.movel(self.home, self.acceleration, self.velocity)
+
+        print('Moving to above goal position')
+        self.ur5.movel(above_goal, self.acceleration, self.velocity)
+
+        print('Moving to goal position')
+        self.ur5.movel(pick_goal, self.acceleration, self.velocity)
+
+        print('Closing gripper')
+        self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
+
+        print('Moving back to above goal position')
+        self.ur5.movel(above_goal, self.acceleration, self.velocity)
+
+        print('Moving to home position')
+        self.ur5.movel(self.home, self.acceleration, self.velocity)
+
     
 
-    def put_down(self, put_goal):
-        '''Put down at second goal position'''
-        self.change_gripper_at_pos(put_goal, self.griper_open)
+    def place(self, place_goal):
+
+        '''Place down at second goal position'''
+
+        above_goal = deepcopy(place_goal)
+        above_goal[2] += 0.20
+
+        print('Moving to home position')
+        self.ur5.movel(self.home, self.acceleration, self.velocity)
+
+        print('Moving to above goal position')
+        self.ur5.movel(above_goal, self.acceleration, self.velocity)
+
+        print('Moving to goal position')
+        self.ur5.movel(place_goal, self.acceleration, self.velocity)
+
+        print('Opennig gripper')
+        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
+
+        print('Moving back to above goal position')
+        self.ur5.movel(above_goal, self.acceleration, self.velocity)
+
+        print('Moving to home position')
+        self.ur5.movel(self.home, self.acceleration, self.velocity)
 
 
     def transfer(self, pos1, pos2):
 
-            self.pick_up(pos1)
-            self.put_down(pos2)
+            self.pick(pos1)
+            self.place(pos2)
             print('Finished transfer')
-
-    def transfer(self, pos1, pos2):
-            rclpy.init(args=None)
-            self.pick_up(pos1)
-            self.put_down(pos2)
-            print('Finished publishing')
-            self.destroy_node()
-            rclpy.shutdown()
 
 
 
 if __name__ == "__main__":
-    rclpy.init(args=None)
+
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
     robot.transfer(pos1,pos2)
     robot.transfer(pos2,pos1)
     robot.ur5.close()
-    robot.destroy_node()
-    rclpy.shutdown()
-    # main()
     print('end')

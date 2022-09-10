@@ -8,6 +8,8 @@ class UR_DASHBOARD():
         self.port = PORT
         self.connection = None
 
+        self.connect()
+
     def connect(self):
         """Create a socket"""
         try:
