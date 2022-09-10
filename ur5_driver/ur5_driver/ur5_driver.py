@@ -24,7 +24,9 @@ class UR5(UR_DASHBOARD):
     def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
 
         super().__init__(IP=IP, PORT=PORT)
-        
+
+        self.initialize() # Initilialize th robot
+
         # ur5 SETUP:
         i = 1
         while True:
