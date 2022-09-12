@@ -40,7 +40,7 @@ class UR5(UR_DASHBOARD):
                 i+=1
 
         self.acceleration = 1.0
-        self.velocity = 1.0
+        self.velocity = 0.2
 
         self.home = (0.0, -0.200, 0.59262, 2.247, 2.196, 0.0)
 
