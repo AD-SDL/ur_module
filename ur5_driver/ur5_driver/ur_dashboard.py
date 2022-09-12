@@ -1,5 +1,5 @@
 import socket
-import time
+from time import sleep
 
 class UR_DASHBOARD():
     def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
@@ -14,8 +14,8 @@ class UR_DASHBOARD():
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.timeout(2) #TODO: Check if we need a timeout
-            self.connect((self.IP, self.port))
+            self.connection.settimeout(10) # Socket will wait 10 seconds till it recieves the response
+            self.connection.connect((self.IP,self.port))
 
         except Exception as err:
             print("UR dashboard could not establish connection")
@@ -26,11 +26,8 @@ class UR_DASHBOARD():
         self.connection.close()
 
     def send_command(self, command):
-        # command = command + '\n'
-        # print(command)
-        # self.s.sendall(command.encode())
-        # rcvd = self.s.recv(4096)
-        print(">>" + command)
+
+        print(">> " + command)
 
         try:
 
@@ -38,9 +35,10 @@ class UR_DASHBOARD():
                 self.connect()
 
             self.connection.sendall((command.encode("ascii") + b"\n")) #Check these to see if respond was received properly
+            sleep(2)
             response = self.connection.recv(4096).decode("utf-8")
                 
-            print("<<" + response)
+            print("<< " + response)
             return response
 
         except Exception as err:
@@ -51,7 +49,7 @@ class UR_DASHBOARD():
         robot_mode = self.robot_mode()
         operation_mode = self.get_operational_mode()
         safety_status = self.safety_status()
-        remote_control_status = self.is_in_remote_mode()
+        remote_control_status = self.is_in_remote_control()
         popup = self.popup()
 
         if robot_mode.upper() == "POWER OFF":
@@ -106,8 +104,8 @@ class UR_DASHBOARD():
     def close_safety_popup(self):
         return self.send_command('close safety popup')
 
-    def is_in_remote_mode(self):
-        return self.send_command('is_in_remote_mode')
+    def is_in_remote_control(self):
+        return self.send_command('is in remote control')
 
     def restart_safety(self):
         return self.send_command('restart safety')
@@ -128,6 +126,8 @@ class UR_DASHBOARD():
         return self.send_command('close popup')
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD()
+    robot = UR_DASHBOARD("192.168.50.82", 29999)
     robot.power_on()
-    robot.brake_release()
+    # robot.brake_release()
+    # robot.power_off()
+    # robot.brake_release()
