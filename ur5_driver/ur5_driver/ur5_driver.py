@@ -19,7 +19,6 @@ from ur_dashboard import UR_DASHBOARD
 
 class UR5(UR_DASHBOARD):
     
-    # commandLock = threading.Lock()
 
     def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
 
@@ -66,36 +65,6 @@ class UR5(UR_DASHBOARD):
 
         print('Opening gripper...')
         self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
-
-
-    def change_gripper_at_pos(self, goal, new_gripper_pos = 0):
-        '''Publish trajectories to move to above goal, move down to goal, move to new gripper position, and move back to above goal'''
-        # self.commandLock.acquire()
-
-
-        above_goal = deepcopy(goal)
-        above_goal[2]+=0.20
-
-
-        print('Moving to above goal position')
-        self.ur5.movel(above_goal, self.acceleration, self.velocity)
-
-
-        print('Moving to goal position')
-        self.ur5.movel(goal, self.acceleration, self.velocity)
-
-
-        print('Closing gripper')
-        self.gripper.move_and_wait_for_pos(new_gripper_pos, self.gripper_speed, self.gripper_force)
-
-
-        print('Moving back to above goal position')
-        self.ur5.movel(above_goal, self.acceleration, self.velocity)
-
-        print('Moving back to home position')
-        self.ur5.movel(self.home, self.acceleration, self.velocity)
-
-        # self.commandLock.release()
 
 
     def pick(self, pick_goal):
@@ -152,10 +121,10 @@ class UR5(UR_DASHBOARD):
 
 
     def transfer(self, pos1, pos2):
-
-            self.pick(pos1)
-            self.place(pos2)
-            print('Finished transfer')
+        ''''''
+        self.pick(pos1)
+        self.place(pos2)
+        print('Finished transfer')
 
 
 
@@ -164,7 +133,7 @@ if __name__ == "__main__":
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
-    robot.transfer(pos1,pos2)
-    robot.transfer(pos2,pos1)
+    # robot.transfer(pos1,pos2)
+    # robot.transfer(pos2,pos1)
     robot.ur5.close()
     print('end')
