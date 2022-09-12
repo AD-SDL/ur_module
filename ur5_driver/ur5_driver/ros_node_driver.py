@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
 import threading
@@ -218,5 +220,3 @@ if __name__ == "__main__":
     pos2= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
     robot = UR5()
     robot.transfer(pos1,pos2)
-
-
