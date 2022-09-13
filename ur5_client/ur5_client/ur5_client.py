@@ -8,8 +8,7 @@ from std_srvs.srv import Empty
 from ur5_driver.ur5_driver import UR5 
 from time import sleep
 
-# from pf400_module_services.srv import pf400WhereJ 
-# from pf400_module_services.srv import MoveJ 
+
 from wei_services.srv import WeiDescription 
 from wei_services.srv import WeiActions  
 

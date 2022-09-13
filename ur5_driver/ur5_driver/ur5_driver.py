@@ -2,14 +2,9 @@
 
 import threading
 
-from builtin_interfaces.msg import Duration
 from multiprocessing.connection import wait
 
 import time
-
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from sensor_msgs.msg import JointState
-
 
 # import ur5_driver.robotiq_gripper as robotiq_gripper
 import robotiq_gripper

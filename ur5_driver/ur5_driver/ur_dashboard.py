@@ -1,5 +1,4 @@
 import socket
-from sre_constants import OP_UNICODE_IGNORE
 from time import sleep
 
 class UR_DASHBOARD():
@@ -15,7 +14,7 @@ class UR_DASHBOARD():
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(30) # Socket will wait 10 seconds till it recieves the response
+            self.connection.settimeout(30) # Socket will wait 30 seconds till it recieves the response
             self.connection.connect((self.IP,self.port))
 
         except Exception as err:
@@ -31,7 +30,6 @@ class UR_DASHBOARD():
         print(">> " + command)
 
         try:
-
             if not self.connection:
                 self.connect()
 
@@ -64,8 +62,7 @@ class UR_DASHBOARD():
         elif safety_status.upper() != "NORMAL":   #safety_status.upper() != "ROBOT_EMERGENCY_STOP" or safety_status.upper() != "SYSTEM_EMERGENCY_STOP":
             print("Restarting safety")
             self.close_safety_popup()
-            output = self.restart_safety()
-        
+            output = self.restart_safety()        
 
         if operation_mode.upper() == "MANUAL":
             print("Operation mode is currently set to MANUAL, switching to AUTOMATIC")
@@ -81,13 +78,10 @@ class UR_DASHBOARD():
             print("Powering on the robot and releasing brakes")
             output = self.brake_release()
 
-
-        
         return self.initialize()
 
     def robot_mode(self):
         """Return the robot mode"""
-        #TODO: Can be used to check if robot joint are moving
         output = self.send_command("robotmode")
         output = output.split(' ')
         return output[1]
@@ -130,7 +124,6 @@ class UR_DASHBOARD():
         self.connect()
         output2 = self.brake_release()
         return output
-
         
     def safety_status(self):
         output = self.send_command('safetystatus')
