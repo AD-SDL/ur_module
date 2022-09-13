@@ -19,7 +19,7 @@ class UR5(UR_DASHBOARD):
 
         super().__init__(IP=IP, PORT=PORT)
 
-        self.initialize() # Initilialize th robot
+        self.initialize() # Initilialize the robot
 
         # ur5 SETUP:
         i = 1
