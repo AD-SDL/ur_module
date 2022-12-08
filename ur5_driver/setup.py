@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'ur5_driver = ur5_driver.ur5_driver:main',
+            'urx_packages = ur5_driver.urx_packages.urx:main',
 
         ],
     },
