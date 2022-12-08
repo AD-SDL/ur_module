@@ -28,9 +28,8 @@ class UR5ClientNode(Node):
         print("UR5 is online") 
 
         self.state = "UNKNOWN"
-        self.client = UR5()
 
-        # self.client.initialize_robot()
+        # self.ur5.initialize_robot()
 
         timer_period = 0.5  # seconds
         self.stateTimer = self.create_timer(timer_period, self.stateCallback)
@@ -41,7 +40,6 @@ class UR5ClientNode(Node):
 
    
         self.action_handler = self.create_service(WeiActions, NODE_NAME + "/action_handler", self.actionCallback)
-        self.description_handler = self.create_service(WeiDescription, NODE_NAME + "/description_handler", self.descriptionCallback)
 
         self.description={}
 
@@ -96,23 +94,11 @@ class UR5ClientNode(Node):
             print(pos1)
             pos2 = vars.get('pos2')
             print(pos2)
-
-            self.client.transfer(pos1, pos2)
+            ur5 = UR5()
+            ur5.transfer(pos1, pos2)
 
         self.state = "COMPLETED"
 
-        return response
-
-    def whereJCallback(self, request, response):
-        '''
-        The descriptionCallback function is a service that can be called to showcase the available actions a robot
-        can preform as well as deliver essential information required by the master node.
-        '''
-
-        self.get_logger().info('What are my joint positions?')
- 
-        var  = self.client.send_command("wherej")
-        print(var)
         return response
 
 
@@ -136,7 +122,7 @@ class UR5ClientNode(Node):
         pos2 = request.joint_positions[6:12]
         print(pos2)
 
-        self.client.transfer(pos1, pos2)
+        self.ur5.transfer(pos1, pos2)
         self.state = "COMPLETED"
 
         return response
