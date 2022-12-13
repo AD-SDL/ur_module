@@ -28,7 +28,7 @@ class UR5ClientNode(Node):
         print("UR5 is online") 
 
         self.state = "UNKNOWN"
-
+        # self.ur5 = UR5()
         # self.ur5.initialize_robot()
 
         timer_period = 0.5  # seconds
@@ -94,8 +94,10 @@ class UR5ClientNode(Node):
             print(pos1)
             pos2 = vars.get('pos2')
             print(pos2)
+
             ur5 = UR5()
             ur5.transfer(pos1, pos2)
+            
 
         self.state = "COMPLETED"
 
@@ -108,24 +110,22 @@ class UR5ClientNode(Node):
         can preform as well as deliver essential information required by the master node.
         '''
 
-        self.state = "BUSY"
-        self.stateCallback()
+        # self.state = "BUSY"
+        # self.stateCallback()
 
+        # pos = request.joint_positions                                                       # Joint position taken from list given within request 
 
-        profile = 2                                                                         # profile changes speed of arm
-        pos = request.joint_positions                                                       # Joint position taken from list given within request 
-        # cmd = "movej" + " " + str(profile) + " " + " ".join(map(str, pos))                  # Turns the list into a string to send cmd to pf400 driver
+        # print(pos)
+        # pos1 = request.joint_positions[0:6]
+        # print(pos1)
+        # pos2 = request.joint_positions[6:12]
+        # print(pos2)
+        # ur5 = UR5()
+        # ur5.transfer(pos1, pos2)
+        # self.state = "COMPLETED"
 
-        print(pos)
-        pos1 = request.joint_positions[0:6]
-        print(pos1)
-        pos2 = request.joint_positions[6:12]
-        print(pos2)
-
-        self.ur5.transfer(pos1, pos2)
-        self.state = "COMPLETED"
-
-        return response
+        # return response
+        pass
 
 def main(args = None):
 

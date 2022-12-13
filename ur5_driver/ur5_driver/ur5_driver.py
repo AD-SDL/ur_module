@@ -7,8 +7,10 @@ from multiprocessing.connection import wait
 from time import sleep
 
 import ur5_driver.robotiq_gripper as robotiq_gripper
-# from ur5_driver.urx_packages.urx1 import Robot
-from urx1 import Robot
+# from urx_packages.urx1 import Robot
+# from urx1 import Robot
+# from ur5_urx.urx1 import Robot
+from urx import Robot
 from copy import deepcopy
 from ur5_driver.ur_dashboard import UR_DASHBOARD
 
@@ -184,7 +186,8 @@ if __name__ == "__main__":
     # pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     # pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
-    robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    robot.ur5.movej(robot.home_joint, robot.acceleration, robot.velocity)
+    # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
     # robot.transfer(pos2,pos1)
     # print(robot.ur5.getl())
     robot.disconnect_ur()
