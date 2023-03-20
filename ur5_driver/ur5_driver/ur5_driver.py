@@ -24,7 +24,7 @@ class UR5(UR_DASHBOARD):
         self.ur5 = self.connect_ur()
 
         self.acceleration = 1.0
-        self.velocity = 0.2
+        self.velocity = 0.5
 
         self.module_entry = [-0.1828145484680406, 0.1501917529215074, 0.4157045667286946, -0.014753354925067616, -3.133785224432585, -0.01020982277167234]
         self.module_entry_joint = [-1.3963525930987757, -2.1945158443846644, 2.1684568564044397, -1.5495260164937754, -1.5337546507464808, 3.2634336948394775]
@@ -63,7 +63,8 @@ class UR5(UR_DASHBOARD):
         i = 1
         while True:
             try:
-                robot_conenction = Robot(self.IP)
+                robot_conenction = Robot(self.IP, use_rt= True)
+                
                 # sleep(1)
                 print('Successful ur5 connection on attempt #{}'.format(i))
                 return robot_conenction
