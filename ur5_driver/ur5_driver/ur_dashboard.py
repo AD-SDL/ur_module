@@ -25,7 +25,7 @@ class UR_DASHBOARD():
         """Close the socket"""
         self.connection.close()
 
-    def send_command(self, command):
+    def send_command(self, command, response_delay:float = 0.5):
 
         print(">> " + command)
 
@@ -34,7 +34,7 @@ class UR_DASHBOARD():
                 self.connect()
 
             self.connection.sendall((command.encode("ascii") + b"\n")) #Check these to see if respond was received properly
-            sleep(2)
+            sleep(response_delay)
             response = self.connection.recv(4096).decode("utf-8")
                 
             if response.find('Connected: Universal Robots Dashboard Server') != -1:
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     robot = UR_DASHBOARD()
     # robot.robot_mode()
     # robot.close_popup()
-    # robot.initialize()
+    robot.initialize()
     # robot.send_command('clear operational mode')
     # robot.power_on()
     # robot.brake_release()
