@@ -3,13 +3,12 @@
 import threading
 
 from multiprocessing.connection import wait
-
 from time import sleep
-
-import robotiq_gripper as robotiq_gripper
-from urx import Robot
 from copy import deepcopy
-from ur_dashboard import UR_DASHBOARD
+
+from ur5_driver.ur_dashboard import UR_DASHBOARD
+import ur5_driver.robotiq_gripper as robotiq_gripper
+from urx import Robot
 
 class UR5(UR_DASHBOARD):
     
@@ -155,7 +154,7 @@ class UR5(UR_DASHBOARD):
         ''''''
         self.pick(pos1)
         self.place(pos2)
-        self.disconnect_ur()
+        # self.disconnect_ur()s
         print('Finished transfer')
 
 
