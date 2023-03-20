@@ -1,8 +1,8 @@
 sudo apt install python3-colcon-common-extensions python3-vcstool
-export COLCON_WS=/ur5_ws
-mkdir -p $COLCON_WS/src
-cd $COLCON_WS
+mkdir -p ~/ur5_ws/src
+cd ~/ur5_ws/src
 git clone https://github.com/AD-SDL/henry_module.git
+cd ~/ur5_ws
 rosdep update
 rosdep install --ignore-src --from-paths src -y -r
 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
