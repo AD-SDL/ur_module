@@ -2,7 +2,7 @@ import socket
 from time import sleep
 
 class UR_DASHBOARD():
-    def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
 
         self.IP = IP
         self.port = PORT
@@ -14,7 +14,7 @@ class UR_DASHBOARD():
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(10) # Socket will wait 10 seconds till it recieves the response
+            self.connection.settimeout(5) # Socket will wait 10 seconds till it recieves the response
             self.connection.connect((self.IP,self.port))
 
         except Exception as err:
@@ -51,10 +51,11 @@ class UR_DASHBOARD():
         safety_status = self.safety_status()
         remote_control_status = self.is_in_remote_control()
         popup = self.popup()
-
+        print("AAAA:", robot_mode)
         if robot_mode.upper() == "POWER OFF":
             print("Powering on the robot")
-            self.power_on()
+            self.brake_release()
+    
 
         if operation_mode.upper() == "MANUAL":
             print("Operation mode is currently set to MANUAL, switching to AUTOMATIC")
@@ -67,7 +68,7 @@ class UR_DASHBOARD():
             print(safety_status)
             print("Resarting safety")
             self.close_safety_popup()
-            self.restart_safety()
+            # self.restart_safety()
 
         if popup != None:
             self.close_popup()
@@ -126,8 +127,9 @@ class UR_DASHBOARD():
         return self.send_command('close popup')
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD("192.168.50.82", 29999)
+    robot = UR_DASHBOARD()
     robot.power_on()
-    # robot.brake_release()
+    # robot.initialize()
+    robot.brake_release()
     # robot.power_off()
     # robot.brake_release()

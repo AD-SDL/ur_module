@@ -13,7 +13,7 @@ from sensor_msgs.msg import JointState
 
 # import ur5_driver.robotiq_gripper as robotiq_gripper
 import robotiq_gripper
-from urx_packages.urx import Robot
+from urx import Robot
 from copy import deepcopy
 from ur_dashboard import UR_DASHBOARD
 
@@ -21,7 +21,7 @@ class UR5(UR_DASHBOARD):
     
     # commandLock = threading.Lock()
 
-    def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
 
         super().__init__(IP=IP, PORT=PORT)
 
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
-    robot.transfer(pos1,pos2)
-    robot.transfer(pos2,pos1)
+    # robot.transfer(pos1,pos2)
+    # robot.transfer(pos2,pos1)
     robot.ur5.close()
     print('end')
