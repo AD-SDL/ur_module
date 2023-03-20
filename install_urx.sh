@@ -1,3 +1,3 @@
-git clone https://github.com/SintefManufacturing/python-urx.git
+git clone https://github.com/jkur/python-urx.git
 cd python-urx
 pip install .
