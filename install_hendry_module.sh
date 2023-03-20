@@ -9,6 +9,6 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
 
 cd src/henry_module
-git clone https://github.com/SintefManufacturing/python-urx.git
+git clone https://github.com/jkur/python-urx.git
 cd python-urx
 pip install .
