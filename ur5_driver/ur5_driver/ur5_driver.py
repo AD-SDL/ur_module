@@ -157,11 +157,6 @@ class UR5(UR_DASHBOARD):
         # self.disconnect_ur()s
         print('Finished transfer')
 
-
-
-def test(): 
-    pass 
-
 if __name__ == "__main__":
 
     # pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
