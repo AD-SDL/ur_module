@@ -25,11 +25,11 @@ class UR5ClientNode(Node):
 
         super().__init__(NODE_NAME)
         
-        print("UR5 is online") 
 
         self.state = "UNKNOWN"
-        # self.ur5 = UR5()
-        # self.ur5.initialize_robot()
+
+        self.connect_robot()
+        # self.test()
 
         timer_period = 0.5  # seconds
         self.stateTimer = self.create_timer(timer_period, self.stateCallback)
@@ -43,7 +43,22 @@ class UR5ClientNode(Node):
 
         self.description={}
 
-
+    def test(self):
+        
+        for i in range(3):
+            sleep(20)
+            self.ur5.transfer(self.ur5.plate_exchange_1,self.ur5.plate_exchange_1)
+        pass
+        
+    def connect_robot(self):
+        
+        try:
+            self.ur5 = UR5()
+        except Exception as err:
+            self.get_logger().error(err)
+        else:
+            self.get_logger().info("UR5 connected")
+            
     def stateCallback(self):
         '''
         Publishes the peeler state to the 'state' topic. 
@@ -95,8 +110,7 @@ class UR5ClientNode(Node):
             pos2 = vars.get('pos2')
             print(pos2)
 
-            ur5 = UR5()
-            ur5.transfer(pos1, pos2)
+            self.ur5.transfer(pos1, pos2)
             
 
         self.state = "COMPLETED"
