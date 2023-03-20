@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<robot name="henry" xmlns:xacro="http://ros.org/wiki/xacro">
+
+
+  <xacro:arg name="tf_prefix" default="" />
+  <xacro:property name="tf_prefix_" value="$(arg tf_prefix)" />
+  <xacro:if value="${tf_prefix_ == ''}">
+    <xacro:property name="prefix" value="" />
+  </xacro:if>
+  <xacro:unless value="${tf_prefix_ == ''}">
+    <xacro:property name="prefix" value="${tf_prefix_}/" />
+  </xacro:unless>
+
+  <!-- MiR250 base -->
+  <xacro:include filename="$(find henrybot_description)/urdf/include/mir_100_v2.urdf.xacro" />
+  <xacro:mir_100 prefix="${prefix}mir/"/>
+
+
+  <!-- table -->
+  <xacro:include filename="$(find henrybot_description)/urdf/include/table.urdf.xacro" />
+  <xacro:table prefix="${prefix}"/>
+
+
+  <!-- UR5e -->
+  <xacro:include filename="$(find ur_description)/urdf/inc/ur_macro.xacro"/>
+
+   <!-- legal values:
+         - hardware_interface/PositionJointInterface
+         - hardware_interface/VelocityJointInterface
+         - hardware_interface/EffortJointInterface
+   -->
+
+   <xacro:ur_robot
+    prefix="${prefix}"
+     joint_limits_parameters_file="$(find ur_description)/config/ur5e/joint_limits.yaml"
+     kinematics_parameters_file="$(find ur_description)/config/ur5e/default_kinematics.yaml"
+     physical_parameters_file="$(find ur_description)/config/ur5e/physical_parameters.yaml"
+     visual_parameters_file="$(find ur_description)/config/ur5e/visual_parameters.yaml"
+     transmission_hw_interface="hardware_interface/PositionJointInterface"
+     safety_limits="false"
+     safety_pos_margin="0.15"
+     safety_k_position="20"/>
+
+  <!-- Gripper -->
+  <xacro:include filename="$(find robotiq_2f_140_gripper_visualization)/urdf/robotiq_arg2f_140_model_macro.xacro" />
+  <xacro:robotiq_arg2f_140 prefix="${prefix}"/>
+
+
+  <!-- Connections -->
+
+  <joint name="${prefix}table_to_mir" type="fixed">
+    <parent link="${prefix}mir/base_link"/>
+    <child link="${prefix}table"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+  </joint>
+
+
+ <joint name="${prefix}ur_to_table" type="fixed">
+    <parent link="${prefix}mir/surface"/>
+    <child link="${prefix}base_link"/>
+    <origin xyz="0.3 0.0 0.6" rpy="0.0 0.0 ${pi/2}"/>
+  </joint>
+
+
+  <joint name="${prefix}gripper_to_ur" type="fixed" >
+    <parent link="${prefix}tool0" />
+    <child link="${prefix}robotiq_arg2f_base_link" />
+  </joint>
+
+</robot>

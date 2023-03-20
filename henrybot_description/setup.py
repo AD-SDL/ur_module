@@ -2,10 +2,10 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'ur5_driver'
+package_name = 'henrybot_description'
 
 setup(
-    name = package_name,
+    name=package_name,
     version='0.0.0',
     packages=[package_name],
     data_files=[
@@ -13,20 +13,19 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
-
+        (os.path.join('share', package_name, 'urdf'), glob('urdf/*')),
+        (os.path.join('share', package_name, 'meshes'), glob('meshes/*')),
+        (os.path.join('share', package_name, 'config'), glob('config/*'))  
     ],
+
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Kendrick, Doga Ozgulbas',
+    maintainer='Doga Ozgulbas',
     maintainer_email='dozgulbas@anl.gov',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-            'ur5_driver = ur5_driver.ur5_driver:main',
-            'urx_packages = ur5_driver.urx_packages.urx:main',
-
-        ],
+        'console_scripts': [],
     },
 )

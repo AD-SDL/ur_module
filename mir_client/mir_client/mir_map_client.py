@@ -3,16 +3,11 @@
 import rclpy                 # import Rospy
 from rclpy.node import Node  # import Rospy Node
 from std_msgs.msg import String
-from std_srvs.srv import Empty
-
-from ur5_driver.ur5_driver import UR5 
-from time import sleep
-
 
 from wei_services.srv import WeiDescription 
 from wei_services.srv import WeiActions  
 
-class UR5ClientNode(Node):
+class MirClientNode(Node):
     '''
     The jointControlNode inputs data from the 'action' topic, providing a set of commands for the driver to execute. It then receives feedback, 
     based on the executed command and publishes the state of the peeler and a description of the peeler to the respective topics.
@@ -28,8 +23,9 @@ class UR5ClientNode(Node):
         print("UR5 is online") 
 
         self.state = "UNKNOWN"
-        # self.ur5 = UR5()
-        # self.ur5.initialize_robot()
+        self.client = UR5()
+
+        # self.client.initialize_robot()
 
         timer_period = 0.5  # seconds
         self.stateTimer = self.create_timer(timer_period, self.stateCallback)
@@ -40,6 +36,7 @@ class UR5ClientNode(Node):
 
    
         self.action_handler = self.create_service(WeiActions, NODE_NAME + "/action_handler", self.actionCallback)
+        self.description_handler = self.create_service(WeiDescription, NODE_NAME + "/description_handler", self.descriptionCallback)
 
         self.description={}
 
@@ -80,58 +77,20 @@ class UR5ClientNode(Node):
         can preform.
         '''
         
-        if request.action_handle=='transfer':
-            self.state = "BUSY"
-            self.stateCallback()
-            vars = eval(request.vars)
-            print(vars)
+        if request.action_handle=='move':
+            pass
 
-            if 'pos1' not in vars.keys() or 'pos2' not in vars.keys():
-                print('vars wrong')
-                return 
+        if request.action_handle=='dock':
+            pass
+        
+        
 
-            pos1 = vars.get('pos1')
-            print(pos1)
-            pos2 = vars.get('pos2')
-            print(pos2)
-
-            ur5 = UR5()
-            ur5.transfer(pos1, pos2)
-            
-
-        self.state = "COMPLETED"
-
-        return response
-
-
-    def moveJCallback(self, request, response):
-        '''
-        The descriptionCallback function is a service that can be called to showcase the available actions a robot
-        can preform as well as deliver essential information required by the master node.
-        '''
-
-        # self.state = "BUSY"
-        # self.stateCallback()
-
-        # pos = request.joint_positions                                                       # Joint position taken from list given within request 
-
-        # print(pos)
-        # pos1 = request.joint_positions[0:6]
-        # print(pos1)
-        # pos2 = request.joint_positions[6:12]
-        # print(pos2)
-        # ur5 = UR5()
-        # ur5.transfer(pos1, pos2)
-        # self.state = "COMPLETED"
-
-        # return response
-        pass
 
 def main(args = None):
 
-    NAME = "UR5_Client_Node"
+    NAME = "MiR_Client_Node"
     rclpy.init(args = args)  # initialize Ros2 communication
-    node = UR5ClientNode(NODE_NAME = NAME)
+    node = MirClientNode(NODE_NAME = NAME)
     rclpy.spin(node)     # keep Ros2 communication open for action node
     rclpy.shutdown()     # kill Ros2 communication
 
