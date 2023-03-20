@@ -63,7 +63,7 @@ class UR5(UR_DASHBOARD):
         i = 1
         while True:
             try:
-                robot_conenction = Robot(self.IP, use_rt= True)
+                robot_conenction = Robot(self.IP)
                 
                 # sleep(1)
                 print('Successful ur5 connection on attempt #{}'.format(i))
