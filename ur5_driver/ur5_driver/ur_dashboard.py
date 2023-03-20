@@ -136,11 +136,36 @@ class UR_DASHBOARD():
     def set_operational_mode(self, mode):
         return self.send_command('set operational mode ' + mode)
 
+    def clear_operational_mode(self):
+        return self.send_command('clear operational mode')
+
     def popup(self):
         return self.send_command('popup <popup-text>')
 
     def close_popup(self):
         return self.send_command('close popup')
+    
+    def load_program(self, program_path:str):
+        return self.send_command("load " + program_path)
+    
+    def get_program_state(self):
+        return self.send_command('programState')
+    
+    def get_loaded_program(self):
+        return self.send_command('get loaded program ')
+    
+    def get_program_run_status(self):
+        return self.send_command('running')
+    
+    def run_program(self):
+        return self.send_command('play')
+    
+    def pause_program(self):
+        return self.send_command('pause')
+    
+    def stop_program(self):
+        return self.send_command('stop')
+
 
 if __name__ == "__main__":
     robot = UR_DASHBOARD()
