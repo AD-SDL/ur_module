@@ -27,23 +27,29 @@ class UR5Client(Node):
         self.node_name = self.get_name()
 
         self.state = "UNKNOWN"
+        self.robot_status = ""
+        self.action_flag = "READY"
+        self.connect_robot()
+        action_cb_group = ReentrantCallbackGroup()
+        robot_state_refresher_cb_group = ReentrantCallbackGroup()
+        state_cb_group = ReentrantCallbackGroup()
+        description_cb_group = ReentrantCallbackGroup()
 
         timer_period = 0.5  # seconds
-        self.stateTimer = self.create_timer(timer_period, self.stateCallback)
 
         self.statePub = self.create_publisher(String, self.node_name + '/state', 10)
-
-        self.stateTimer = self.create_timer(timer_period, self.stateCallback)
+        self.stateTimer = self.create_timer(timer_period, self.stateCallback, callback_group = state_cb_group)
    
-        self.action_handler = self.create_service(WeiActions, self.node_name + "/action_handler", self.actionCallback)
+        self.action_handler = self.create_service(WeiActions, self.node_name + "/action_handler", self.actionCallback, callback_group=action_cb_group)
 
         self.description={}
+        self.descriptionSrv = self.create_service(WeiDescription, self.node_name + "/description_handler", self.descriptionCallback, callback_group=description_cb_group)
 
     def test(self):
         
         for i in range(3):
             sleep(20)
-            self.ur5.transfer(self.ur5.plate_exchange_1,self.ur5.plate_exchange_1)
+            # self.ur5.transfer(self.ur5.plate_exchange_1,self.ur5.plate_exchange_1)
         pass
         
     def connect_robot(self):
@@ -60,10 +66,18 @@ class UR5Client(Node):
         Publishes the peeler state to the 'state' topic. 
         '''
         msg = String()
+
+        try:
+            self.state = self.ur5.get_movement_state()
+
+        except Exception as err:
+            self.get_logger().error("ROBOT IS NOT RESPONDING! ERROR: " + str(err))
+            self.state = "UR5 CONNECTION ERROR"
+
         msg.data = 'State: %s' % self.state
         self.statePub.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
-        self.state = "READY"
+        # self.state = "READY"
 
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
@@ -115,6 +129,8 @@ class UR5Client(Node):
 
 
 def main(args = None):
+
+    rclpy.init(args=args)  # initialize Ros2 communication
 
     try:
         ur5_client = UR5Client()
