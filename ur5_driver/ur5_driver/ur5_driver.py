@@ -163,7 +163,7 @@ if __name__ == "__main__":
     # pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
     # robot.ur5.movej(robot.home_joint, robot.acceleration, robot.velocity)
-    robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
     # robot.ur5.set_tcp((0, 0, 0.1, 0, 0, 0))
     # robot.ur5.set_payload(2, (0, 0, 0.1))
     sleep(0.2)  #leave some time to robot to process the setup commands    # robot.transfer(pos2,pos1)
