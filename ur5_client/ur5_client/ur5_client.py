@@ -39,7 +39,22 @@ class UR5Client(Node):
 
         self.description={}
 
-
+    def test(self):
+        
+        for i in range(3):
+            sleep(20)
+            self.ur5.transfer(self.ur5.plate_exchange_1,self.ur5.plate_exchange_1)
+        pass
+        
+    def connect_robot(self):
+        
+        try:
+            self.ur5 = UR5()
+        except Exception as err:
+            self.get_logger().error(err)
+        else:
+            self.get_logger().info("UR5 connected")
+            
     def stateCallback(self):
         '''
         Publishes the peeler state to the 'state' topic. 
@@ -91,8 +106,7 @@ class UR5Client(Node):
             pos2 = vars.get('pos2')
             print(pos2)
 
-            ur5 = UR5()
-            ur5.transfer(pos1, pos2)
+            self.ur5.transfer(pos1, pos2)
             
 
         self.state = "COMPLETED"
@@ -100,51 +114,21 @@ class UR5Client(Node):
         return response
 
 
-    def moveJCallback(self, request, response):
-        '''
-        The descriptionCallback function is a service that can be called to showcase the available actions a robot
-        can preform as well as deliver essential information required by the master node.
-        '''
-
-        # self.state = "BUSY"
-        # self.stateCallback()
-
-        # pos = request.joint_positions                                                       # Joint position taken from list given within request 
-
-        # print(pos)
-        # pos1 = request.joint_positions[0:6]
-        # print(pos1)
-        # pos2 = request.joint_positions[6:12]
-        # print(pos2)
-        # ur5 = UR5()
-        # ur5.transfer(pos1, pos2)
-        # self.state = "COMPLETED"
-
-        # return response
-        pass
-
 def main(args = None):
 
-    NAME = "UR5_Client_Node"
-    rclpy.init(args = args)  # initialize Ros2 communication
-    node = UR5Client(NODE_NAME = NAME)
-    rclpy.spin(node)     # keep Ros2 communication open for action node
-    rclpy.shutdown()     # kill Ros2 communication
-    rclpy.init(args=args)       # initialize Ros2 communication
-
     try:
-        peeler_client = UR5Client()
+        ur5_client = UR5Client()
         executor = MultiThreadedExecutor()
-        executor.add_node(peeler_client)
+        executor.add_node(ur5_client)
 
         try:
-            peeler_client.get_logger().info('Beginning client, shut down with CTRL-C')
+            ur5_client.get_logger().info('Beginning client, shut down with CTRL-C')
             executor.spin()
         except KeyboardInterrupt:
-            peeler_client.get_logger().info('Keyboard interrupt, shutting down.\n')
+            ur5_client.get_logger().info('Keyboard interrupt, shutting down.\n')
         finally:
             executor.shutdown()
-            peeler_client.destroy_node()
+            ur5_client.destroy_node()
     finally:
         rclpy.shutdown()
 

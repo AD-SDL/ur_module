@@ -3,8 +3,8 @@
 import threading
 
 from multiprocessing.connection import wait
-
 from time import sleep
+<<<<<<< HEAD
 
 import robotiq_gripper as robotiq_gripper
 # from urx_packages.urx1 import Robot
@@ -13,21 +13,28 @@ import robotiq_gripper as robotiq_gripper
 from urx import Robot
 from copy import deepcopy
 from ur_dashboard import UR_DASHBOARD
+=======
+from copy import deepcopy
+
+from ur5_driver.ur_dashboard import UR_DASHBOARD
+import ur5_driver.robotiq_gripper as robotiq_gripper
+from urx import Robot
+>>>>>>> e45b54d9079386194dba265e7a6a5739fb44dfba
 
 class UR5(UR_DASHBOARD):
     
 
-    def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
 
         super().__init__(IP=IP, PORT=PORT)
 
-        # self.initialize() # Initilialize the robot
+        self.initialize() # Initilialize the robot
 
         # ur5 SETUP:
         self.ur5 = self.connect_ur()
 
         self.acceleration = 1.0
-        self.velocity = 0.2
+        self.velocity = 0.5
 
         self.module_entry = [-0.1828145484680406, 0.1501917529215074, 0.4157045667286946, -0.014753354925067616, -3.133785224432585, -0.01020982277167234]
         self.module_entry_joint = [-1.3963525930987757, -2.1945158443846644, 2.1684568564044397, -1.5495260164937754, -1.5337546507464808, 3.2634336948394775]
@@ -67,7 +74,8 @@ class UR5(UR_DASHBOARD):
         while True:
             try:
                 robot_conenction = Robot(self.IP)
-                sleep(1)
+                
+                # sleep(1)
                 print('Successful ur5 connection on attempt #{}'.format(i))
                 return robot_conenction
 
@@ -92,39 +100,31 @@ class UR5(UR_DASHBOARD):
         print('Moving to home position')
         # self.ur5.movel(self.home, self.acceleration, self.velocity)
         self.ur5.movej(self.home_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print("Moving to the module entry location")
         # self.ur5.movel(self.module_entry, self.acceleration, self.velocity)
         self.ur5.movej(self.module_entry_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Moving to above goal position')
         self.ur5.movel(above_goal, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Moving to goal position')
         self.ur5.movel(pick_goal, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Closing gripper')
         self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
-        sleep(1)
-
+        # sleep(1)
         print('Moving back to above goal position')
         self.ur5.movel(above_goal, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print("Moving to the module entry location")
         # self.ur5.movel(self.module_entry, self.acceleration, self.velocity)
         self.ur5.movej(self.module_entry_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Moving to home position')
         # self.ur5.movel(self.home, self.acceleration, self.velocity)
         self.ur5.movej(self.home_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
 
     def place(self, place_goal):
 
@@ -136,59 +136,55 @@ class UR5(UR_DASHBOARD):
         print('Moving to home position')
         # self.ur5.movel(self.home, self.acceleration, self.velocity)
         self.ur5.movej(self.home_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print("Moving to the module entry location")
         # self.ur5.movel(self.module_entry, self.acceleration, self.velocity)
         self.ur5.movej(self.module_entry_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Moving to above goal position')
         self.ur5.movel(above_goal, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Moving to goal position')
         self.ur5.movel(place_goal, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Opennig gripper')
         self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
-        sleep(1)
-
+        # sleep(1)
         print('Moving back to above goal position')
         self.ur5.movel(above_goal, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print("Moving to the module entry location")
         # self.ur5.movel(self.module_entry, self.acceleration, self.velocity)
         self.ur5.movej(self.module_entry_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
         print('Moving to home position')
         # self.ur5.movel(self.home, self.acceleration, self.velocity)
         self.ur5.movej(self.home_joint, self.acceleration, self.velocity)
-        sleep(1)
-
+        # sleep(1)
     def transfer(self, pos1, pos2):
         ''''''
         self.pick(pos1)
         self.place(pos2)
-        self.disconnect_ur()
+        # self.disconnect_ur()s
         print('Finished transfer')
-
-
-
-def test(): 
-    pass 
 
 if __name__ == "__main__":
 
     # pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     # pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+<<<<<<< HEAD
     robot = UR5("146.137.240.38")
     # robot.ur5.movej(robot.home_joint, robot.acceleration, robot.velocity)
     # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
     # robot.transfer(pos2,pos1)
+=======
+    robot = UR5()
+    # robot.ur5.movej(robot.home_joint, robot.acceleration, robot.velocity)
+    robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    # robot.ur5.set_tcp((0, 0, 0.1, 0, 0, 0))
+    # robot.ur5.set_payload(2, (0, 0, 0.1))
+    sleep(0.2)  #leave some time to robot to process the setup commands    # robot.transfer(pos2,pos1)
+>>>>>>> e45b54d9079386194dba265e7a6a5739fb44dfba
     # print(robot.ur5.getl())
     robot.disconnect_ur()
     print('end')

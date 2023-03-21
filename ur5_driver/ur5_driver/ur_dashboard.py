@@ -2,7 +2,7 @@ import socket
 from time import sleep
 
 class UR_DASHBOARD():
-    def __init__(self, IP:str = "192.168.50.82", PORT: int = 29999):
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
 
         self.IP = IP
         self.port = PORT
@@ -14,7 +14,7 @@ class UR_DASHBOARD():
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(30) # Socket will wait 30 seconds till it recieves the response
+            self.connection.settimeout(5) # Socket will wait 10 seconds till it recieves the response
             self.connection.connect((self.IP,self.port))
 
         except Exception as err:
@@ -25,7 +25,7 @@ class UR_DASHBOARD():
         """Close the socket"""
         self.connection.close()
 
-    def send_command(self, command):
+    def send_command(self, command, response_delay:float = 0.5):
 
         print(">> " + command)
 
@@ -34,7 +34,7 @@ class UR_DASHBOARD():
                 self.connect()
 
             self.connection.sendall((command.encode("ascii") + b"\n")) #Check these to see if respond was received properly
-            sleep(2)
+            sleep(response_delay)
             response = self.connection.recv(4096).decode("utf-8")
                 
             if response.find('Connected: Universal Robots Dashboard Server') != -1:
@@ -136,17 +136,46 @@ class UR_DASHBOARD():
     def set_operational_mode(self, mode):
         return self.send_command('set operational mode ' + mode)
 
+    def clear_operational_mode(self):
+        return self.send_command('clear operational mode')
+
     def popup(self):
         return self.send_command('popup <popup-text>')
 
     def close_popup(self):
         return self.send_command('close popup')
+    
+    def load_program(self, program_path:str):
+        return self.send_command("load " + program_path)
+    
+    def get_program_state(self):
+        return self.send_command('programState')
+    
+    def get_loaded_program(self):
+        return self.send_command('get loaded program ')
+    
+    def get_program_run_status(self):
+        return self.send_command('running')
+    
+    def run_program(self):
+        return self.send_command('play')
+    
+    def pause_program(self):
+        return self.send_command('pause')
+    
+    def stop_program(self):
+        return self.send_command('stop')
+
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD("192.168.50.82", 29999)
+    robot = UR_DASHBOARD()
     # robot.robot_mode()
     # robot.close_popup()
+<<<<<<< HEAD
     # robot.initialize()
+=======
+    robot.initialize()
+>>>>>>> e45b54d9079386194dba265e7a6a5739fb44dfba
     # robot.send_command('clear operational mode')
     # robot.power_on()
     # robot.brake_release()
