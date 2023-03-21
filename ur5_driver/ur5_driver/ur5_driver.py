@@ -6,8 +6,8 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 
-from ur5_driver.ur_dashboard import UR_DASHBOARD
-import ur5_driver.robotiq_gripper as robotiq_gripper
+from ur_dashboard import UR_DASHBOARD
+import robotiq_gripper as robotiq_gripper
 from urx import Robot
 
 class UR5(UR_DASHBOARD):
@@ -20,7 +20,8 @@ class UR5(UR_DASHBOARD):
         self.initialize() # Initilialize the robot
 
         # ur5 SETUP:
-        self.ur5 = self.connect_ur()
+        self.ur5 = None
+        self.connect_ur()
 
         self.acceleration = 1.0
         self.velocity = 0.5
@@ -59,18 +60,16 @@ class UR5(UR_DASHBOARD):
         Description: Create conenction to the UR robot
         """
 
-        i = 1
-        while True:
+        for i in range(10):
             try:
-                robot_conenction = Robot(self.IP)
-                
-                # sleep(1)
-                print('Successful ur5 connection on attempt #{}'.format(i))
-                return robot_conenction
+                self.ur5 = Robot(self.IP)
+                sleep(2)
 
-            except:
-                print('Failed attempt #{}'.format(i))
-                i+=1
+            except Exception as err:
+                print(err)
+            else:
+                print('Successful ur5 connection')
+                break
 
     def disconnect_ur(self):
         """

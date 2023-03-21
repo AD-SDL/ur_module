@@ -25,7 +25,7 @@ class UR_DASHBOARD():
         """Close the socket"""
         self.connection.close()
 
-    def send_command(self, command, response_delay:float = 0.5):
+    def send_command(self, command, response_delay:float = 0.1):
 
         print(">> " + command)
 
