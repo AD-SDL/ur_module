@@ -171,11 +171,7 @@ if __name__ == "__main__":
     robot = UR_DASHBOARD()
     # robot.robot_mode()
     # robot.close_popup()
-<<<<<<< HEAD
-    # robot.initialize()
-=======
     robot.initialize()
->>>>>>> e45b54d9079386194dba265e7a6a5739fb44dfba
     # robot.send_command('clear operational mode')
     # robot.power_on()
     # robot.brake_release()
