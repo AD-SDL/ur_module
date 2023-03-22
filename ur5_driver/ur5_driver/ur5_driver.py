@@ -6,8 +6,8 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 
-from ur_dashboard import UR_DASHBOARD
-import robotiq_gripper as robotiq_gripper
+from ur5_driver.ur_dashboard import UR_DASHBOARD
+import ur5_driver.robotiq_gripper as robotiq_gripper
 from urx import Robot, RobotException
 
 class UR5(UR_DASHBOARD):
