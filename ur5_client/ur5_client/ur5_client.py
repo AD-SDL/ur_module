@@ -145,6 +145,7 @@ def main(args = None):
             ur5_client.get_logger().info('Keyboard interrupt, shutting down.\n')
         finally:
             executor.shutdown()
+            ur5_client.ur5.disconnect_ur()
             ur5_client.destroy_node()
     finally:
         rclpy.shutdown()
