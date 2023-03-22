@@ -6,8 +6,8 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 
-from ur5_driver.ur_dashboard import UR_DASHBOARD
-import ur5_driver.robotiq_gripper as robotiq_gripper
+from ur_dashboard import UR_DASHBOARD
+import robotiq_gripper as robotiq_gripper
 from urx import Robot, RobotException
 
 class UR5(UR_DASHBOARD):
@@ -26,7 +26,8 @@ class UR5(UR_DASHBOARD):
         self.acceleration = 1.0
         self.velocity = 0.5
 
-        self.robot_current_joint_angles = self.get_joint_angles()
+        self.robot_current_joint_angles = None
+        # self.test1
         self.module_entry = [-0.1828145484680406, 0.1501917529215074, 0.4157045667286946, -0.014753354925067616, -3.133785224432585, -0.01020982277167234]
         self.module_entry_joint = [-1.3963525930987757, -2.1945158443846644, 2.1684568564044397, -1.5495260164937754, -1.5337546507464808, 3.2634336948394775]
         self.home = [-0.13358071546889347, -0.009673715752021885, 0.5890782758304143, -0.014566051910791617, -3.133734935087693, -0.010359747956377084]
@@ -82,7 +83,11 @@ class UR5(UR_DASHBOARD):
     def get_joint_angles(self):
         
         return self.ur5.getj()
-
+    
+    def get_cartesian_coordinates(self):
+        
+        return self.ur5.getl()
+    
     def get_movement_state(self):
         current_location = self.get_joint_angles()
         
@@ -166,8 +171,10 @@ class UR5(UR_DASHBOARD):
         # self.ur5.movel(self.home, self.acceleration, self.velocity)
         self.ur5.movej(self.home_joint, self.acceleration, self.velocity)
         # sleep(1)
+        
     def transfer(self, pos1, pos2):
         ''''''
+        self.ur5.set_tcp((0, 0, 0, 0, 0, 0))
         self.pick(pos1)
         self.place(pos2)
         # self.disconnect_ur()s
@@ -179,13 +186,15 @@ if __name__ == "__main__":
     # pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
     # robot.ur5.movej(robot.home_joint, robot.acceleration, robot.velocity)
-    # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
     # robot.ur5.set_tcp((0, 0, 0.1, 0, 0, 0))
     # robot.ur5.set_payload(2, (0, 0, 0.1))
     sleep(0.2)  #leave some time to robot to process the setup commands    # robot.transfer(pos2,pos1)
     # print(robot.ur5.getl())
-    for i in range(10):
-        print(robot.get_movement_state())
-        sleep(0.5)
+    # for i in range(10):
+    #     print(robot.get_movement_state())
+    #     sleep(0.5)
+    # print(robot.get_joint_angles())
+    # print(robot.get_cartesian_coordinates())
     robot.disconnect_ur()
     print('end')
