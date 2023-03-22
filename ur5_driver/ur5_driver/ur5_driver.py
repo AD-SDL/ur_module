@@ -6,8 +6,8 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 
-from ur_dashboard import UR_DASHBOARD
-import robotiq_gripper as robotiq_gripper
+from ur5_driver.ur_dashboard import UR_DASHBOARD
+import ur5_driver.robotiq_gripper as robotiq_gripper
 from urx import Robot, RobotException
 
 class UR5(UR_DASHBOARD):
@@ -23,9 +23,8 @@ class UR5(UR_DASHBOARD):
         self.ur5 = None
         self.connect_ur()
 
-        self.acceleration = 1.0
-        self.velocity = 0.5
-
+        self.acceleration = 2
+        self.velocity = 2
         self.robot_current_joint_angles = None
         # self.test1
         self.module_entry = [-0.1828145484680406, 0.1501917529215074, 0.4157045667286946, -0.014753354925067616, -3.133785224432585, -0.01020982277167234]

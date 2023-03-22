@@ -152,7 +152,7 @@ class UR_DASHBOARD():
         return self.send_command('programState')
     
     def get_loaded_program(self):
-        return self.send_command('get loaded program ')
+        return self.send_command('get loaded program')
     
     def get_program_run_status(self):
         return self.send_command('running')
@@ -171,8 +171,11 @@ if __name__ == "__main__":
     robot = UR_DASHBOARD()
     # robot.robot_mode()
     # robot.close_popup()
-    robot.initialize()
-    # robot.send_command('clear operational mode')
+    # robot.initialize()
+    # robot.get_program_run_status()
+    # robot.load_program("/home/rpl/test.txt")
+    # robot.get_loaded_program()
+    robot.send_command('clear operational mode')
     # robot.power_on()
     # robot.brake_release()
     # robot.power_off()
