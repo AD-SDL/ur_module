@@ -25,7 +25,7 @@ class UR5(UR_DASHBOARD):
 
         self.acceleration = 2
         self.velocity = 2
-        self.robot_current_joint_angles = None
+        self.robot_current_joint_angles = self.get_movement_state()
         # self.test1
         self.module_entry = [-0.1828145484680406, 0.1501917529215074, 0.4157045667286946, -0.014753354925067616, -3.133785224432585, -0.01020982277167234]
         self.module_entry_joint = [-1.3963525930987757, -2.1945158443846644, 2.1684568564044397, -1.5495260164937754, -1.5337546507464808, 3.2634336948394775]
@@ -185,14 +185,14 @@ if __name__ == "__main__":
     # pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR5()
     # robot.ur5.movej(robot.home_joint, robot.acceleration, robot.velocity)
-    robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
     # robot.ur5.set_tcp((0, 0, 0.1, 0, 0, 0))
     # robot.ur5.set_payload(2, (0, 0, 0.1))
     sleep(0.2)  #leave some time to robot to process the setup commands    # robot.transfer(pos2,pos1)
     # print(robot.ur5.getl())
-    # for i in range(10):
-    #     print(robot.get_movement_state())
-    #     sleep(0.5)
+    for i in range(10):
+        print(robot.get_movement_state())
+        sleep(0.5)
     # print(robot.get_joint_angles())
     # print(robot.get_cartesian_coordinates())
     robot.disconnect_ur()
