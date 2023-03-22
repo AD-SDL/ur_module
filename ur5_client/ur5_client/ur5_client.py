@@ -29,6 +29,7 @@ class UR5Client(Node):
         self.state = "UNKNOWN"
         self.robot_status = ""
         self.action_flag = "READY"
+        self.ur5 = None
         self.connect_robot()
         action_cb_group = ReentrantCallbackGroup()
         robot_state_refresher_cb_group = ReentrantCallbackGroup()
