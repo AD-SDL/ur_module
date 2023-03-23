@@ -1,6 +1,9 @@
 import socket
 from time import sleep
 
+import scp
+from scp import SCPException
+
 class UR_DASHBOARD():
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
 
@@ -145,6 +148,18 @@ class UR_DASHBOARD():
     def close_popup(self):
         return self.send_command('close popup')
     
+    def transfer_program(self, local_path:str = None, ur_path:str = "/programs"):
+        if not local_path:
+            print("Local file was not provided!")
+            return
+        try:
+            scp_client = scp.Client(host=self.IP, user = "root", password = "easybot")
+            scp_client.transfer(local_path, ur_path)
+        except SCPException as scp_err:
+            print(scp_err)
+        else:
+            print("UR program "+ local_path + " is transferred to UR onboard " + ur_path)
+
     def load_program(self, program_path:str):
         return self.send_command("load " + program_path)
     
@@ -175,7 +190,6 @@ if __name__ == "__main__":
     # robot.get_program_run_status()
     # robot.load_program("/home/rpl/test.txt")
     # robot.get_loaded_program()
-    robot.send_command('clear operational mode')
     # robot.power_on()
     # robot.brake_release()
     # robot.power_off()
