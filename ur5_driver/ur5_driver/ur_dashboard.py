@@ -1,8 +1,9 @@
 import socket
 from time import sleep
 
-import scp
-from scp import SCPException
+
+from paramiko import SSHClient, AutoAddPolicy
+from scp import SCPClient, SCPException
 
 class UR_DASHBOARD():
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
@@ -153,8 +154,13 @@ class UR_DASHBOARD():
             print("Local file was not provided!")
             return
         try:
-            scp_client = scp.Client(host=self.IP, user = "root", password = "easybot")
-            scp_client.transfer(local_path, ur_path)
+            ssh_client = SSHClient()
+            ssh_client.load_system_host_keys()
+            ssh_client.set_missing_host_key_policy(AutoAddPolicy())
+            ssh_client.connect(hostname = self.IP, username = "root", password = "easybot", disabled_algorithms={'keys': ['rsa-sha2-256', 'rsa-sha2-512']})         
+            with SCPClient(ssh_client.get_transport()) as scp:
+                # scp.put(local_path, ur_path)
+                pass
         except SCPException as scp_err:
             print(scp_err)
         else:
@@ -196,4 +202,5 @@ if __name__ == "__main__":
     # robot.brake_release()
     # robot.safety_status()
     # robot.quit()
-    robot.clear_operational_mode()
+    # robot.clear_operational_mode()
+    robot.transfer_program("/home/rpl/test.txt", "programs/doga_test.txt")
