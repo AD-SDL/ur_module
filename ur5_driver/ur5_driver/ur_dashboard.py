@@ -196,3 +196,4 @@ if __name__ == "__main__":
     # robot.brake_release()
     # robot.safety_status()
     # robot.quit()
+    robot.clear_operational_mode()
