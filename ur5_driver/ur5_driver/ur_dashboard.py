@@ -25,7 +25,7 @@ class UR_DASHBOARD():
         """Close the socket"""
         self.connection.close()
 
-    def send_command(self, command, response_delay:float = 0.5):
+    def send_command(self, command, response_delay:float = 0.1):
 
         print(">> " + command)
 
@@ -152,7 +152,7 @@ class UR_DASHBOARD():
         return self.send_command('programState')
     
     def get_loaded_program(self):
-        return self.send_command('get loaded program ')
+        return self.send_command('get loaded program')
     
     def get_program_run_status(self):
         return self.send_command('running')
@@ -171,12 +171,14 @@ if __name__ == "__main__":
     robot = UR_DASHBOARD()
     # robot.robot_mode()
     # robot.close_popup()
-    robot.initialize()
-    robot.get_loaded_program()
-    # robot.send_command('clear operational mode')
+    # robot.initialize()
+    # robot.get_program_run_status()
+    # robot.load_program("/home/rpl/test.txt")
+    # robot.get_loaded_program()
     # robot.power_on()
     # robot.brake_release()
     # robot.power_off()
     # robot.brake_release()
     # robot.safety_status()
     # robot.quit()
+    robot.clear_operational_mode()
