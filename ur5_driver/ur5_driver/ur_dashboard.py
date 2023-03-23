@@ -172,6 +172,7 @@ if __name__ == "__main__":
     # robot.robot_mode()
     # robot.close_popup()
     robot.initialize()
+    robot.get_loaded_program()
     # robot.send_command('clear operational mode')
     # robot.power_on()
     # robot.brake_release()
