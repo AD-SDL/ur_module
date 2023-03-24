@@ -157,10 +157,10 @@ class UR_DASHBOARD():
             ssh_client = SSHClient()
             ssh_client.load_system_host_keys()
             ssh_client.set_missing_host_key_policy(AutoAddPolicy())
-            ssh_client.connect(hostname = self.IP, username = "root", password = "easybot", disabled_algorithms={'keys': ['rsa-sha2-256', 'rsa-sha2-512']})         
+            ssh_client.connect(hostname = self.IP, username = "root", password = "123", disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})         
             with SCPClient(ssh_client.get_transport()) as scp:
-                # scp.put(local_path, ur_path)
-                pass
+                scp.put(local_path, ur_path)
+                
         except SCPException as scp_err:
             print(scp_err)
         else:
@@ -203,4 +203,4 @@ if __name__ == "__main__":
     # robot.safety_status()
     # robot.quit()
     # robot.clear_operational_mode()
-    robot.transfer_program("/home/rpl/test.txt", "programs/doga_test.txt")
+    # robot.transfer_program("/home/rpl/test.txt", "/programs/doga_test.txt")
