@@ -1,24 +1,36 @@
 
 from launch import LaunchDescription
-from launch.substitutions import PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
+from ament_index_python import get_package_share_directory
 
+import os
 
 def generate_launch_description():
 
-    position_goals = PathJoinSubstitution(
-        [FindPackageShare("ur5_client"), "config", "ur5_move_config.yaml"]
-    )
     launch_d = LaunchDescription()
+
+    ip = LaunchConfiguration("ip")
+
+    
+    declare_use_ur_ip_cmd = DeclareLaunchArgument(
+        name = "ip",
+        default_value= "",
+        description= "Flag to accept UR IP"
+        )
     
     ur5_client = Node(
             package = 'ur5_client',
             namespace = 'ur5_client',
             executable = 'ur5_client',
             output = "screen",
-            name='UR5_Client_Node'
+            name='UR5_Client_Node',
+            parameters = [{"peeler_port":ip}],
+            emulate_tty=True
     )
-
+    launch_d.add_action(declare_use_ur_ip_cmd)
     launch_d.add_action(ur5_client)
+
     return launch_d
