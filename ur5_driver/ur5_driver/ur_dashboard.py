@@ -149,7 +149,7 @@ class UR_DASHBOARD():
     def close_popup(self):
         return self.send_command('close popup')
     
-    def transfer_program(self, local_path:str = None, ur_path:str = "/programs"):
+    def transfer_program(self, local_path:str = None, ur_path:str = "/programs/"):
         if not local_path:
             print("Local file was not provided!")
             return
