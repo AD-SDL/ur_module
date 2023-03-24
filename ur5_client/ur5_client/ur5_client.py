@@ -30,7 +30,7 @@ class UR5Client(Node):
         self.ur5 = None
         self.IP = None
 
-        self.declare_parameter('ip', '146.137.240.39')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
+        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
         self.IP = self.get_parameter('ip').get_parameter_value().string_value     # Renaming parameter to general form so it can be used for other nodes too
         self.get_logger().info("Received IP: " + str(self.IP))
 
@@ -71,6 +71,8 @@ class UR5Client(Node):
         Publishes the peeler state to the 'state' topic. 
         '''
         msg = String()
+
+        #BUG: FIX EXEPCTION HANDLING TO HANDLE SOCKET ERRORS AND OTHER ERRORS SEPERATLY
 
         try:
             self.movement_state = self.ur5.get_movement_state()
