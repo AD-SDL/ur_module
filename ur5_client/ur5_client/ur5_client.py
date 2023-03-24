@@ -29,6 +29,10 @@ class UR5Client(Node):
         self.ur5 = None
         self.IP = None
 
+        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
+        self.IP = self.get_parameter('ip').get_parameter_value().string_value     # Renaming parameter to general form so it can be used for other nodes too
+        self.get_logger().info("Received Port: " + str(self.IP))
+
         self.connect_robot()
 
         self.state = "UNKNOWN"
@@ -53,7 +57,7 @@ class UR5Client(Node):
     def connect_robot(self):
         
         try:
-            self.ur5 = UR5()
+            self.ur5 = UR5(self.IP)
         except Exception as err:
             self.get_logger().error(err)
         else:
@@ -74,7 +78,7 @@ class UR5Client(Node):
             self.state = "UR5 CONNECTION ERROR"
 
         if self.state != "UR5 CONNECTION ERROR":
-            
+
             if self.ur5.remote_control_status == False:
                 self.get_logger().error("Please put the UR into remote mode using the Teach Pendant")
 
@@ -115,8 +119,8 @@ class UR5Client(Node):
             msg.data = 'State: %s' % self.state
             self.statePub.publish(msg)
             self.get_logger().error(msg.data)
-            self.get_logger().warn("Trying to connect again! IP: " + self.)
-            self.connect_robot()
+            self.get_logger().warn("Trying to connect again! IP: " + self.IP)
+            self.connect_robot(self.IP)
 
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
