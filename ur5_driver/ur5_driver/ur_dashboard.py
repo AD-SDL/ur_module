@@ -37,7 +37,7 @@ class UR_DASHBOARD():
 
     def send_command(self, command, response_delay:float = 0.1):
 
-        print(">> " + command)
+        # print(">> " + command)
 
         try:
             if not self.connection:
@@ -49,10 +49,10 @@ class UR_DASHBOARD():
             response = self.connection.recv(4096).decode("utf-8")
                 
             if response.find('Connected: Universal Robots Dashboard Server') != -1:
-                print("Connected: Universal Robots Dashboard Server")
+                # print("Connected: Universal Robots Dashboard Server")
                 response = response[45:]
 
-            print("<< " + response[:-1])
+            # print("<< " + response[:-1])
 
             return response.strip()
 
