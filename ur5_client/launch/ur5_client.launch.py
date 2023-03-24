@@ -17,7 +17,7 @@ def generate_launch_description():
     
     declare_use_ur_ip_cmd = DeclareLaunchArgument(
         name = "ip",
-        default_value= "",
+        default_value= "146.137.240.38",
         description= "Flag to accept UR IP"
         )
     
