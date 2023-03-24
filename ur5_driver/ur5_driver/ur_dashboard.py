@@ -12,6 +12,12 @@ class UR_DASHBOARD():
         self.port = PORT
         self.connection = None
 
+        self.robot_mode = None
+        self.safety_status = None
+        self.operational_mode = None
+        self.remote_control_status = None
+        self.initialize()
+
         self.connect()
 
     def connect(self):
@@ -52,39 +58,43 @@ class UR_DASHBOARD():
         except Exception as err:
             print(err)
 
+    def get_overal_robot_status(self):
+
+        self.robot_mode = self.get_robot_mode()
+        self.operational_mode = self.get_operational_mode()
+        self.safety_status = self.get_safety_status()
+        self.remote_control_status = self.is_in_remote_control()
+
     def initialize(self):
 
-        robot_mode = self.robot_mode()
-        operation_mode = self.get_operational_mode()
-        safety_status = self.safety_status()
-        remote_control_status = self.is_in_remote_control()
+        self.get_overal_robot_status()
 
-        if safety_status.upper() == 'PROTECTIVE_STOP':
+        if self.safety_status.upper() == 'PROTECTIVE_STOP':
             print("Unlocking protective stop")
             self.unlock_protective_stop()
 
-        elif safety_status.upper() != "NORMAL":   #safety_status.upper() != "ROBOT_EMERGENCY_STOP" or safety_status.upper() != "SYSTEM_EMERGENCY_STOP":
+        elif self.safety_status.upper() != "NORMAL":   #self.safety_status.upper() != "ROBOT_EMERGENCY_STOP" or self.safety_status.upper() != "SYSTEM_EMERGENCY_STOP":
             print("Restarting safety")
             self.close_safety_popup()
             output = self.restart_safety()        
 
-        if operation_mode.upper() == "MANUAL":
+        if self.operational_mode.upper() == "MANUAL":
             print("Operation mode is currently set to MANUAL, switching to AUTOMATIC")
             self.set_operational_mode("automatic")
 
-        if remote_control_status == False:
+        if self.remote_control_status == False:
             print("Robot is not in remote control")
         
-        if robot_mode.upper() == 'RUNNING' and safety_status.upper() == "NORMAL":
+        if self.robot_mode.upper() == 'RUNNING' and self.safety_status.upper() == "NORMAL":
             print('Robot is initialized')
             return
-        elif robot_mode.upper() == "POWER_OFF" or robot_mode.upper() == "BOOTING" or robot_mode.upper() == "POWER_ON" or robot_mode.upper() == "IDLE":
+        elif self.robot_mode.upper() == "POWER_OFF" or self.robot_mode.upper() == "BOOTING" or self.robot_mode.upper() == "POWER_ON" or self.robot_mode.upper() == "IDLE":
             print("Powering on the robot and releasing brakes")
             output = self.brake_release()
 
         return self.initialize()
 
-    def robot_mode(self):
+    def get_robot_mode(self):
         """Return the robot mode"""
         output = self.send_command("robotmode")
         output = output.split(' ')
@@ -129,7 +139,7 @@ class UR_DASHBOARD():
         output2 = self.brake_release()
         return output
         
-    def safety_status(self):
+    def get_safety_status(self):
         output = self.send_command('safetystatus')
         output = output.split(' ')
         return output[1]
@@ -192,7 +202,7 @@ if __name__ == "__main__":
     robot = UR_DASHBOARD()
     # robot.robot_mode()
     # robot.close_popup()
-    # robot.initialize()
+    robot.initialize()
     # robot.get_program_run_status()
     # robot.load_program("/home/rpl/test.txt")
     # robot.get_loaded_program()
@@ -200,7 +210,7 @@ if __name__ == "__main__":
     # robot.brake_release()
     # robot.power_off()
     # robot.brake_release()
-    # robot.safety_status()
+    # robot.self.get_safety_status()
     # robot.quit()
     # robot.clear_operational_mode()
     # robot.transfer_program("/home/rpl/test.txt", "/programs/doga_test.txt")
