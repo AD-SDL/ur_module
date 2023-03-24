@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Urx python repo to be ignorred in the local path
+python-urx/
