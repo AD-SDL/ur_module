@@ -24,7 +24,7 @@ class UR_DASHBOARD():
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(5) # Socket will wait 10 seconds till it recieves the response
+            self.connection.settimeout(5) # Socket will wait 5 seconds till it recieves the response
             self.connection.connect((self.IP,self.port))
 
         except Exception as err:
@@ -43,8 +43,9 @@ class UR_DASHBOARD():
             if not self.connection:
                 self.connect()
 
-            self.connection.sendall((command.encode("ascii") + b"\n")) #Check these to see if respond was received properly
-            sleep(response_delay)
+            self.connection.sendall((command.encode("ascii") + b"\n")) 
+            
+            sleep(response_delay) # Wait for response delay
             response = self.connection.recv(4096).decode("utf-8")
                 
             if response.find('Connected: Universal Robots Dashboard Server') != -1:
