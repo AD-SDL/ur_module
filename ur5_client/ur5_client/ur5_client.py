@@ -28,10 +28,11 @@ class UR5Client(Node):
 
         self.ur5 = None
         self.IP = None
+        self.try_connection = "READY" # A verable that make sure the multithreads doesn't try to connect robot simultaneously
 
         self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
         self.IP = self.get_parameter('ip').get_parameter_value().string_value     # Renaming parameter to general form so it can be used for other nodes too
-        self.get_logger().info("Received Port: " + str(self.IP))
+        self.get_logger().info("Received IP: " + str(self.IP))
 
         self.connect_robot()
 
@@ -57,12 +58,17 @@ class UR5Client(Node):
     def connect_robot(self):
         
         try:
-            self.ur5 = UR5(self.IP)
+            if self.try_connection != "BUSY":
+                self.try_connection = "BUSY"
+                self.ur5 = UR5(self.IP)
         except Exception as err:
             self.get_logger().error(err)
         else:
             self.get_logger().info("UR5 connected")
-            
+        finally:
+            sleep(1)
+            self.try_connection = "READY"
+
     def stateCallback(self):
         '''
         Publishes the peeler state to the 'state' topic. 
@@ -89,6 +95,8 @@ class UR5Client(Node):
                 self.get_logger().error(msg.data)
                 self.get_logger().error("Robot_Mode: " + self.ur5.robot_mode + " Safety_Status: " + self.ur5.safety_status)
                 self.action_flag = "READY"
+                self.get_logger().warn("Trying to clear the error messages")
+                self.ur5.initialize()
 
             elif self.state == "COMPLETED" and self.action_flag == "BUSY":
                 self.state = "COMPLETED"
@@ -120,7 +128,7 @@ class UR5Client(Node):
             self.statePub.publish(msg)
             self.get_logger().error(msg.data)
             self.get_logger().warn("Trying to connect again! IP: " + self.IP)
-            self.connect_robot(self.IP)
+            self.connect_robot()
 
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
