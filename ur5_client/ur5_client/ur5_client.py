@@ -26,11 +26,15 @@ class UR5Client(Node):
         super().__init__(TEMP_NODE_NAME)
         self.node_name = self.get_name()
 
-        self.state = "UNKNOWN"
-        self.robot_status = ""
-        self.action_flag = "READY"
         self.ur5 = None
+        self.IP = None
+
         self.connect_robot()
+
+        self.state = "UNKNOWN"
+        self.robot_status = None
+        self.action_flag = "READY"
+        
         action_cb_group = ReentrantCallbackGroup()
         robot_state_refresher_cb_group = ReentrantCallbackGroup()
         state_cb_group = ReentrantCallbackGroup()
@@ -64,14 +68,50 @@ class UR5Client(Node):
         try:
             self.movement_state = self.ur5.get_movement_state()
             self.ur5.get_overall_robot_status()
+
         except Exception as err:
             self.get_logger().error("ROBOT IS NOT RESPONDING! ERROR: " + str(err))
             self.state = "UR5 CONNECTION ERROR"
 
-        msg.data = 'State: %s' % self.state
-        self.statePub.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
-        # self.state = "READY"
+        if self.state != "UR5 CONNECTION ERROR":
+
+            if self.robot_status == "FAILED" or (self.state == "ERROR" and self.action_flag == "BUSY"):
+                self.state = "ERROR"
+                msg.data = 'State: %s' % self.state
+                self.statePub.publish(msg)
+                self.get_logger().error(msg.data)
+                self.action_flag = "READY"
+
+            elif self.state == "COMPLETED" and self.action_flag == "BUSY":
+                self.state = "COMPLETED"
+                msg.data = 'State: %s' % self.state
+                self.statePub.publish(msg)
+                self.get_logger().info(msg.data)
+                self.action_flag = "READY"
+
+            elif self.robot_status == "RUNNING" or self.robot_status == "FINISHING" or self.robot_status == "PAUSED":
+                self.state = "BUSY"
+                msg.data = 'State: %s' % self.state
+                self.statePub.publish(msg)
+                self.get_logger().info(msg.data)
+
+            elif self.robot_status == "IDLE":
+                self.state = "READY"
+                msg.data = 'State: %s' % self.state
+                self.statePub.publish(msg)
+                self.get_logger().info(msg.data)
+            else:
+                self.state = "UNKOWN"
+                msg.data = 'State: %s' % self.state
+                self.statePub.publish(msg)
+                self.get_logger().warn(msg.data)
+        else: 
+            msg = String()
+            msg.data = 'State: %s' % self.state
+            self.statePub.publish(msg)
+            self.get_logger().error(msg.data)
+            self.get_logger().warn("Trying to connect again! IP: " + self.)
+            self.connect_robot()
 
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
@@ -103,16 +143,16 @@ class UR5Client(Node):
             self.state = "BUSY"
             self.stateCallback()
             vars = eval(request.vars)
-            print(vars)
+            self.get_logger().info(vars)
 
             if 'pos1' not in vars.keys() or 'pos2' not in vars.keys():
-                print('vars wrong')
+                self.get_logger().error('vars wrong')
                 return 
 
             pos1 = vars.get('pos1')
-            print(pos1)
+            self.get_logger().info(pos1)
             pos2 = vars.get('pos2')
-            print(pos2)
+            self.get_logger().info(pos2)
 
             self.ur5.transfer(pos1, pos2)
             
