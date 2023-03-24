@@ -74,6 +74,7 @@ class UR5Client(Node):
             self.state = "UR5 CONNECTION ERROR"
 
         if self.state != "UR5 CONNECTION ERROR":
+            
             if self.ur5.remote_control_status == False:
                 self.get_logger().error("Please put the UR into remote mode using the Teach Pendant")
 
