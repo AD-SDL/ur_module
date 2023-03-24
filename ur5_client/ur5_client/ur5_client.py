@@ -74,12 +74,15 @@ class UR5Client(Node):
             self.state = "UR5 CONNECTION ERROR"
 
         if self.state != "UR5 CONNECTION ERROR":
+            if self.ur5.remote_control_status == False:
+                self.get_logger().error("Please put the UR into remote mode using the Teach Pendant")
 
-            if self.robot_status == "FAILED" or (self.state == "ERROR" and self.action_flag == "BUSY"):
+            elif self.ur5.robot_mode != "RUNNING" or self.ur5.safety_status != "NORMAL" or self.state == "ERROR":
                 self.state = "ERROR"
                 msg.data = 'State: %s' % self.state
                 self.statePub.publish(msg)
                 self.get_logger().error(msg.data)
+                self.get_logger().error("Robot_Mode: " + self.ur5.robot_mode + " Safety_Status: " + self.ur5.safety_status)
                 self.action_flag = "READY"
 
             elif self.state == "COMPLETED" and self.action_flag == "BUSY":
@@ -89,17 +92,18 @@ class UR5Client(Node):
                 self.get_logger().info(msg.data)
                 self.action_flag = "READY"
 
-            elif self.robot_status == "RUNNING" or self.robot_status == "FINISHING" or self.robot_status == "PAUSED":
+            elif self.movement_state == "BUSY" or self.action_flag == "BUSY":
                 self.state = "BUSY"
                 msg.data = 'State: %s' % self.state
                 self.statePub.publish(msg)
                 self.get_logger().info(msg.data)
 
-            elif self.robot_status == "IDLE":
+            elif self.ur5.robot_mode == "RUNNING" and self.ur5.safety_status == "NORMAL" and self.movement_state == "READY" and self.action_flag == "READY":
                 self.state = "READY"
                 msg.data = 'State: %s' % self.state
                 self.statePub.publish(msg)
                 self.get_logger().info(msg.data)
+
             else:
                 self.state = "UNKOWN"
                 msg.data = 'State: %s' % self.state
