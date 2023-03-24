@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import threading
+import socket 
 
 from multiprocessing.connection import wait
 from time import sleep
@@ -14,7 +15,7 @@ class UR5(UR_DASHBOARD):
     
 
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
-
+        
         super().__init__(IP=IP, PORT=PORT)
 
         # ur5 SETUP:
@@ -66,7 +67,7 @@ class UR5(UR_DASHBOARD):
                 self.ur5 = Robot(self.IP)
                 sleep(2)
 
-            except Exception:
+            except socket.error:
                 print("Trying robot connection ...")
             else:
                 print('Successful ur5 connection')

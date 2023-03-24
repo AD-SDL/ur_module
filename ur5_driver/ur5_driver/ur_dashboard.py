@@ -11,14 +11,16 @@ class UR_DASHBOARD():
         self.IP = IP
         self.port = PORT
         self.connection = None
-
+        self.connection_error = False
         self.robot_mode = None
         self.safety_status = None
         self.operational_mode = None
         self.remote_control_status = None
-        self.initialize()
 
         self.connect()
+
+        self.initialize()
+
 
     def connect(self):
         """Create a socket"""
@@ -27,9 +29,11 @@ class UR_DASHBOARD():
             self.connection.settimeout(5) # Socket will wait 5 seconds till it recieves the response
             self.connection.connect((self.IP,self.port))
 
-        except Exception as err:
+        except socket.error as err:
             print("UR dashboard could not establish connection")
             print(err)
+            self.connection_error = True
+            
 
     def disconnect(self):
         """Close the socket"""
@@ -67,7 +71,9 @@ class UR_DASHBOARD():
         self.remote_control_status = self.is_in_remote_control()
 
     def initialize(self):
-
+        if self.connection_error:
+            return
+            
         self.get_overall_robot_status()
 
         if self.safety_status == 'PROTECTIVE_STOP':
@@ -77,7 +83,7 @@ class UR_DASHBOARD():
         elif self.safety_status != "NORMAL":   #self.safety_status != "ROBOT_EMERGENCY_STOP" or self.safety_status != "SYSTEM_EMERGENCY_STOP":
             print("Restarting safety")
             self.close_safety_popup()
-            output = self.restart_safety()        
+            self.restart_safety()        
 
         if self.operational_mode == "MANUAL":
             print("Operation mode is currently set to MANUAL, switching to AUTOMATIC")
@@ -91,7 +97,7 @@ class UR_DASHBOARD():
             return
         elif self.robot_mode == "POWER_OFF" or self.robot_mode == "BOOTING" or self.robot_mode == "POWER_ON" or self.robot_mode == "IDLE":
             print("Powering on the robot and releasing brakes")
-            output = self.brake_release()
+            self.brake_release()
 
         return self.initialize()
 

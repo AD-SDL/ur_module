@@ -8,6 +8,7 @@ from std_msgs.msg import String
 
 from ur5_driver.ur5_driver import UR5 
 from time import sleep
+import socket
 
 from wei_services.srv import WeiDescription 
 from wei_services.srv import WeiActions  
@@ -28,9 +29,8 @@ class UR5Client(Node):
 
         self.ur5 = None
         self.IP = None
-        self.try_connection = "READY" # A verable that make sure the multithreads doesn't try to connect robot simultaneously
 
-        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
+        self.declare_parameter('ip', '146.137.240.39')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
         self.IP = self.get_parameter('ip').get_parameter_value().string_value     # Renaming parameter to general form so it can be used for other nodes too
         self.get_logger().info("Received IP: " + str(self.IP))
 
@@ -58,16 +58,13 @@ class UR5Client(Node):
     def connect_robot(self):
         
         try:
-            if self.try_connection != "BUSY":
-                self.try_connection = "BUSY"
-                self.ur5 = UR5(self.IP)
+      
+            self.ur5 = UR5(self.IP)
         except Exception as err:
             self.get_logger().error(err)
         else:
             self.get_logger().info("UR5 connected")
-        finally:
-            sleep(1)
-            self.try_connection = "READY"
+
 
     def stateCallback(self):
         '''
