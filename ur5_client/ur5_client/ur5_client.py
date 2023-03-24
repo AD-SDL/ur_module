@@ -46,13 +46,6 @@ class UR5Client(Node):
         self.description={}
         self.descriptionSrv = self.create_service(WeiDescription, self.node_name + "/description_handler", self.descriptionCallback, callback_group=description_cb_group)
 
-    def test(self):
-        
-        for i in range(3):
-            sleep(20)
-            # self.ur5.transfer(self.ur5.plate_exchange_1,self.ur5.plate_exchange_1)
-        pass
-        
     def connect_robot(self):
         
         try:
@@ -69,8 +62,8 @@ class UR5Client(Node):
         msg = String()
 
         try:
-            self.state = self.ur5.get_movement_state()
-
+            self.movement_state = self.ur5.get_movement_state()
+            self.ur5.get_overall_robot_status()
         except Exception as err:
             self.get_logger().error("ROBOT IS NOT RESPONDING! ERROR: " + str(err))
             self.state = "UR5 CONNECTION ERROR"
