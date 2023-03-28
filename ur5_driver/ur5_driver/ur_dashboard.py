@@ -1,8 +1,7 @@
 import socket
 from time import sleep
 
-
-from paramiko import SSHClient, AutoAddPolicy
+from paramiko import SSHClient, AutoAddPolicy, SSHException
 from scp import SCPClient, SCPException
 
 class UR_DASHBOARD():
@@ -11,19 +10,29 @@ class UR_DASHBOARD():
         self.IP = IP
         self.port = PORT
         self.connection = None
+        self.connection_error = False
+        self.robot_mode = None
+        self.safety_status = None
+        self.operational_mode = None
+        self.remote_control_status = None
 
         self.connect()
+
+        self.initialize()
+
 
     def connect(self):
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(5) # Socket will wait 10 seconds till it recieves the response
+            self.connection.settimeout(5) # Socket will wait 5 seconds till it recieves the response
             self.connection.connect((self.IP,self.port))
 
-        except Exception as err:
+        except socket.error as err:
             print("UR dashboard could not establish connection")
             print(err)
+            self.connection_error = True
+            
 
     def disconnect(self):
         """Close the socket"""
@@ -31,60 +40,67 @@ class UR_DASHBOARD():
 
     def send_command(self, command, response_delay:float = 0.1):
 
-        print(">> " + command)
+        # print(">> " + command)
 
         try:
             if not self.connection:
                 self.connect()
 
-            self.connection.sendall((command.encode("ascii") + b"\n")) #Check these to see if respond was received properly
-            sleep(response_delay)
+            self.connection.sendall((command.encode("ascii") + b"\n")) 
+            
+            sleep(response_delay) # Wait for response delay
             response = self.connection.recv(4096).decode("utf-8")
                 
             if response.find('Connected: Universal Robots Dashboard Server') != -1:
-                print("Connected: Universal Robots Dashboard Server")
+                # print("Connected: Universal Robots Dashboard Server")
                 response = response[45:]
 
-            print("<< " + response[:-1])
+            # print("<< " + response[:-1])
 
             return response.strip()
 
         except Exception as err:
             print(err)
 
+    def get_overall_robot_status(self):
+
+        self.robot_mode = self.get_robot_mode().upper()
+        self.operational_mode = self.get_operational_mode().upper()
+        self.safety_status = self.get_safety_status().upper()
+        self.remote_control_status = self.is_in_remote_control()
+
     def initialize(self):
+        if self.connection_error:
+            return
+            
+        self.get_overall_robot_status()
 
-        robot_mode = self.robot_mode()
-        operation_mode = self.get_operational_mode()
-        safety_status = self.safety_status()
-        remote_control_status = self.is_in_remote_control()
-
-        if safety_status.upper() == 'PROTECTIVE_STOP':
+        if self.safety_status == 'PROTECTIVE_STOP':
             print("Unlocking protective stop")
             self.unlock_protective_stop()
 
-        elif safety_status.upper() != "NORMAL":   #safety_status.upper() != "ROBOT_EMERGENCY_STOP" or safety_status.upper() != "SYSTEM_EMERGENCY_STOP":
+        elif self.safety_status != "NORMAL":   #self.safety_status != "ROBOT_EMERGENCY_STOP" or self.safety_status != "SYSTEM_EMERGENCY_STOP":
             print("Restarting safety")
             self.close_safety_popup()
-            output = self.restart_safety()        
+            self.restart_safety()        
 
-        if operation_mode.upper() == "MANUAL":
+        if self.operational_mode == "MANUAL":
             print("Operation mode is currently set to MANUAL, switching to AUTOMATIC")
             self.set_operational_mode("automatic")
 
-        if remote_control_status == False:
+        if self.remote_control_status == False:
             print("Robot is not in remote control")
         
-        if robot_mode.upper() == 'RUNNING' and safety_status.upper() == "NORMAL":
+        if self.robot_mode == 'RUNNING' and self.safety_status == "NORMAL":
             print('Robot is initialized')
             return
-        elif robot_mode.upper() == "POWER_OFF" or robot_mode.upper() == "BOOTING" or robot_mode.upper() == "POWER_ON" or robot_mode.upper() == "IDLE":
+        elif self.robot_mode == "POWER_OFF" or self.robot_mode == "BOOTING" or self.robot_mode == "POWER_ON" or self.robot_mode == "IDLE":
             print("Powering on the robot and releasing brakes")
-            output = self.brake_release()
+            self.brake_release()
 
         return self.initialize()
 
-    def robot_mode(self):
+    def get_robot_mode(self):
         """Return the robot mode"""
         output = self.send_command("robotmode")
         output = output.split(' ')
@@ -129,7 +145,7 @@ class UR_DASHBOARD():
         output2 = self.brake_release()
         return output
         
-    def safety_status(self):
+    def get_safety_status(self):
         output = self.send_command('safetystatus')
         output = output.split(' ')
         return output[1]
@@ -149,7 +165,7 @@ class UR_DASHBOARD():
     def close_popup(self):
         return self.send_command('close popup')
     
-    def transfer_program(self, local_path:str = None, ur_path:str = "/programs"):
+    def transfer_program(self, local_path:str = None, ur_path:str = "/programs/"):
         if not local_path:
             print("Local file was not provided!")
             return
@@ -157,14 +173,22 @@ class UR_DASHBOARD():
             ssh_client = SSHClient()
             ssh_client.load_system_host_keys()
             ssh_client.set_missing_host_key_policy(AutoAddPolicy())
-            ssh_client.connect(hostname = self.IP, username = "root", password = "easybot", disabled_algorithms={'keys': ['rsa-sha2-256', 'rsa-sha2-512']})         
+            ssh_client.connect(hostname = self.IP, username = "root", password = "123", disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})         
             with SCPClient(ssh_client.get_transport()) as scp:
-                # scp.put(local_path, ur_path)
-                pass
+                scp.put(local_path, ur_path)
+
+        except SSHException as scp_err:
+            print("SSH error: " + scp_err)      
+
         except SCPException as scp_err:
-            print(scp_err)
+            print("SCP error: " + scp_err)
+
         else:
             print("UR program "+ local_path + " is transferred to UR onboard " + ur_path)
+        
+        finally:
+            scp.close()
+            ssh_client.close()
 
     def load_program(self, program_path:str):
         return self.send_command("load " + program_path)
@@ -200,7 +224,7 @@ if __name__ == "__main__":
     # robot.brake_release()
     # robot.power_off()
     # robot.brake_release()
-    # robot.safety_status()
+    # robot.self.get_safety_status()
     # robot.quit()
     # robot.clear_operational_mode()
-    robot.transfer_program("/home/rpl/test.txt", "programs/doga_test.txt")
+    # robot.transfer_program("/home/rpl/test.txt", "/programs/doga_test.txt")
