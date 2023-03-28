@@ -1,8 +1,7 @@
 import socket
 from time import sleep
 
-
-from paramiko import SSHClient, AutoAddPolicy
+from paramiko import SSHClient, AutoAddPolicy, SSHException
 from scp import SCPClient, SCPException
 
 class UR_DASHBOARD():
@@ -177,11 +176,19 @@ class UR_DASHBOARD():
             ssh_client.connect(hostname = self.IP, username = "root", password = "123", disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})         
             with SCPClient(ssh_client.get_transport()) as scp:
                 scp.put(local_path, ur_path)
-                
+
+        except SSHException as scp_err:
+            print("SSH error: " + scp_err)      
+
         except SCPException as scp_err:
-            print(scp_err)
+            print("SCP error: " + scp_err)
+
         else:
             print("UR program "+ local_path + " is transferred to UR onboard " + ur_path)
+        
+        finally:
+            scp.close()
+            ssh_client.close()
 
     def load_program(self, program_path:str):
         return self.send_command("load " + program_path)
