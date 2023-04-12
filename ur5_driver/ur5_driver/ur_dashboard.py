@@ -52,10 +52,10 @@ class UR_DASHBOARD():
             response = self.connection.recv(4096).decode("utf-8")
                 
             if response.find('Connected: Universal Robots Dashboard Server') != -1:
-                # print("Connected: Universal Robots Dashboard Server")
+                print("Connected: Universal Robots Dashboard Server")
                 response = response[45:]
 
-            # print("<< " + response[:-1])
+            print("<< " + response[:-1])
 
             return response.strip()
 
@@ -214,6 +214,7 @@ class UR_DASHBOARD():
 
 if __name__ == "__main__":
     robot = UR_DASHBOARD()
+    robot.get_overall_robot_status()
     # robot.robot_mode()
     # robot.close_popup()
     # robot.initialize()
@@ -227,4 +228,6 @@ if __name__ == "__main__":
     # robot.self.get_safety_status()
     # robot.quit()
     # robot.clear_operational_mode()
-    # robot.transfer_program("/home/rpl/test.txt", "/programs/doga_test.txt")
+    robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
+    robot.load_program("/programs/katerina.urp")
+    robot.run_program()
