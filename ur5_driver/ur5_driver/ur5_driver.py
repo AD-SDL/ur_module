@@ -7,8 +7,8 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 
-from ur5_driver.ur_dashboard import UR_DASHBOARD
-import ur5_driver.robotiq_gripper as robotiq_gripper
+from ur_dashboard import UR_DASHBOARD
+import robotiq_gripper as robotiq_gripper
 from urx import Robot, RobotException
 
 class UR5(UR_DASHBOARD):
@@ -188,9 +188,10 @@ if __name__ == "__main__":
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
     robot = UR5()
-    robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
-    for i in range(10):
+    # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    for i in range(1000):
         print(robot.get_movement_state())
+        robot.get_overall_robot_status()
         sleep(0.5)
 
     robot.disconnect_ur()
