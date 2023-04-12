@@ -61,7 +61,7 @@ class UR5Client(Node):
       
             self.ur5 = UR5(self.IP)
         except Exception as err:
-            self.get_logger().error(err)
+            self.get_logger().error(str(err))
         else:
             self.get_logger().info("UR5 connected")
 
@@ -78,10 +78,12 @@ class UR5Client(Node):
             self.movement_state = self.ur5.get_movement_state()
             self.ur5.get_overall_robot_status()
 
-        except Exception as err:
+        except socket.error as err:
             self.get_logger().error("ROBOT IS NOT RESPONDING! ERROR: " + str(err))
             self.state = "UR5 CONNECTION ERROR"
-
+        except Exception as ganeral_err:
+            self.get_logger().error(str(ganeral_err))
+            
         if self.state != "UR5 CONNECTION ERROR":
 
             if self.ur5.remote_control_status == False:
@@ -127,7 +129,7 @@ class UR5Client(Node):
             self.statePub.publish(msg)
             self.get_logger().error(msg.data)
             self.get_logger().warn("Trying to connect again! IP: " + self.IP)
-            self.connect_robot()
+            # self.connect_robot()
 
     def descriptionCallback(self, request, response):
         """The descriptionCallback function is a service that can be called to showcase the available actions a robot
@@ -156,21 +158,20 @@ class UR5Client(Node):
         '''
         
         if request.action_handle=='transfer':
-            self.state = "BUSY"
+            self.action_flag = "BUSY"
             self.stateCallback()
             vars = eval(request.vars)
-            self.get_logger().info(vars)
+            self.get_logger().info(str(vars))
 
             if 'pos1' not in vars.keys() or 'pos2' not in vars.keys():
                 self.get_logger().error('vars wrong')
                 return 
 
             pos1 = vars.get('pos1')
-            self.get_logger().info(pos1)
+            # self.get_logger().info(str(pos1))
             pos2 = vars.get('pos2')
-            self.get_logger().info(pos2)
-
-            self.ur5.transfer(pos1, pos2)
+            # self.get_logger().info(str(pos2))
+            # self.ur5.transfer(pos1, pos2)
             
 
         self.state = "COMPLETED"

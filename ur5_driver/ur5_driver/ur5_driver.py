@@ -188,7 +188,7 @@ if __name__ == "__main__":
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
     robot = UR5()
-    # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
     for i in range(10):
         print(robot.get_movement_state())
         sleep(0.5)
