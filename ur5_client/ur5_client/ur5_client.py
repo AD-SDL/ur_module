@@ -81,8 +81,8 @@ class UR5Client(Node):
         except socket.error as err:
             self.get_logger().error("ROBOT IS NOT RESPONDING! ERROR: " + str(err))
             self.state = "UR5 CONNECTION ERROR"
-        except Exception as ganeral_err:
-            self.get_logger().error(str(ganeral_err))
+        except Exception as general_err:
+            self.get_logger().error(str(general_err))
             
         if self.state != "UR5 CONNECTION ERROR":
 
@@ -159,7 +159,6 @@ class UR5Client(Node):
         
         if request.action_handle=='transfer':
             self.action_flag = "BUSY"
-            self.stateCallback()
             vars = eval(request.vars)
             self.get_logger().info(str(vars))
 
@@ -168,10 +167,10 @@ class UR5Client(Node):
                 return 
 
             pos1 = vars.get('pos1')
-            # self.get_logger().info(str(pos1))
+            self.get_logger().info(str(pos1))
             pos2 = vars.get('pos2')
-            # self.get_logger().info(str(pos2))
-            # self.ur5.transfer(pos1, pos2)
+            self.get_logger().info(str(pos2))
+            self.ur5.transfer(pos1, pos2)
             
 
         self.state = "COMPLETED"
