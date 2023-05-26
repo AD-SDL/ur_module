@@ -15,19 +15,16 @@ from wei_services.srv import WeiActions
 
 class UR5Client(Node):
     '''
-    The jointControlNode inputs data from the 'action' topic, providing a set of commands for the driver to execute. It then receives feedback, 
-    based on the executed command and publishes the state of the peeler and a description of the peeler to the respective topics.
+    The init function is neccesary for the URCLient class to initialize all variables, parameters, and other functions.
+    Inside the function the parameters exist, and calls to other functions and services are made so they can be executed in main.
     '''
-    def __init__(self, TEMP_NODE_NAME = "UR5_Client_Node"):
-        '''
-        The init function is neccesary for the peelerNode class to initialize all variables, parameters, and other functions.
-        Inside the function the parameters exist, and calls to other functions and services are made so they can be executed in main.
-        '''
+   
+    def __init__(self, TEMP_NODE_NAME = "Ur_Client_Node"):
 
         super().__init__(TEMP_NODE_NAME)
         self.node_name = self.get_name()
 
-        self.ur5 = None
+        self.ur = None
         self.IP = None
 
         self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
@@ -59,45 +56,46 @@ class UR5Client(Node):
         
         try:
       
-            self.ur5 = UR5(self.IP)
+            self.ur = UR5(self.IP)
         except Exception as err:
             self.get_logger().error(str(err))
         else:
-            self.get_logger().info("UR5 connected")
+            self.get_logger().info("ur connected")
 
 
     def stateCallback(self):
         '''
-        Publishes the peeler state to the 'state' topic. 
+        Publishes the ur state to the 'state' topic. 
         '''
         msg = String()
 
         #BUG: FIX EXEPCTION HANDLING TO HANDLE SOCKET ERRORS AND OTHER ERRORS SEPERATLY
 
         try:
-            self.movement_state = self.ur5.get_movement_state()
-            self.ur5.get_overall_robot_status()
+            self.movement_state = self.ur.get_movement_state()
+            self.ur.get_overall_robot_status()
 
         except socket.error as err:
             self.get_logger().error("ROBOT IS NOT RESPONDING! ERROR: " + str(err))
-            self.state = "UR5 CONNECTION ERROR"
+            self.state = "ur CONNECTION ERROR"
         except Exception as general_err:
             self.get_logger().error(str(general_err))
             
-        if self.state != "UR5 CONNECTION ERROR":
+        if self.state != "ur CONNECTION ERROR":
 
-            if self.ur5.remote_control_status == False:
+            if self.ur.remote_control_status == False:
                 self.get_logger().error("Please put the UR into remote mode using the Teach Pendant")
 
-            elif self.ur5.robot_mode != "RUNNING" or self.ur5.safety_status != "NORMAL" or self.state == "ERROR":
+            elif self.ur.robot_mode != "RUNNING" or self.ur.safety_status != "NORMAL" or self.state == "ERROR":
                 self.state = "ERROR"
                 msg.data = 'State: %s' % self.state
                 self.statePub.publish(msg)
                 self.get_logger().error(msg.data)
-                self.get_logger().error("Robot_Mode: " + self.ur5.robot_mode + " Safety_Status: " + self.ur5.safety_status)
+                self.get_logger().error("Robot_Mode: " + self.ur.robot_mode + " Safety_Status: " + self.ur.safety_status)
                 self.action_flag = "READY"
                 self.get_logger().warn("Trying to clear the error messages")
-                self.ur5.initialize()
+                self.ur.initialize()
+                self.action_flag = "UNKOWN"
 
             elif self.state == "COMPLETED" and self.action_flag == "BUSY":
                 self.state = "COMPLETED"
@@ -112,7 +110,7 @@ class UR5Client(Node):
                 self.statePub.publish(msg)
                 self.get_logger().info(msg.data)
 
-            elif self.ur5.robot_mode == "RUNNING" and self.ur5.safety_status == "NORMAL" and self.movement_state == "READY" and self.action_flag == "READY":
+            elif self.ur.robot_mode == "RUNNING" and self.ur.safety_status == "NORMAL" and self.movement_state == "READY" and self.action_flag == "READY":
                 self.state = "READY"
                 msg.data = 'State: %s' % self.state
                 self.statePub.publish(msg)
@@ -170,12 +168,43 @@ class UR5Client(Node):
             self.get_logger().info(str(pos1))
             pos2 = vars.get('pos2')
             self.get_logger().info(str(pos2))
-            self.ur5.transfer(pos1, pos2)
+
+            try:
+                self.ur.transfer(pos1, pos2)            
+            except Exception as er:
+                response.action_response = -1
+                response.action_msg = "Transfer failed"
+                self.state = "ERROR"
+            else:
+                response.action_response = 0
+                response.action_msg = "Transfer successfully completed"
+                self.state = "COMPLETED"
+            finally:
+                return response
             
+        elif request.action_handle == 'run_droplet':
+            self.action_flag = "BUSY"
+            vars = eval(request.vars)
+            self.get_logger().info(str(vars))
 
-        self.state = "COMPLETED"
+    
+            tip_number_1 = vars.get('tip_number_1', 1)
+            self.get_logger().info(str(tip_number_1))
+            tip_number_2 = vars.get('tip_number_2', 2)
+            self.get_logger().info(str(tip_number_2))
 
-        return response
+            try:
+                self.ur.droplet_exp(tip_number_1, tip_number_2)
+            except Exception as er:
+                response.action_response = -1
+                response.action_msg = "Run droplet failed"
+                self.state = "ERROR"
+            else:
+                response.action_response = 0
+                response.action_msg = "Run droplet successfully completed"
+                self.state = "COMPLETED"
+            finally:
+                return response
 
 
 def main(args = None):
@@ -183,19 +212,19 @@ def main(args = None):
     rclpy.init(args=args)  # initialize Ros2 communication
 
     try:
-        ur5_client = UR5Client()
+        ur_client = UR5Client()
         executor = MultiThreadedExecutor()
-        executor.add_node(ur5_client)
+        executor.add_node(ur_client)
 
         try:
-            ur5_client.get_logger().info('Beginning client, shut down with CTRL-C')
+            ur_client.get_logger().info('Beginning client, shut down with CTRL-C')
             executor.spin()
         except KeyboardInterrupt:
-            ur5_client.get_logger().info('Keyboard interrupt, shutting down.\n')
+            ur_client.get_logger().info('Keyboard interrupt, shutting down.\n')
         finally:
             executor.shutdown()
-            ur5_client.ur5.disconnect_ur()
-            ur5_client.destroy_node()
+            ur_client.ur.disconnect_ur()
+            ur_client.destroy_node()
     finally:
         rclpy.shutdown()
 
