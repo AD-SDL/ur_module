@@ -182,26 +182,30 @@ class UR5Client(Node):
             finally:
                 return response
             
-        elif request.action_handle == 'run_droplet':
+        elif request.action_handle == 'run_urp_program':
             self.action_flag = "BUSY"
+
             vars = eval(request.vars)
             self.get_logger().info(str(vars))
 
-    
-            tip_number_1 = vars.get('tip_number_1', 1)
-            self.get_logger().info(str(tip_number_1))
-            tip_number_2 = vars.get('tip_number_2', 2)
-            self.get_logger().info(str(tip_number_2))
+            local_urp_path = vars.get('local_urp_path', None)
+            self.get_logger().info(str(local_urp_path))
+            program_name = vars.get('program_name', None)
+            self.get_logger().info(str(program_name))
 
+            if program_name: 
+                self.get_logger_error("Program name is not provided!")
+                return
+            
             try:
-                self.ur.droplet_exp(tip_number_1, tip_number_2)
+                self.ur.run_urp_program(transfer_file_path = local_urp_path, program_name = program_name)
             except Exception as er:
                 response.action_response = -1
-                response.action_msg = "Run droplet failed"
+                response.action_msg = "Run URP program failed"
                 self.state = "ERROR"
             else:
                 response.action_response = 0
-                response.action_msg = "Run droplet successfully completed"
+                response.action_msg = "Run URP program successfully completed"
                 self.state = "COMPLETED"
             finally:
                 return response
