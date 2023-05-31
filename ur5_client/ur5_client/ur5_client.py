@@ -215,8 +215,8 @@ class UR5Client(Node):
             program_name = vars.get('program_name', None)
             self.get_logger().info(str(program_name))
 
-            if program_name: 
-                self.get_logger_error("Program name is not provided!")
+            if not program_name: 
+                self.get_logger().err("Program name is not provided!")
                 return
             
             try:
