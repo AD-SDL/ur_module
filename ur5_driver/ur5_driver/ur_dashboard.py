@@ -242,7 +242,7 @@ if __name__ == "__main__":
     
      
     """
-    BUG 
+    Bug: Output error message breaks the client state check, causing the client to retry connection 
 
     [ur5_client-1] [INFO] [1685573134.289546521] [ur5_client.UR5_Client_Node]: {'program_name': 'chemspeed2tecan'}
     [ur5_client-1] [INFO] [1685573134.290071438] [ur5_client.UR5_Client_Node]: None
