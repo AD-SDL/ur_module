@@ -68,10 +68,11 @@ class UR5(UR_DASHBOARD):
         for i in range(10):
             try:
                 self.ur = Robot(self.IP)
-                sleep(10)
 
             except socket.error:
                 print("Trying robot connection ...")
+                sleep(10)
+
             else:
                 print('Successful ur connection')
                 break
@@ -291,16 +292,16 @@ class UR5(UR_DASHBOARD):
             time_elapsed += 1 
             sleep(1)
             program_state = self.get_program_state()
-            if "not" in program_state:
-                print("here")
-                program_err = program_state
+
+            if "PAUSED" in program_state:
+                program_err = self.get_safety_status()
 
         if "STOPPED" in program_state:       
-            program_log = {"0", "Successfully finished " + program_name, "seconds_elapsed:" + str(time_elapsed)}
+            program_log = {"output_code":"0", "output_msg": "Successfully finished " + program_name, "output_log": "seconds_elapsed:" + str(time_elapsed)}
         elif "PAUSED" in program_state:
-            program_log = {"-1", "Failed running: " + program_name, program_err}
+            program_log = {"output_code":"-1", "output_msg": "Failed running: " + program_name, "output_log": program_err}
         else:
-            program_log = {"-1", "Unkown program state:  " + program_name, program_state}
+            program_log = {"output_code":"-1", "output_msg": "Unkown program state:  " + program_name, "output_log": program_state}
 
         return program_log
 
