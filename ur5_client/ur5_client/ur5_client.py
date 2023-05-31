@@ -29,6 +29,7 @@ class UR5Client(Node):
         self.receive_launch_parameters()    
         
         self.get_logger().info("Received IP: " + str(self.IP))
+        self.get_logger().info("Tools: " + "Gripper: " + str(self.gripper))
 
         self.connect_robot()
 
@@ -57,22 +58,22 @@ class UR5Client(Node):
         self.IP = self.get_parameter('ip').get_parameter_value().string_value     
         
         self.declare_parameter('gripper', False)       # Declaring parameter 
-        self.gripper = self.get_parameter('gripper').get_parameter_value() 
+        self.gripper = self.get_parameter('gripper').get_parameter_value().bool_value
        
         self.declare_parameter('vacuum_gripper', False)       # Declaring parameter 
-        self.vacuum_gripper = self.get_parameter('vacuum_gripper').get_parameter_value()  
+        self.vacuum_gripper = self.get_parameter('vacuum_gripper').get_parameter_value().bool_value
 
         self.declare_parameter('screwdriver', False)       # Declaring parameter 
-        self.screwdriver = self.get_parameter('screwdriver').get_parameter_value() 
+        self.screwdriver = self.get_parameter('screwdriver').get_parameter_value().bool_value
 
-        self.declare_parameter('pipette_pv', None)       # Declaring parameter 
-        self.pipette_pv = self.get_parameter('pipette_pv').get_parameter_value()    
+        self.declare_parameter('pipette_pv', "None")       # Declaring parameter 
+        self.pipette_pv = eval(self.get_parameter('pipette_pv').get_parameter_value().string_value )
         
-        self.declare_parameter('tool_changer_pv', None)       # Declaring parameter 
-        self.tool_changer_pv = self.get_parameter('tool_changer_pv').get_parameter_value()
+        self.declare_parameter('tool_changer_pv', "None")       # Declaring parameter 
+        self.tool_changer_pv = eval(self.get_parameter('tool_changer_pv').get_parameter_value().string_value)
 
-        self.declare_parameter('camera_pv', None)       # Declaring parameter 
-        self.camera_pv = self.get_parameter('camera_pv').get_parameter_value()
+        self.declare_parameter('camera_pv', "None")       # Declaring parameter 
+        self.camera_pv = eval(self.get_parameter('camera_pv').get_parameter_value().string_value)
 
     def connect_robot(self):
         
