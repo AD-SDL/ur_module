@@ -68,7 +68,7 @@ class UR5(UR_DASHBOARD):
         for i in range(10):
             try:
                 self.ur = Robot(self.IP)
-                sleep(2)
+                sleep(10)
 
             except socket.error:
                 print("Trying robot connection ...")
@@ -272,7 +272,7 @@ class UR5(UR_DASHBOARD):
             print("Provide program name!")
             return
         
-        ur_program_path = "/programs/program_name"
+        ur_program_path = "/programs/" + program_name 
 
         if transfer_file_path:
             self.transfer_program(local_path = transfer_file_path, ur_path = ur_program_path)
@@ -281,13 +281,28 @@ class UR5(UR_DASHBOARD):
         self.load_program(program_path = ur_program_path)
         sleep(2)
         self.run_program()
+        sleep(2)
         
-        run_status = "Busy"
-        while run_status == "Busy":
-            if self.get_program_run_status() != "running": # TODO: Change this with the correct output message
-                run_status = "Completed"
+        print("Running the URP program: ", program_name)
+        time_elapsed = 0
+        program_err = ""
 
-        return 
+        while "false" not in self.get_program_run_status():
+            time_elapsed += 1 
+            sleep(1)
+            program_state = self.get_program_state()
+            if "not" in program_state:
+                print("here")
+                program_err = program_state
+
+        if "STOPPED" in program_state:       
+            program_log = {"0", "Successfully finished " + program_name, "seconds_elapsed:" + str(time_elapsed)}
+        elif "PAUSED" in program_state:
+            program_log = {"-1", "Failed running: " + program_name, program_err}
+        else:
+            program_log = {"-1", "Unkown program state:  " + program_name, program_state}
+
+        return program_log
 
 
 if __name__ == "__main__":
@@ -296,6 +311,8 @@ if __name__ == "__main__":
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
     robot = UR5("146.139.48.76", gripper = True)
+    log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
+    print(log)
     # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
     # for i in range(1000):
     #     print(robot.get_movement_state())
