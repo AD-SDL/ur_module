@@ -65,19 +65,19 @@ class UR5Client(Node):
         self.declare_parameter('screwdriver', False)       # Declaring parameter 
         self.screwdriver = self.get_parameter('screwdriver').get_parameter_value() 
 
-        self.declare_parameter('pipette_pv', '')       # Declaring parameter 
+        self.declare_parameter('pipette_pv', None)       # Declaring parameter 
         self.pipette_pv = self.get_parameter('pipette_pv').get_parameter_value().string_value.lower()     
         
-        self.declare_parameter('tool_changer_pv', '')       # Declaring parameter 
+        self.declare_parameter('tool_changer_pv', None)       # Declaring parameter 
         self.tool_changer_pv = self.get_parameter('tool_changer_pv').get_parameter_value().string_value.lower() 
 
-        self.declare_parameter('camera_pv', '')       # Declaring parameter 
+        self.declare_parameter('camera_pv', None)       # Declaring parameter 
         self.camera_pv = self.get_parameter('camera_pv').get_parameter_value().string_value.lower() 
 
     def connect_robot(self):
         
         try:
-            self.ur = UR5(self.IP, gripper = self.gripper)
+            self.ur = UR5(self.IP, gripper = self.gripper, tool_changer_pv = self.tool_changer_pv, pipette_pv =self.pipette_pv, camera_pv = self.camera_pv)
         except Exception as err:
             self.get_logger().error(str(err))
         else:
