@@ -151,7 +151,7 @@ class UR_DASHBOARD():
     def get_safety_status(self):
         output = self.send_command('safetystatus')
         output = output.split(' ')
-        print(output)
+        # print(output)
         if "\n" in output[1]:
             return output[1].split("\n")[0]
         else:

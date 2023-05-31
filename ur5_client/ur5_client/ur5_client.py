@@ -108,7 +108,7 @@ class UR5Client(Node):
             if self.ur.remote_control_status == False:
                 self.get_logger().error("Please put the UR into remote mode using the Teach Pendant")
 
-            elif self.ur.robot_mode != "RUNNING" or "NORMAL" not in self.ur.safety_status or self.state == "ERROR":
+            elif "RUNNING" not in self.ur.robot_mode or "NORMAL" not in self.ur.safety_status or self.state == "ERROR":
                 self.state = "ERROR"
                 msg.data = 'State: %s' % self.state
                 self.statePub.publish(msg)
@@ -116,7 +116,7 @@ class UR5Client(Node):
                 self.get_logger().error("Robot_Mode: " + self.ur.robot_mode + " Safety_Status: " + self.ur.safety_status)
                 self.action_flag = "READY"
                 self.get_logger().warn("Trying to clear the error messages")
-                self.ur.initialize()
+                # self.ur.initialize()
                 self.action_flag = "UNKOWN"
 
             elif self.state == "COMPLETED" and self.action_flag == "BUSY":
