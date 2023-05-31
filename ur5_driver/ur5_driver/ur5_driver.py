@@ -2,6 +2,7 @@
 
 import threading
 import socket 
+import epics
 
 from multiprocessing.connection import wait
 from time import sleep
@@ -25,6 +26,11 @@ class UR5(UR_DASHBOARD):
         self.tool_changer = None
         self.camera = None
     
+        self.gripper_close = 130 # 0-255 (255 is closed)
+        self.griper_open = 0
+        self.gripper_speed = 150 # 0-255
+        self.gripper_force = 0 # 0-255
+
         self.connect_ur()
         if gripper:
             self.connect_gripper()
@@ -39,14 +45,6 @@ class UR5(UR_DASHBOARD):
         self.pipette_aspirate_value = 2.0
         self.pipette_dispense_value = -2.0
         self.droplet_value = 0.3
-
-        self.gripper_close = 130 # 0-255 (255 is closed)
-        self.griper_open = 0
-        self.gripper_speed = 150 # 0-255
-        self.gripper_force = 0 # 0-255
-
-        print('Opening gripper...')
-        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
         self.acceleration = 0.5
         self.velocity = 0.5
@@ -97,6 +95,8 @@ class UR5(UR_DASHBOARD):
             else:
                 print('Activating gripper...')
                 self.gripper.activate()
+                print('Opening gripper...')
+                self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
     def connect_tool_changer(self, tool_changer_pv:str):
         """
@@ -295,11 +295,11 @@ if __name__ == "__main__":
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
-    robot = UR5()
+    robot = UR5("146.139.48.76", gripper = True)
     # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
-    for i in range(1000):
-        print(robot.get_movement_state())
-        robot.get_overall_robot_status()
-        sleep(0.5)
+    # for i in range(1000):
+    #     print(robot.get_movement_state())
+    #     robot.get_overall_robot_status()
+    #     sleep(0.5)
 
     robot.disconnect_ur()
