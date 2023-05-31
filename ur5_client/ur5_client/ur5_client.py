@@ -27,8 +27,15 @@ class UR5Client(Node):
         self.ur = None
         self.IP = None
 
-        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter so it is able to be retrieved from module_params.yaml file
-        self.IP = self.get_parameter('ip').get_parameter_value().string_value     # Renaming parameter to general form so it can be used for other nodes too
+        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter 
+        self.IP = self.get_parameter('ip').get_parameter_value().string_value     
+        
+        self.declare_parameter('tool', 'none')       # Declaring parameter 
+        self.tool = self.get_parameter('tool').get_parameter_value().string_value.lower()     
+       
+        self.declare_parameter('tool_address', 'none')       # Declaring parameter 
+        self.tool_address = self.get_parameter('tool_address').get_parameter_value().string_value.lower()     
+        
         self.get_logger().info("Received IP: " + str(self.IP))
 
         self.connect_robot()
@@ -55,8 +62,9 @@ class UR5Client(Node):
     def connect_robot(self):
         
         try:
-      
-            self.ur = UR5(self.IP)
+            if self.tool != "none":
+                if self.tool
+                self.ur = UR5(self.IP, )
         except Exception as err:
             self.get_logger().error(str(err))
         else:
