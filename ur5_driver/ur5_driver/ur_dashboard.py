@@ -54,7 +54,7 @@ class UR_DASHBOARD():
                 print("Connected: Universal Robots Dashboard Server")
                 response = response[45:]
 
-            # print("<< " + response[:-1])
+            print("<< " + response[:-1])
 
             return response.strip()
 
@@ -104,8 +104,11 @@ class UR_DASHBOARD():
         """Return the robot mode"""
         output = self.send_command("robotmode")
         output = output.split(' ')
-        return output[1]
-        
+        if "\n" in output[1]:
+            return output[1].split("\n")[0]
+        else:
+            return output[1]
+                
     def quit(self):
         '''Closes connection to robot'''
         return self.send_command('quit')
@@ -148,8 +151,12 @@ class UR_DASHBOARD():
     def get_safety_status(self):
         output = self.send_command('safetystatus')
         output = output.split(' ')
-        return output
-
+        print(output)
+        if "\n" in output[1]:
+            return output[1].split("\n")[0]
+        else:
+            return output[1]
+                
     def get_operational_mode(self):
         return self.send_command('get operational mode')
 
@@ -232,3 +239,21 @@ if __name__ == "__main__":
     # robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
     # robot.load_program("/programs/katerina.urp")
     # robot.run_program()
+    
+     
+    """
+    BUG 
+
+    [ur5_client-1] [INFO] [1685573134.289546521] [ur5_client.UR5_Client_Node]: {'program_name': 'chemspeed2tecan'}
+    [ur5_client-1] [INFO] [1685573134.290071438] [ur5_client.UR5_Client_Node]: None
+    [ur5_client-1] [INFO] [1685573134.290490743] [ur5_client.UR5_Client_Node]: chemspeed2tecan
+    [ur5_client-1] << NONE
+    [ur5_client-1] File not found: /programs/chemspeed2tecan
+    [ur5_client-1] << Safetystatus: NORMAL
+    [ur5_client-1] << Robotmode: RUNNING
+    [ur5_client-1] ['Robotmode:', 'RUNNING']
+    [ur5_client-1] << true
+    [ur5_client-1] [ERROR] [1685573134.745633959] [ur5_client.UR5_Client_Node]: list index out of range
+    [ur5_client-1] [ERROR] [1685573134.746134932] [ur5_client.UR5_Client_Node]: State: ERROR
+    [ur5_client-1] [ERROR] [1685573134.746477735] [ur5_client.UR5_Client_Node]: Robot_Mode: RUNNING Safety_Status: RUNNING
+    """
