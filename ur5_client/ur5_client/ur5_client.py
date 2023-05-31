@@ -66,13 +66,13 @@ class UR5Client(Node):
         self.screwdriver = self.get_parameter('screwdriver').get_parameter_value() 
 
         self.declare_parameter('pipette_pv', None)       # Declaring parameter 
-        self.pipette_pv = self.get_parameter('pipette_pv').get_parameter_value().string_value.lower()     
+        self.pipette_pv = self.get_parameter('pipette_pv').get_parameter_value()    
         
         self.declare_parameter('tool_changer_pv', None)       # Declaring parameter 
-        self.tool_changer_pv = self.get_parameter('tool_changer_pv').get_parameter_value().string_value.lower() 
+        self.tool_changer_pv = self.get_parameter('tool_changer_pv').get_parameter_value()
 
         self.declare_parameter('camera_pv', None)       # Declaring parameter 
-        self.camera_pv = self.get_parameter('camera_pv').get_parameter_value().string_value.lower() 
+        self.camera_pv = self.get_parameter('camera_pv').get_parameter_value()
 
     def connect_robot(self):
         
