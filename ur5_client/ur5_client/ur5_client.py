@@ -198,14 +198,14 @@ class UR5Client(Node):
                 return
             
             try:
-                self.ur.run_urp_program(transfer_file_path = local_urp_path, program_name = program_name)
+                output_log = self.ur.run_urp_program(transfer_file_path = local_urp_path, program_name = program_name)
             except Exception as er:
                 response.action_response = -1
-                response.action_msg = "Run URP program failed"
+                response.action_msg = output_log["output_msg"] + output_log["output_log"]
                 self.state = "ERROR"
             else:
                 response.action_response = 0
-                response.action_msg = "Run URP program successfully completed"
+                response.action_msg = output_log["output_msg"] + output_log["output_log"]
                 self.state = "COMPLETED"
             finally:
                 return response
