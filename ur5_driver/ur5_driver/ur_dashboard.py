@@ -55,7 +55,7 @@ class UR_DASHBOARD():
                 print("Connected: Universal Robots Dashboard Server")
                 response = response[45:]
 
-            print("<< " + response[:-1])
+            # print("<< " + response[:-1])
 
             return response.strip()
 
