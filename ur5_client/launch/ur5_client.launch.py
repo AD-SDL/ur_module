@@ -46,19 +46,19 @@ def generate_launch_description():
         )
     declare_use_ur_tool_changer_pv_cmd = DeclareLaunchArgument(
         name = "tool_changer_pv",
-        default_value= None,
+        default_value= "None",
         description= "Flag to accept UR tool address"
         )
     
     declare_use_ur_pipette_pv_cmd = DeclareLaunchArgument(
         name = "pipette_pv",
-        default_value= None,
+        default_value= "None",
         description= "Flag to accept UR pipette_pv"
         )
     
     declare_use_ur_camera_pv_cmd = DeclareLaunchArgument(
         name = "camera_pv",
-        default_value= None,
+        default_value= "None",
         description= "Flag to accept UR camera_pv"
         )
     
