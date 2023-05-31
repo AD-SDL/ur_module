@@ -26,15 +26,7 @@ class UR5Client(Node):
 
         self.ur = None
         self.IP = None
-
-        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter 
-        self.IP = self.get_parameter('ip').get_parameter_value().string_value     
-        
-        self.declare_parameter('tool', 'none')       # Declaring parameter 
-        self.tool = self.get_parameter('tool').get_parameter_value().string_value.lower()     
-       
-        self.declare_parameter('tool_address', 'none')       # Declaring parameter 
-        self.tool_address = self.get_parameter('tool_address').get_parameter_value().string_value.lower()     
+        self.receive_launch_parameters()    
         
         self.get_logger().info("Received IP: " + str(self.IP))
 
@@ -58,13 +50,34 @@ class UR5Client(Node):
 
         self.description={}
         self.descriptionSrv = self.create_service(WeiDescription, self.node_name + "/description_handler", self.descriptionCallback, callback_group=description_cb_group)
+    
+    def receive_launch_parameters(self):
+        
+        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter 
+        self.IP = self.get_parameter('ip').get_parameter_value().string_value     
+        
+        self.declare_parameter('gripper', False)       # Declaring parameter 
+        self.gripper = self.get_parameter('gripper').get_parameter_value() 
+       
+        self.declare_parameter('vacuum_gripper', False)       # Declaring parameter 
+        self.vacuum_gripper = self.get_parameter('vacuum_gripper').get_parameter_value()  
+
+        self.declare_parameter('screwdriver', False)       # Declaring parameter 
+        self.screwdriver = self.get_parameter('screwdriver').get_parameter_value() 
+
+        self.declare_parameter('pipette_pv', '')       # Declaring parameter 
+        self.pipette_pv = self.get_parameter('pipette_pv').get_parameter_value().string_value.lower()     
+        
+        self.declare_parameter('tool_changer_pv', '')       # Declaring parameter 
+        self.tool_changer_pv = self.get_parameter('tool_changer_pv').get_parameter_value().string_value.lower() 
+
+        self.declare_parameter('camera_pv', '')       # Declaring parameter 
+        self.camera_pv = self.get_parameter('camera_pv').get_parameter_value().string_value.lower() 
 
     def connect_robot(self):
         
         try:
-            if self.tool != "none":
-                if self.tool
-                self.ur = UR5(self.IP, )
+            self.ur = UR5(self.IP, gripper = self.gripper)
         except Exception as err:
             self.get_logger().error(str(err))
         else:
