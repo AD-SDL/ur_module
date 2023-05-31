@@ -159,8 +159,8 @@ class UR_DASHBOARD():
     def clear_operational_mode(self):
         return self.send_command('clear operational mode')
 
-    def popup(self):
-        return self.send_command('popup <popup-text>')
+    def popup(self, message):
+        return self.send_command('popup ' + message)
 
     def close_popup(self):
         return self.send_command('close popup')
