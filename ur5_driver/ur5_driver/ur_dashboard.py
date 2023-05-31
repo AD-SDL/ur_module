@@ -17,7 +17,6 @@ class UR_DASHBOARD():
         self.remote_control_status = None
 
         self.connect()
-
         self.initialize()
 
 
@@ -66,7 +65,7 @@ class UR_DASHBOARD():
 
         self.robot_mode = self.get_robot_mode().upper()
         self.operational_mode = self.get_operational_mode().upper()
-        self.safety_status = self.get_safety_status().upper()
+        self.safety_status = self.get_safety_status()
         self.remote_control_status = self.is_in_remote_control()
 
     def initialize(self):
@@ -79,7 +78,7 @@ class UR_DASHBOARD():
             print("Unlocking protective stop")
             self.unlock_protective_stop()
 
-        elif self.safety_status != "NORMAL":   #self.safety_status != "ROBOT_EMERGENCY_STOP" or self.safety_status != "SYSTEM_EMERGENCY_STOP":
+        elif "NORMAL" not in self.safety_status:   #self.safety_status != "ROBOT_EMERGENCY_STOP" or self.safety_status != "SYSTEM_EMERGENCY_STOP":
             print("Restarting safety")
             self.close_safety_popup()
             self.restart_safety()        
@@ -91,9 +90,10 @@ class UR_DASHBOARD():
         if self.remote_control_status == False:
             print("Robot is not in remote control")
         
-        if self.robot_mode == 'RUNNING' and self.safety_status == "NORMAL":
+        if self.robot_mode == 'RUNNING' and "NORMAL" in self.safety_status:
             print('Robot is initialized')
             return
+        
         elif self.robot_mode == "POWER_OFF" or self.robot_mode == "BOOTING" or self.robot_mode == "POWER_ON" or self.robot_mode == "IDLE":
             print("Powering on the robot and releasing brakes")
             self.brake_release()
@@ -148,7 +148,7 @@ class UR_DASHBOARD():
     def get_safety_status(self):
         output = self.send_command('safetystatus')
         output = output.split(' ')
-        return output[1]
+        return output
 
     def get_operational_mode(self):
         return self.send_command('get operational mode')
@@ -213,8 +213,9 @@ class UR_DASHBOARD():
 
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD()
-    robot.get_overall_robot_status()
+    robot = UR_DASHBOARD("146.139.48.76")
+    # robot.get_overall_robot_status()
+    # robot.get_operational_mode()
     # robot.robot_mode()
     # robot.close_popup()
     # robot.initialize()
@@ -228,6 +229,6 @@ if __name__ == "__main__":
     # robot.self.get_safety_status()
     # robot.quit()
     # robot.clear_operational_mode()
-    robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
-    robot.load_program("/programs/katerina.urp")
-    robot.run_program()
+    # robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
+    # robot.load_program("/programs/katerina.urp")
+    # robot.run_program()
