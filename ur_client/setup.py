@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'ur5_client'
+package_name = 'ur_client'
 
 setup(
     name = package_name,
@@ -18,14 +18,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='kendrick, Doga Ozgulbas',
+    maintainer='Doga Ozgulbas',
     maintainer_email='dozgulbas@anl.gov',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ur5_client = ur5_client.ur5_client:main',
+            'ur_client = ur_client.ur_client:main',
 
         ],
     },
