@@ -13,14 +13,14 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
 
 
-import ur5_driver.robotiq_gripper as robotiq_gripper
+import ur_driver.robotiq_gripper as robotiq_gripper
 
 
-class UR5(Node):
+class UR(Node):
     commandLock = threading.Lock()
 
     def __init__(self):
-        super().__init__(node_name= "ur5_driver")
+        super().__init__(node_name= "UR_driver")
 
 
         controller_name = "joint_trajectory_controller"
@@ -218,5 +218,5 @@ if __name__ == "__main__":
     
     pos1= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
     pos2= [-1.57, -1.35, -2.61, -0.75, 1.57, 0.0]
-    robot = UR5()
+    robot = UR()
     robot.transfer(pos1,pos2)
