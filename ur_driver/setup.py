@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'ur5_driver'
+package_name = 'ur_driver'
 
 setup(
     name = package_name,
@@ -24,8 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ur5_driver = ur5_driver.ur5_driver:main',
-            'urx_packages = ur5_driver.urx_packages.urx:main',
+            'ur_driver = ur_driver.ur_driver:main',
 
         ],
     },

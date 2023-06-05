@@ -8,11 +8,11 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 
-from ur5_driver.ur_dashboard import UR_DASHBOARD
-import ur5_driver.robotiq_gripper as robotiq_gripper
+from ur_driver.ur_dashboard import UR_DASHBOARD
+import ur_driver.robotiq_gripper as robotiq_gripper
 from urx import Robot, RobotException
 
-class UR5(UR_DASHBOARD):
+class UR(UR_DASHBOARD):
     
 
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False, tool_changer_pv:str = None, pipette_pv:str = None, camera_pv:str = None):
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
-    robot = UR5("146.139.48.76", gripper = True)
+    robot = UR("146.139.48.76", gripper = True)
     log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     print(log)
     # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
