@@ -63,9 +63,9 @@ def generate_launch_description():
         )
     
     ur5_client = Node(
-            package = 'ur5_client',
-            namespace = 'ur5_client',
-            executable = 'ur5_client',
+            package = 'ur_client',
+            namespace = 'std_ns',
+            executable = 'ur_client',
             output = "screen",
             name='UR5_Client_Node',
             parameters = [{"ip":ip},
