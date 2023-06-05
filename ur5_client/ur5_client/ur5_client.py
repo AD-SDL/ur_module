@@ -6,14 +6,14 @@ from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallb
 from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor
 from std_msgs.msg import String
 
-from ur5_driver.ur5_driver import UR5 
+from ur_driver.ur_driver import UR 
 from time import sleep
 import socket
 
 from wei_services.srv import WeiDescription 
 from wei_services.srv import WeiActions  
 
-class UR5Client(Node):
+class URClient(Node):
     '''
     The init function is neccesary for the URCLient class to initialize all variables, parameters, and other functions.
     Inside the function the parameters exist, and calls to other functions and services are made so they can be executed in main.
@@ -82,7 +82,7 @@ class UR5Client(Node):
     def connect_robot(self):
         
         try:
-            self.ur = UR5(self.IP, gripper = self.gripper, tool_changer_pv = self.tool_changer_pv, pipette_pv =self.pipette_pv, camera_pv = self.camera_pv)
+            self.ur = UR(self.IP, gripper = self.gripper, tool_changer_pv = self.tool_changer_pv, pipette_pv =self.pipette_pv, camera_pv = self.camera_pv)
         except Exception as err:
             self.get_logger().error(str(err))
         else:
@@ -274,7 +274,7 @@ def main(args = None):
     rclpy.init(args=args)  # initialize Ros2 communication
 
     try:
-        ur_client = UR5Client()
+        ur_client = URClient()
         executor = MultiThreadedExecutor()
         executor.add_node(ur_client)
 
