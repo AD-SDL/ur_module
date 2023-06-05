@@ -84,7 +84,40 @@ class UR5Client(Node):
         else:
             self.get_logger().info("ur connected")
 
+    def stateRefresherCallback(self):
+        """ Refreshes the robot states if robot cannot update the state parameters automatically because it is not running any jobs
+       
+         Parameters:
+        -----------
+            None
+        Returns
+        -------
+            None
+        """  
+        err = None
 
+        try:
+
+            if self.action_flag == "READY": #Only refresh the state manualy if robot is not running a job.
+                self.ur.get_overall_robot_status()
+
+
+        except UnboundLocalError as local_var_err:
+            err = local_var_err
+
+        except TimeoutError as time_err:
+            err = time_err
+
+        except AttributeError as attribute_err:
+            err = attribute_err
+            self.get_logger().warn("Trying to connect again! IP: " + self.ip + " Port:" + str(self.port))
+            self.connect_robot()
+
+        finally:
+            if err:
+                self.state = "ERROR"
+                self.get_logger().error(str(err))
+        
     def stateCallback(self):
         '''
         Publishes the ur state to the 'state' topic. 
@@ -95,7 +128,6 @@ class UR5Client(Node):
 
         try:
             self.movement_state = self.ur.get_movement_state()
-            self.ur.get_overall_robot_status()
 
         except socket.error as err:
             self.get_logger().error("ROBOT IS NOT RESPONDING! ERROR: " + str(err))
