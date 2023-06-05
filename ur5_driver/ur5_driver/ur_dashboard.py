@@ -104,10 +104,14 @@ class UR_DASHBOARD():
         """Return the robot mode"""
         output = self.send_command("robotmode")
         output = output.split(' ')
-        if "\n" in output[1]:
-            return output[1].split("\n")[0]
-        else:
-            return output[1]
+        try:
+            if "\n" in output[1]:
+                return output[1].split("\n")[0]
+            else:
+                return output[1]
+        except IndexError:
+            print("Depricated output!")
+            return output
                 
     def quit(self):
         '''Closes connection to robot'''
@@ -152,10 +156,14 @@ class UR_DASHBOARD():
         output = self.send_command('safetystatus')
         output = output.split(' ')
         # print(output)
-        if "\n" in output[1]:
-            return output[1].split("\n")[0]
-        else:
-            return output[1]
+        try:
+            if "\n" in output[1]:
+                return output[1].split("\n")[0]
+            else:
+                return output[1]
+        except IndexError:
+            print("Depricated output!")
+            return output
                 
     def get_operational_mode(self):
         return self.send_command('get operational mode')
@@ -220,7 +228,7 @@ class UR_DASHBOARD():
 
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD("146.139.48.76")
+    robot = UR_DASHBOARD("146.137.240.36")
     # robot.get_overall_robot_status()
     # robot.get_operational_mode()
     # robot.robot_mode()
