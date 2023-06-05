@@ -38,15 +38,19 @@ class UR5Client(Node):
         self.action_flag = "READY"
         
         action_cb_group = ReentrantCallbackGroup()
-        robot_state_refresher_cb_group = ReentrantCallbackGroup()
+        state_refresher_cb_group = ReentrantCallbackGroup()
         state_cb_group = ReentrantCallbackGroup()
         description_cb_group = ReentrantCallbackGroup()
 
-        timer_period = 0.5  # seconds
+
+        state_publisher_period = 0.5  # seconds
+        self.state_refresher_period = state_publisher_period + 1.0  # seconds
 
         self.statePub = self.create_publisher(String, self.node_name + '/state', 10)
-        self.stateTimer = self.create_timer(timer_period, self.stateCallback, callback_group = state_cb_group)
-   
+        self.stateTimer = self.create_timer(state_publisher_period, self.stateCallback, callback_group = state_cb_group)
+        
+        self.StateRefresherTimer = self.create_timer(self.state_refresher_period, callback = self.stateRefresherCallback, callback_group = state_refresher_cb_group)
+
         self.action_handler = self.create_service(WeiActions, self.node_name + "/action_handler", self.actionCallback, callback_group=action_cb_group)
 
         self.description={}
