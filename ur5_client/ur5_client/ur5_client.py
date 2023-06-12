@@ -9,6 +9,7 @@ from std_msgs.msg import String
 from ur5_driver.ur5_driver import UR5 
 from time import sleep
 import socket
+import json
 
 from wei_services.srv import WeiDescription 
 from wei_services.srv import WeiActions  
@@ -159,7 +160,7 @@ class UR5Client(Node):
         
         if request.action_handle=='transfer':
             self.action_flag = "BUSY"
-            vars = eval(request.vars)
+            vars = json.loads(request.vars)
             self.get_logger().info(str(vars))
 
             if 'pos1' not in vars.keys() or 'pos2' not in vars.keys():
