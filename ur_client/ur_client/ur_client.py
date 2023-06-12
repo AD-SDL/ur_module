@@ -9,6 +9,7 @@ from std_msgs.msg import String
 from ur_driver.ur_driver import UR 
 from time import sleep
 import socket
+import json
 
 from wei_services.srv import WeiDescription 
 from wei_services.srv import WeiActions  
@@ -71,13 +72,13 @@ class URClient(Node):
         self.screwdriver = self.get_parameter('screwdriver').get_parameter_value().bool_value
 
         self.declare_parameter('pipette_pv', "None")       # Declaring parameter 
-        self.pipette_pv = eval(self.get_parameter('pipette_pv').get_parameter_value().string_value )
+        self.pipette_pv = json.loads(self.get_parameter('pipette_pv').get_parameter_value().string_value )
         
         self.declare_parameter('tool_changer_pv', "None")       # Declaring parameter 
-        self.tool_changer_pv = eval(self.get_parameter('tool_changer_pv').get_parameter_value().string_value)
+        self.tool_changer_pv = json.loads(self.get_parameter('tool_changer_pv').get_parameter_value().string_value)
 
         self.declare_parameter('camera_pv', "None")       # Declaring parameter 
-        self.camera_pv = eval(self.get_parameter('camera_pv').get_parameter_value().string_value)
+        self.camera_pv = json.loads(self.get_parameter('camera_pv').get_parameter_value().string_value)
 
     def connect_robot(self):
         
@@ -215,7 +216,7 @@ class URClient(Node):
         
         if request.action_handle=='transfer':
             self.action_flag = "BUSY"
-            vars = eval(request.vars)
+            vars = json.loads(request.vars)
             self.get_logger().info(str(vars))
 
             if 'pos1' not in vars.keys() or 'pos2' not in vars.keys():
@@ -243,7 +244,7 @@ class URClient(Node):
         elif request.action_handle == 'run_urp_program':
             self.action_flag = "BUSY"
 
-            vars = eval(request.vars)
+            vars = json.loads(request.vars)
             self.get_logger().info(str(vars))
 
             local_urp_path = vars.get('local_urp_path', None)
