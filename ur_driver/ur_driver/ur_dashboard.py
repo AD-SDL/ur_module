@@ -17,7 +17,6 @@ class UR_DASHBOARD():
         self.remote_control_status = None
 
         self.connect()
-
         self.initialize()
 
 
@@ -66,7 +65,7 @@ class UR_DASHBOARD():
 
         self.robot_mode = self.get_robot_mode().upper()
         self.operational_mode = self.get_operational_mode().upper()
-        self.safety_status = self.get_safety_status().upper()
+        self.safety_status = self.get_safety_status()
         self.remote_control_status = self.is_in_remote_control()
 
     def initialize(self):
@@ -79,7 +78,7 @@ class UR_DASHBOARD():
             print("Unlocking protective stop")
             self.unlock_protective_stop()
 
-        elif self.safety_status != "NORMAL":   #self.safety_status != "ROBOT_EMERGENCY_STOP" or self.safety_status != "SYSTEM_EMERGENCY_STOP":
+        elif "NORMAL" not in self.safety_status:   #self.safety_status != "ROBOT_EMERGENCY_STOP" or self.safety_status != "SYSTEM_EMERGENCY_STOP":
             print("Restarting safety")
             self.close_safety_popup()
             self.restart_safety()        
@@ -91,9 +90,10 @@ class UR_DASHBOARD():
         if self.remote_control_status == False:
             print("Robot is not in remote control")
         
-        if self.robot_mode == 'RUNNING' and self.safety_status == "NORMAL":
+        if self.robot_mode == 'RUNNING' and "NORMAL" in self.safety_status:
             print('Robot is initialized')
             return
+        
         elif self.robot_mode == "POWER_OFF" or self.robot_mode == "BOOTING" or self.robot_mode == "POWER_ON" or self.robot_mode == "IDLE":
             print("Powering on the robot and releasing brakes")
             self.brake_release()
@@ -104,8 +104,15 @@ class UR_DASHBOARD():
         """Return the robot mode"""
         output = self.send_command("robotmode")
         output = output.split(' ')
-        return output[1]
-        
+        try:
+            if "\n" in output[1]:
+                return output[1].split("\n")[0]
+            else:
+                return output[1]
+        except IndexError:
+            print("Depricated output!")
+            return output
+                
     def quit(self):
         '''Closes connection to robot'''
         return self.send_command('quit')
@@ -148,8 +155,16 @@ class UR_DASHBOARD():
     def get_safety_status(self):
         output = self.send_command('safetystatus')
         output = output.split(' ')
-        return output[1]
-
+        # print(output)
+        try:
+            if "\n" in output[1]:
+                return output[1].split("\n")[0]
+            else:
+                return output[1]
+        except IndexError:
+            print("Depricated output!")
+            return output
+                
     def get_operational_mode(self):
         return self.send_command('get operational mode')
 
@@ -159,8 +174,8 @@ class UR_DASHBOARD():
     def clear_operational_mode(self):
         return self.send_command('clear operational mode')
 
-    def popup(self):
-        return self.send_command('popup <popup-text>')
+    def popup(self, message):
+        return self.send_command('popup ' + message)
 
     def close_popup(self):
         return self.send_command('close popup')
@@ -213,8 +228,9 @@ class UR_DASHBOARD():
 
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD()
-    robot.get_overall_robot_status()
+    robot = UR_DASHBOARD("146.137.240.36")
+    # robot.get_overall_robot_status()
+    # robot.get_operational_mode()
     # robot.robot_mode()
     # robot.close_popup()
     # robot.initialize()
@@ -228,6 +244,24 @@ if __name__ == "__main__":
     # robot.self.get_safety_status()
     # robot.quit()
     # robot.clear_operational_mode()
-    robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
-    robot.load_program("/programs/katerina.urp")
-    robot.run_program()
+    # robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
+    # robot.load_program("/programs/katerina.urp")
+    # robot.run_program()
+    
+     
+    """
+    Bug: Output error message breaks the client state check, causing the client to retry connection 
+
+    [ur5_client-1] [INFO] [1685573134.289546521] [ur5_client.UR5_Client_Node]: {'program_name': 'chemspeed2tecan'}
+    [ur5_client-1] [INFO] [1685573134.290071438] [ur5_client.UR5_Client_Node]: None
+    [ur5_client-1] [INFO] [1685573134.290490743] [ur5_client.UR5_Client_Node]: chemspeed2tecan
+    [ur5_client-1] << NONE
+    [ur5_client-1] File not found: /programs/chemspeed2tecan
+    [ur5_client-1] << Safetystatus: NORMAL
+    [ur5_client-1] << Robotmode: RUNNING
+    [ur5_client-1] ['Robotmode:', 'RUNNING']
+    [ur5_client-1] << true
+    [ur5_client-1] [ERROR] [1685573134.745633959] [ur5_client.UR5_Client_Node]: list index out of range
+    [ur5_client-1] [ERROR] [1685573134.746134932] [ur5_client.UR5_Client_Node]: State: ERROR
+    [ur5_client-1] [ERROR] [1685573134.746477735] [ur5_client.UR5_Client_Node]: Robot_Mode: RUNNING Safety_Status: RUNNING
+    """

@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'ur5_client'
+package_name = 'ur_driver'
 
 setup(
     name = package_name,
@@ -13,19 +13,18 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
-        (os.path.join('share', package_name, 'config'), glob('config/*.yaml.py')),
 
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='kendrick, Doga Ozgulbas',
+    maintainer='Kendrick, Doga Ozgulbas',
     maintainer_email='dozgulbas@anl.gov',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ur5_client = ur5_client.ur5_client:main',
+            'ur_driver = ur_driver.ur_driver:main',
 
         ],
     },
