@@ -282,13 +282,12 @@ class UR(UR_DASHBOARD):
         self.load_program(program_path = ur_program_path)
         sleep(2)
         self.run_program()
-        sleep(2)
+        sleep(5)
         
         print("Running the URP program: ", program_name)
         time_elapsed = 0
         program_err = ""
         
-        sleep(5)
         program_status = "BUSY"
         ready_status_count = 0
         while program_status == "BUSY":
@@ -300,13 +299,7 @@ class UR(UR_DASHBOARD):
                 ready_status_count = 0
             sleep(2)
 
-        # while "false" not in self.get_program_run_status():
-        #     time_elapsed += 1 
-        #     sleep(1)
-        #     program_state = self.get_program_state()
-
-        #     if "PAUSED" in program_state:
-        #         program_err = self.get_safety_status()
+        #TODO: FIX the output loggings 
 
         # if "STOPPED" in program_state:       
         program_log = {"output_code":"0", "output_msg": "Successfully finished " + program_name, "output_log": "seconds_elapsed:" + str(time_elapsed)}
