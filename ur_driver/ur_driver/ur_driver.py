@@ -19,6 +19,7 @@ class Connection():
         self.IP = IP
         self.PORT = PORT
         self.connection = None
+        self.connect_ur()
 
     def connect_ur(self):
         """
@@ -47,14 +48,15 @@ class Connection():
 class UR(UR_DASHBOARD):
     
 
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False, tool_changer_pv:str = None, pipette_pv:str = None, camera_pv:str = None):
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, connection: Connection = None):
         
         super().__init__(IP=IP, PORT=PORT)
 
-        self.ur = None
+        if not connection:
+            raise Exception("Robot connection is not established")
+        else:
+            self.ur = connection
     
-        self.connect_camera(camera_pv)
-
         self.acceleration = 0.5
         self.velocity = 0.2
         self.speed_ms    = 0.750
@@ -67,26 +69,6 @@ class UR(UR_DASHBOARD):
         self.robot_current_joint_angles = None
         self.get_movement_state()
         #TODO: get the information of what is the current tool attached to UR. Maybe keep the UR unattached after the tools were used? Run a senity check at the beginning to findout if a tool is connected 
-
-
-    # def connect_camera(self, camera_pv:str):
-    #     """
-    #     Connect camera
-    #     """
-
-    #     try:
-    #         # Establishing a connection with the camera using EPICS library.
-    #         self.camera =  epics.PV("8idiARV1:cam1:Acquire")
-    #         self.cam_image = epics.PV("8idiARV1:Pva1:Image")
-    #         self.cam_capture =  epics.PV("8idiARV1:Pva1:Capture")
-
-    #     except Exception as err:
-    #         print("Pipette error: ", err)
-
-    #     else:
-    #         print("Pipette is connected.")
-
-
 
     def get_joint_angles(self):
         
@@ -261,9 +243,9 @@ if __name__ == "__main__":
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
-    robot = UR("146.139.48.76", gripper = True)
-    log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
-    print(log)
+    robot = UR("192.168.1.100", connection=Connection(IP="192.168.1.100").connection)
+    # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
+    # print(log)
     # robot.transfer
     # (robot.plate_exchange_1,robot.plate_exchange_1)
     # for i in range(1000):
