@@ -293,6 +293,7 @@ class UR(UR_DASHBOARD):
         ready_status_count = 0
         while program_status == "BUSY":
             if self.get_movement_state == "READY":
+                print(self.get_movement_state)
                 ready_status_count += 1
                 if ready_status_count >=4:
                     program_status = "READY"
