@@ -7,6 +7,7 @@ class URPGenerator:
     def add_line(self, line):
         self.program += line + "\n"
 
+    def add_activate_tool(self,tool_name:str = None):
         self.add_line("def activate_tool():")
         self.add_line("    textmsg('Activating Robotiq screwdriver tool')")
         self.add_line("")
@@ -93,6 +94,6 @@ class URPGenerator:
 pick_location = [0.1, 0.2, 0.3, 0, 3.14159, 0]  # Example pick location (x, y, z, rx, ry, rz)
 place_location = [0.4, 0.5, 0.6, 0, 3.14159, 0]  # Example place location (x, y, z, rx, ry, rz)
 
-generator = URPGenerator("pick_and_place.urp")
-generator.add_pick_and_place(pick_location, place_location)
-generator.generate_program()
+# generator = URPGenerator("pick_and_place.urp")
+# generator.add_pick_and_place(pick_location, place_location)
+# generator.generate_program()
