@@ -287,21 +287,33 @@ class UR(UR_DASHBOARD):
         print("Running the URP program: ", program_name)
         time_elapsed = 0
         program_err = ""
+        
+        sleep(5)
+        program_status = "BUSY"
+        ready_status_count = 0
+        while program_status == "BUSY":
+            if self.get_movement_state == "READY":
+                ready_status_count += 1
+                if ready_status_count >=4:
+                    program_status = "READY"
+            else:
+                ready_status_count = 0
+            sleep(2)
 
-        while "false" not in self.get_program_run_status():
-            time_elapsed += 1 
-            sleep(1)
-            program_state = self.get_program_state()
+        # while "false" not in self.get_program_run_status():
+        #     time_elapsed += 1 
+        #     sleep(1)
+        #     program_state = self.get_program_state()
 
-            if "PAUSED" in program_state:
-                program_err = self.get_safety_status()
+        #     if "PAUSED" in program_state:
+        #         program_err = self.get_safety_status()
 
-        if "STOPPED" in program_state:       
-            program_log = {"output_code":"0", "output_msg": "Successfully finished " + program_name, "output_log": "seconds_elapsed:" + str(time_elapsed)}
-        elif "PAUSED" in program_state:
-            program_log = {"output_code":"-1", "output_msg": "Failed running: " + program_name, "output_log": program_err}
-        else:
-            program_log = {"output_code":"-1", "output_msg": "Unkown program state:  " + program_name, "output_log": program_state}
+        # if "STOPPED" in program_state:       
+        program_log = {"output_code":"0", "output_msg": "Successfully finished " + program_name, "output_log": "seconds_elapsed:" + str(time_elapsed)}
+        # elif "PAUSED" in program_state:
+            # program_log = {"output_code":"-1", "output_msg": "Failed running: " + program_name, "output_log": program_err}
+        # else:
+            # program_log = {"output_code":"-1", "output_msg": "Unkown program state:  " + program_name, "output_log": program_state}
 
         return program_log
 
@@ -314,7 +326,8 @@ if __name__ == "__main__":
     robot = UR("146.139.48.76", gripper = True)
     log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     print(log)
-    # robot.transfer(robot.plate_exchange_1,robot.plate_exchange_1)
+    # robot.transfer
+    # (robot.plate_exchange_1,robot.plate_exchange_1)
     # for i in range(1000):
     #     print(robot.get_movement_state())
     #     robot.get_overall_robot_status()
