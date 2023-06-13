@@ -1,7 +1,7 @@
 from time import sleep
 from copy import deepcopy
 
-from robotiq_gripper_driver import RobotiqGripper
+from .robotiq_gripper_driver import RobotiqGripper
 
 class FingerGripperController():
     
