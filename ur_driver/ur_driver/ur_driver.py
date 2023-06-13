@@ -13,11 +13,14 @@ from ur_tools import *
 from urx import Robot, RobotException
 
 
-class Connection():
+class Connection(UR_DASHBOARD):
     """Connection to the UR robot to be shared within UR driver """
     def __init__(self,  IP:str = "146.137.240.38", PORT: int = 29999) -> None:
+        super().__init__(IP=IP, PORT=PORT)
+
         self.IP = IP
         self.PORT = PORT
+        
         self.connection = None
         self.connect_ur()
 
@@ -28,7 +31,7 @@ class Connection():
 
         for i in range(10):
             try:
-                self.ur = Robot(self.IP)
+                self.connection = Robot(self.IP)
 
             except socket.error:
                 print("Trying robot connection ...")
@@ -42,16 +45,14 @@ class Connection():
         """
         Description: Disconnects the socket connection with the UR robot
         """
-        self.ur.close()
+        self.connection.close()
         print("Robot connection is closed.")
 
-class UR(UR_DASHBOARD):
+class UR():
     
 
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, connection: Connection = None):
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, connection = None):
         
-        super().__init__(IP=IP, PORT=PORT)
-
         if not connection:
             raise Exception("Robot connection is not established")
         else:
@@ -242,8 +243,9 @@ if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    
-    robot = UR("192.168.1.100", connection=Connection(IP="192.168.1.100").connection)
+    robot_connection = Connection(IP="192.168.1.100")
+    robot = UR(connection = robot_connection.connection)
+    print(robot.get_joint_angles())
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
@@ -253,7 +255,7 @@ if __name__ == "__main__":
     #     robot.get_overall_robot_status()
     #     sleep(0.5)
 
-    robot.disconnect_ur()
+    robot_connection.disconnect_ur()
 
 
 
