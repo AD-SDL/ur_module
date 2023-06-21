@@ -268,7 +268,7 @@ class URClient(Node):
                 self.state = "COMPLETED"
             finally:
                 return response
-
+            #BUG: Action response never sent back
 
 def main(args = None):
 
