@@ -130,3 +130,6 @@ dmypy.json
 
 # Urx python repo to be ignorred in the local path
 python-urx/
+
+#VScode 
+.vscode/
