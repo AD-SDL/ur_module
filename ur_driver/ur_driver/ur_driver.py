@@ -257,9 +257,12 @@ class UR(UR_DASHBOARD):
         self.ur.movej(self.home_joint, self.acceleration, self.velocity)
 
         
-    def transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
-        ''''''
+    def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
+        '''
+        Make a transfer using the finger gripper
+        ''' 
         self.ur.set_tcp((0, 0, 0, 0, 0, 0))
+        # gripper = Gripper(self.ur)
         # robot.ur.set_payload(2, (0, 0, 0.1))
 
         self.pick(pos1)
@@ -327,3 +330,39 @@ if __name__ == "__main__":
     #     sleep(0.5)
 
     robot.disconnect_ur()
+
+
+class Gripper():
+    
+
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False, tool_changer_pv:str = None, pipette_pv:str = None, camera_pv:str = None):
+        
+        super().__init__(IP=IP, PORT=PORT)
+
+class VacuumGripper():
+    
+
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False):
+        
+        super().__init__(IP=IP, PORT=PORT)
+
+class Screwdriver():
+    
+
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
+        
+        super().__init__(IP=IP, PORT=PORT)
+
+class Pipette():
+    
+
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, pipette_pv:str = None, camera_pv:str = None):
+        
+        super().__init__(IP=IP, PORT=PORT)
+
+class ToolChanger():
+    
+
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, pipette_pv:str = None):
+        
+        super().__init__(IP=IP, PORT=PORT)
