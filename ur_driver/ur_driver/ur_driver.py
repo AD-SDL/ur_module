@@ -73,35 +73,6 @@ class UR(UR_DASHBOARD):
                 break
 
 
-    def connect_tool_changer(self, tool_changer_pv:str):
-        """
-        Connect tool changer
-        """
-
-        try:
-            # Establishing a connection with the tool changer using EPICS library.
-            self.tool_changer = epics.PV(tool_changer_pv)
-
-        except Exception as err:
-            print("Tool changer error: ", err)
-
-        else:
-            print("Tool changer is connected.")
-
-    def connect_pipette(self, pipette_pv:str):
-        """
-        Connect pipette
-        """
-
-        try:
-            # Establishing a connection with the pipette using EPICS library.
-            self.pipette = epics.PV(pipette_pv)
-
-        except Exception as err:
-            print("Pipette error: ", err)
-
-        else:
-            print("Pipette is connected.")
 
     def connect_camera(self, camera_pv:str):
         """
@@ -358,13 +329,43 @@ class ScrewdriverController():
 class PipetteController():
     
 
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, pipette_pv:str = None, camera_pv:str = None):
-        
-        super().__init__(IP=IP, PORT=PORT)
+    def __init__(self, pipette_pv:str = None):
+        self.pv = pipette_pv
+
+
+    def connect_pipette(self):
+        """
+        Connect pipette
+        """
+
+        try:
+            # Establishing a connection with the pipette using EPICS library.
+            self.pipette = epics.PV(self.pv)
+
+        except Exception as err:
+            print("Pipette error: ", err)
+
+        else:
+            print("Pipette is connected.")
 
 class ToolChangerController():
     
 
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, pipette_pv:str = None):
+    def __init__(self, tool_changer_pv:str = None):
+        self.pv = tool_changer_pv
+        self.connect_tool_changer()
         
-        super().__init__(IP=IP, PORT=PORT)
+    def connect_tool_changer(self, ):
+        """
+        Connect tool changer
+        """
+
+        try:
+            # Establishing a connection with the tool changer using EPICS library.
+            self.tool_changer = epics.PV(self.pv)
+
+        except Exception as err:
+            print("Tool changer error: ", err)
+
+        else:
+            print("Tool changer is connected.")
