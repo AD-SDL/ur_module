@@ -25,11 +25,6 @@ class UR(UR_DASHBOARD):
         self.pipette = None
         self.tool_changer = None
         self.camera = None
-    
-        self.gripper_close = 130 # 0-255 (255 is closed)
-        self.griper_open = 0
-        self.gripper_speed = 150 # 0-255
-        self.gripper_force = 0 # 0-255
 
         self.connect_ur()
         if gripper:
@@ -77,27 +72,6 @@ class UR(UR_DASHBOARD):
                 print('Successful ur connection')
                 break
 
-    def connect_gripper(self):
-        """
-        Connect to the gripper
-        """
-        try:
-            # GRIPPER SETUP:
-            self.gripper = robotiq_gripper.RobotiqGripper()
-            print('Connecting to gripper...')
-            self.gripper.connect(self.IP, 63352)
-
-        except Exception as err:
-            print("Gripper error: ", err)
-
-        else:
-            if self.gripper.is_active():
-                print('Gripper already active')
-            else:
-                print('Activating gripper...')
-                self.gripper.activate()
-                print('Opening gripper...')
-                self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
     def connect_tool_changer(self, tool_changer_pv:str):
         """
@@ -262,7 +236,7 @@ class UR(UR_DASHBOARD):
         Make a transfer using the finger gripper
         ''' 
         self.ur.set_tcp((0, 0, 0, 0, 0, 0))
-        # gripper = Gripper(self.ur)
+        gripper = GripperController(IP = self.IP, ur_connection = self.ur)
         # robot.ur.set_payload(2, (0, 0, 0.1))
 
         self.pick(pos1)
@@ -314,53 +288,82 @@ class UR(UR_DASHBOARD):
         return program_log
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+#     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+#     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
-    robot = UR("146.139.48.76", gripper = True)
-    log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
-    print(log)
-    # robot.transfer
-    # (robot.plate_exchange_1,robot.plate_exchange_1)
-    # for i in range(1000):
-    #     print(robot.get_movement_state())
-    #     robot.get_overall_robot_status()
-    #     sleep(0.5)
+#     robot = UR("146.139.48.76", gripper = True)
+#     log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
+#     print(log)
+#     # robot.transfer
+#     # (robot.plate_exchange_1,robot.plate_exchange_1)
+#     # for i in range(1000):
+#     #     print(robot.get_movement_state())
+#     #     robot.get_overall_robot_status()
+#     #     sleep(0.5)
 
-    robot.disconnect_ur()
+#     robot.disconnect_ur()
 
 
-class Gripper():
+class GripperController():
     
 
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False, tool_changer_pv:str = None, pipette_pv:str = None, camera_pv:str = None):
+    def __init__(self, IP:str = "146.137.240.38", ur_connection = None):
+        self.IP = IP
+        self.PORT = 63352
+        self.ur = ur_connection
+
+        self.gripper_close = 130 # 0-255 (255 is closed)
+        self.griper_open = 0
+        self.gripper_speed = 150 # 0-255
+        self.gripper_force = 0 # 0-255
         
-        super().__init__(IP=IP, PORT=PORT)
+    def connect_gripper(self):
+        """
+        Connect to the gripper
+        """
+        try:
+            # GRIPPER SETUP:
+            self.gripper = robotiq_gripper.RobotiqGripper()
+            print('Connecting to gripper...')
+            self.gripper.connect(self.IP, self.PORT)
 
-class VacuumGripper():
+        except Exception as err:
+            print("Gripper error: ", err)
+
+        else:
+            if self.gripper.is_active():
+                print('Gripper already active')
+            else:
+                print('Activating gripper...')
+                self.gripper.activate()
+                print('Opening gripper...')
+                self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
+
+
+class VacuumGripperController():
     
 
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False):
         
         super().__init__(IP=IP, PORT=PORT)
 
-class Screwdriver():
+class ScrewdriverController():
     
 
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
         
         super().__init__(IP=IP, PORT=PORT)
 
-class Pipette():
+class PipetteController():
     
 
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, pipette_pv:str = None, camera_pv:str = None):
         
         super().__init__(IP=IP, PORT=PORT)
 
-class ToolChanger():
+class ToolChangerController():
     
 
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, pipette_pv:str = None):
