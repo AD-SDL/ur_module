@@ -159,88 +159,17 @@ class UR(UR_DASHBOARD):
         print("Robot moved to home location")
 
 
-    def pick(self, pick_goal):
-
-        '''Pick up from first goal position'''
-
-        above_goal = deepcopy(pick_goal)
-        above_goal[2] += 0.05
-
-        print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
-
-        print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
-
-        print('Moving to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
-
-        print('Moving to goal position')
-        self.ur.movel(pick_goal, self.acceleration, self.velocity)
-
-        print('Closing gripper')
-        self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
-
-        print('Moving back to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
-
-        print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
-
-        print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
-
-
-    def place(self, place_goal):
-
-        '''Place down at second goal position'''
-
-        above_goal = deepcopy(place_goal)
-        above_goal[2] += 0.05
-
-        print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
-
-        print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
-
-        print('Moving to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
-
-        print('Moving to goal position')
-        self.ur.movel(place_goal, self.acceleration, self.velocity)
-
-        print('Opennig gripper')
-        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
-
-        print('Moving back to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
-
-        print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
-
-        print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
-
         
     def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
         '''
         Make a transfer using the finger gripper
         ''' 
         self.ur.set_tcp((0, 0, 0, 0, 0, 0))
-        gripper = GripperController(IP = self.IP, ur_connection = self.ur)
+        gripper_controller = GripperController(IP = self.IP, ur_connection = self.ur)
         # robot.ur.set_payload(2, (0, 0, 0.1))
 
-        self.pick(pos1)
-        self.place(pos2)
+        gripper_controller.pick(pos1)
+        gripper_controller.place(pos2)
         print('Finished transfer')
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
@@ -341,6 +270,76 @@ class GripperController():
                 print('Opening gripper...')
                 self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
+    def pick(self, pick_goal):
+
+        '''Pick up from first goal position'''
+
+        above_goal = deepcopy(pick_goal)
+        above_goal[2] += 0.05
+
+        print('Moving to home position')
+        # self.ur.movel(self.home, self.acceleration, self.velocity)
+        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
+
+        print("Moving to the module entry location")
+        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
+        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
+
+        print('Moving to above goal position')
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print('Moving to goal position')
+        self.ur.movel(pick_goal, self.acceleration, self.velocity)
+
+        print('Closing gripper')
+        self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
+
+        print('Moving back to above goal position')
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print("Moving to the module entry location")
+        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
+        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
+
+        print('Moving to home position')
+        # self.ur.movel(self.home, self.acceleration, self.velocity)
+        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
+
+
+    def place(self, place_goal):
+
+        '''Place down at second goal position'''
+
+        above_goal = deepcopy(place_goal)
+        above_goal[2] += 0.05
+
+        print('Moving to home position')
+        # self.ur.movel(self.home, self.acceleration, self.velocity)
+        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
+
+        print("Moving to the module entry location")
+        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
+        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
+
+        print('Moving to above goal position')
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print('Moving to goal position')
+        self.ur.movel(place_goal, self.acceleration, self.velocity)
+
+        print('Opennig gripper')
+        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
+
+        print('Moving back to above goal position')
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print("Moving to the module entry location")
+        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
+        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
+
+        print('Moving to home position')
+        # self.ur.movel(self.home, self.acceleration, self.velocity)
+        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
 
 class VacuumGripperController():
     
