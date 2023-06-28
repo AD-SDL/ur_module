@@ -64,7 +64,7 @@ class PipetteController():
         """
 
         try:
-            # Establishing a connection with the pipette using EPICS library.
+            # Establishing a connection with the pipette on EPICS
             self.pipette = epics.PV(self.pv)
             
         except Exception as err:
@@ -79,7 +79,7 @@ class PipetteController():
         """
 
         try:
-            # Establishing a connection with the pipette using EPICS library.
+            # Closing the connection with the pipette on EPICS 
             self.pipette.disconnect()
             
         except Exception as err:

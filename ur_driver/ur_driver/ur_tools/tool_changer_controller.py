@@ -17,7 +17,7 @@ class ToolChangerController():
         """
 
         try:
-            # Establishing a connection with the tool changer using EPICS library.
+            # Establishing a connection with the tool changer on EPICS
             self.tool_changer = epics.PV(self.pv)
 
         except Exception as err:
@@ -26,7 +26,21 @@ class ToolChangerController():
         else:
             print("Tool changer is connected.")
 
-    
+    def disconnect_tool_changer(self):
+        """
+        Disconnect tool changer
+        """
+
+        try:
+            # Closing the connection with the tool changer on EPICS
+            self.tool_changer.disconnect()
+
+        except Exception as err:
+            print("Tool changer error: ", err)
+
+        else:
+            print("Tool changer is disconnected.")
+
     def get_tool_changer_status(self):
         """
         Description: 
