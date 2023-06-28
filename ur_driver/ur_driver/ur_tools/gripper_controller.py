@@ -1,10 +1,19 @@
-class GripperController():
+from time import sleep
+from copy import deepcopy
+
+from robotiq_gripper_driver import RobotiqGripper
+
+class FingerGripperController():
     
 
     def __init__(self, IP:str = "146.137.240.38", ur_connection = None):
         self.IP = IP
         self.PORT = 63352
-        self.ur = ur_connection
+
+        if not ur_connection:
+            raise Exception("UR connection is not established")
+        else:
+            self.ur = ur_connection
 
         self.gripper_close = 130 # 0-255 (255 is closed)
         self.griper_open = 0
@@ -34,7 +43,7 @@ class GripperController():
         """
         try:
             # GRIPPER SETUP:
-            self.gripper = robotiq_gripper.RobotiqGripper()
+            self.gripper = RobotiqGripper()
             print('Connecting to gripper...')
             self.gripper.connect(self.IP, self.PORT)
 
@@ -121,7 +130,31 @@ class GripperController():
         # self.ur.movel(self.home, self.acceleration, self.velocity)
         self.ur.movej(self.home_joint, self.acceleration, self.velocity)
 
+class HandGripperController():
+    
 
+    def __init__(self, IP:str = "146.137.240.38", ur_connection = None):
+        self.IP = IP
+        self.PORT = 63352
+
+        if not ur_connection:
+            raise Exception("UR connection is not established")
+        else:
+            self.ur = ur_connection
+
+        self.gripper_close = 130 # 0-255 (255 is closed)
+        self.griper_open = 0
+        self.gripper_speed = 150 # 0-255
+        self.gripper_force = 0 # 0-255
+
+        self.acceleration = 0.5
+        self.velocity = 0.2
+        self.speed_ms    = 0.750
+        self.speed_rads  = 0.750
+        self.accel_mss   = 1.200
+        self.accel_radss = 1.200
+        self.blend_radius_m = 0.001
+        self.ref_frame = [0,0,0,0,0,0]
 
 class VacuumGripperController():
     
