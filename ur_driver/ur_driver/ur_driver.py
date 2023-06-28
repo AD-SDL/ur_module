@@ -359,9 +359,9 @@ class PipetteController():
         else:
             print("Pipette is connected.")
     
-    def pick_pipette(self):
+    def move_pipette_dock(self):
         """
-        Description: Moves the roboto to the doscking location and then picks up the pipette.
+        Description: Moves the robot to the doscking location and then picks up the pipette.
         """
         print("Picking up the pipette...")
         accel_mss = 1.00
@@ -377,7 +377,11 @@ class PipetteController():
         self.ur.movel(self.pipette_loc,self.accel_mss,speed_ms,0,0)
         sleep(5)
         # LOCK THE TOOL CHANGER TO ATTACH THE PIPETTE HERE
-        self.lock_tool_changer()######################
+
+    def lift_pipette_on_dock(self):
+        """
+        Description: Moves the robot to the doscking location and then picks up the pipette.
+        """
         sleep(5.0)
         self.ur.movel(self.pipette_approach,self.accel_mss,speed_ms,0,0)
         sleep(1)
@@ -386,30 +390,6 @@ class PipetteController():
         sleep(2)
         print("Pipette successfully picked up")
        
-
-    def place_pipette(self):
-        """
-        Description: Moves the robot to the pipette docking location and the places the pipette.
-        """
-
-        print("Placing the pipette...")
-        speed_ms = 0.5
-        self.ur.movel(self.pipette_above,self.ur.accel_radss, self.speed_ms,0,0)
-        sleep(2)
-        self.ur.movel(self.pipette_approach,self.ur.accel_mss,speed_ms,0,0) 
-        sleep(1)
-        speed_ms = 0.01
-        self.ur.movel(self.pipette_loc,self.ur.accel_mss,speed_ms,0,0)
-        sleep(5)
-        # Detach pipette
-        self.unlock_tool_changer() ############################
-        sleep(5.0)
-        self.ur.movel(self.pipette_approach,self.ur.accel_mss,speed_ms,0,0)
-        sleep(1)
-        speed_ms = 0.500
-        self.ur.movel(self.pipette_above,self.ur.accel_mss,speed_ms,0,0)
-        sleep(2)
-        print("Pipette successfully placed")
 
 
     def pick_tip(self, x=0, y=0):
@@ -454,8 +434,6 @@ class PipetteController():
         self.ur.movel(self.tip2_above,self.accel_mss,speed_ms,0,0)
         sleep(2)    
         print("Second pipette tip successfully picked up")
-
-       
 
     def make_sample(self):
         
@@ -562,8 +540,7 @@ class PipetteController():
         current_value = self.pipette.get()
         self.pipette.put(float(current_value) - self.droplet_value)
         sleep(10)
-
-        
+  
 
     def retrieve_droplet(self):
         """
@@ -603,53 +580,57 @@ class PipetteController():
         self.pipette.put(0)
         sleep(2)
   
-
     def empty_tip(self):
         """
         Description: Dispenses all the liquid inside pipette tip.
         """
-        try:
-            print("Empting tip...")
-            speed_ms = 0.5  
-            # Moving the robot to the empty tube location
-            self.ur.movel(self.empty_tube_above,self.ur.accel_mss,self.speed_ms,0,0)
-            sleep(2)
-            speed_ms = 0.1
-            self.ur.movel(self.empty_tube,self.ur.accel_mss,speed_ms,0,0)
-            sleep(2)
+        print("Empting tip...")
+        speed_ms = 0.5  
+        # Moving the robot to the empty tube location
+        self.ur.movel(self.empty_tube_above,self.ur.accel_mss,self.speed_ms,0,0)
+        sleep(2)
+        speed_ms = 0.1
+        self.ur.movel(self.empty_tube,self.ur.accel_mss,speed_ms,0,0)
+        sleep(2)
 
-            # Drive the pipette three times to dispense all the liquid inside the pipette tip.
-            for i in range(3):
-                self.dispense_pipette()
-                sleep(1)
-
-            self.ur.movel(self.empty_tube_above,self.ur.accel_mss,speed_ms,0,0)
+        # Drive the pipette three times to dispense all the liquid inside the pipette tip.
+        for i in range(3):
+            self.dispense_pipette()
             sleep(1)
-        
-        except Exception as err:
-            print("Empting tip failed: ", err)
+
+        self.ur.movel(self.empty_tube_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+    
+
 
     def droplet_exp(self, tip_number_1:int = None, tip_number_2:int = None):
         """
         Description: Runs the full droplet experiment by calling the functions that perform each step in the experiment.
         """
         print("-*-*-* Starting the droplet experiment *-*-*-")
-        self.pick_pipette()
+        self.move_pipette_dock()
+        self.lock_tool_changer()
+        self.lift_pipette_on_dock()
         self.home_robot()
         self.pick_tip()
         self.make_sample()
         self.home_robot()
-        self.place_pipette()
+        self.move_pipette_dock()
+        self.unlock_tool_changer()
+        self.lift_pipette_on_dock()        
         self.create_droplet()
         self.retrieve_droplet()
-        self.pick_pipette()
+        self.move_pipette_dock()
+        self.lock_tool_changer()
+        self.lift_pipette_on_dock()        
         self.home_robot()
         self.empty_tip()
         self.drop_tip_to_trash()
         self.home_robot()
-        self.place_pipette()
+        self.move_pipette_dock()
+        self.unlock_tool_changer()
+        self.lift_pipette_on_dock()         
         print("-*-*-* Droplet experiment is completed *-*-*-")
-        self.disconnect_robot()
 
 
 class ToolChangerController():
