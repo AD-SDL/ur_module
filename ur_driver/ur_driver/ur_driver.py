@@ -13,31 +13,12 @@ from ur_driver.ur_dashboard import UR_DASHBOARD
 import ur_driver.robotiq_gripper as robotiq_gripper
 from urx import Robot, RobotException
 
-class UR(UR_DASHBOARD):
-    
-
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False, tool_changer_pv:str = None, pipette_pv:str = None, camera_pv:str = None):
-        
-        super().__init__(IP=IP, PORT=PORT)
-
-        self.ur = None
-
-        self.connect_ur()
-    
-        self.connect_camera(camera_pv)
-
-        self.acceleration = 0.5
-        self.velocity = 0.2
-        self.speed_ms    = 0.750
-        self.speed_rads  = 0.750
-        self.accel_mss   = 1.200
-        self.accel_radss = 1.200
-        self.blend_radius_m = 0.001
-        self.ref_frame = [0,0,0,0,0,0]
-
-        self.robot_current_joint_angles = None
-        self.get_movement_state()
-
+class Connection():
+    """Connection to the UR robot to be shared within UR driver """
+    def __init__(self,  IP:str = "146.137.240.38", PORT: int = 29999) -> None:
+        self.IP = IP
+        self.PORT = PORT
+        self.connection = None
 
     def connect_ur(self):
         """
@@ -55,6 +36,30 @@ class UR(UR_DASHBOARD):
             else:
                 print('Successful ur connection')
                 break
+
+
+class UR(UR_DASHBOARD):
+    
+
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, gripper:bool = False, tool_changer_pv:str = None, pipette_pv:str = None, camera_pv:str = None):
+        
+        super().__init__(IP=IP, PORT=PORT)
+
+        self.ur = None
+    
+        self.connect_camera(camera_pv)
+
+        self.acceleration = 0.5
+        self.velocity = 0.2
+        self.speed_ms    = 0.750
+        self.speed_rads  = 0.750
+        self.accel_mss   = 1.200
+        self.accel_radss = 1.200
+        self.blend_radius_m = 0.001
+        self.ref_frame = [0,0,0,0,0,0]
+
+        self.robot_current_joint_angles = None
+        self.get_movement_state()
 
 
     def connect_camera(self, camera_pv:str):
@@ -406,8 +411,8 @@ class ScrewdriverController():
         pass
     def update_urp_programs(self):
         pass
+
 class PipetteController():
-    
 
     def __init__(self, pipette_pv:str = None, ur_connection = None):
 
