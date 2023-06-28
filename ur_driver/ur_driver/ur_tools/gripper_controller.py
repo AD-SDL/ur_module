@@ -59,6 +59,18 @@ class FingerGripperController():
                 print('Opening gripper...')
                 self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
+    def disconnect_gripper(self):
+        """
+        Discconect from the gripper
+        """
+        try:
+            self.gripper.disconnect()
+        except Exception as err:
+            print("Gripper error: ", err)
+
+        else:
+            print("Gripper conenction is closed")
+            
     def pick(self, pick_goal):
 
         '''Pick up from first goal position'''
