@@ -1,9 +1,18 @@
 from time import sleep
 from copy import deepcopy
 
+import epics
+
 class PipetteController():
 
     def __init__(self, pipette_pv:str = None, ur_connection = None):
+        """
+        Initializes the PipetteController class.
+        
+        Parameters:
+        - pipette_pv (str): The EPICS process variable (PV) for the pipette.
+        - ur_connection: The connection object for the Universal Robot (UR) robot.
+        """
 
         self.pv = pipette_pv
 
@@ -57,13 +66,28 @@ class PipetteController():
         try:
             # Establishing a connection with the pipette using EPICS library.
             self.pipette = epics.PV(self.pv)
-
+            
         except Exception as err:
             print("Pipette error: ", err)
 
         else:
-            print("Pipette is connected.")
-    
+            print("Pipette is connected")
+
+    def disconnect_pipette(self):
+        """
+        Disconnect pipette
+        """
+
+        try:
+            # Establishing a connection with the pipette using EPICS library.
+            self.pipette.disconnect()
+            
+        except Exception as err:
+            print("Pipette error: ", err)
+
+        else:
+            print("Pipette is disconnected")
+
     def move_pipette_dock(self):
         """
         Description: Moves the robot to the doscking location and then picks up the pipette.
