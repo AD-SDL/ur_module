@@ -1,12 +1,16 @@
 from time import sleep
-
+from copy import deepcopy
 
 class PipetteController():
 
     def __init__(self, pipette_pv:str = None, ur_connection = None):
 
         self.pv = pipette_pv
-        self.ur = ur_connection
+
+        if not ur_connection:
+            raise Exception("UR connection is not established")
+        else:
+            self.ur = ur_connection
 
         self.acceleration = 0.5
         self.velocity = 0.2
