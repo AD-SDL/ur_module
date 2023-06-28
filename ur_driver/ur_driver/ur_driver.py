@@ -2,7 +2,6 @@
 
 import threading
 import socket 
-import epics
 
 from multiprocessing.connection import wait
 from time import sleep
@@ -148,6 +147,7 @@ class UR(UR_DASHBOARD):
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
         pipette_controller = PipetteController(ur_connection=self.ur)
+        pipette_controller.connect_pipette()
         self.home(home_J)
         pipette_controller.pick_tip()
         pipette_controller.make_sample()
@@ -177,8 +177,6 @@ class UR(UR_DASHBOARD):
         pipette_controller = PipetteController(ur_connection=self.ur)
         tool_changer_controller = ToolChangerController()
 
- 
-
         pipette_controller.move_pipette_dock()
         tool_changer_controller.lock_tool_changer()
         pipette_controller.lift_pipette_on_dock()    
@@ -198,12 +196,14 @@ class UR(UR_DASHBOARD):
         Make a transfer using the finger gripper
         ''' 
         self.ur.set_tcp((0, 0, 0, 0, 0, 0))
-        gripper_controller = GripperController(IP = self.IP, ur_connection = self.ur)
+        gripper_controller = FingerGripperController(IP = self.IP, ur_connection = self.ur)
+        gripper_controller.connect_gripper()
         # robot.ur.set_payload(2, (0, 0, 0.1))
 
         gripper_controller.pick(pos1)
         gripper_controller.place(pos2)
         print('Finished transfer')
+        gripper_controller.disconnect_gripper()
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
 
@@ -250,22 +250,22 @@ class UR(UR_DASHBOARD):
         return program_log
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-#     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     
-#     robot = UR("146.139.48.76", gripper = True)
-#     log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
-#     print(log)
-#     # robot.transfer
-#     # (robot.plate_exchange_1,robot.plate_exchange_1)
-#     # for i in range(1000):
-#     #     print(robot.get_movement_state())
-#     #     robot.get_overall_robot_status()
-#     #     sleep(0.5)
+    robot = UR("146.139.48.76", gripper = True)
+    log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
+    print(log)
+    # robot.transfer
+    # (robot.plate_exchange_1,robot.plate_exchange_1)
+    # for i in range(1000):
+    #     print(robot.get_movement_state())
+    #     robot.get_overall_robot_status()
+    #     sleep(0.5)
 
-#     robot.disconnect_ur()
+    robot.disconnect_ur()
 
 
 
