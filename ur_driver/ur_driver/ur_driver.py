@@ -336,9 +336,13 @@ class ScrewdriverController():
 class PipetteController():
     
 
-    def __init__(self, pipette_pv:str = None):
+    def __init__(self, pipette_pv:str = None, ur_connection = None):
         self.pv = pipette_pv
-
+        self.ur = ur_connection
+        self.pipette_drop_tip_value = -8
+        self.pipette_aspirate_value = 2.0
+        self.pipette_dispense_value = -2.0
+        self.droplet_value = 0.3
 
     def connect_pipette(self):
         """
@@ -354,6 +358,299 @@ class PipetteController():
 
         else:
             print("Pipette is connected.")
+    
+    def pick_pipette(self):
+        """
+        Description: Moves the roboto to the doscking location and then picks up the pipette.
+        """
+        print("Picking up the pipette...")
+        accel_mss = 1.00
+        speed_ms = 1.00
+    
+        print("Picking up the pipette...")
+        sleep(1)
+        self.ur.movel(self.pipette_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(2)
+        self.ur.movel(self.pipette_approach,self.accel_mss,speed_ms,0,0)
+        speed_ms = 0.01
+        sleep(1)
+        self.ur.movel(self.pipette_loc,self.accel_mss,speed_ms,0,0)
+        sleep(5)
+        # LOCK THE TOOL CHANGER TO ATTACH THE PIPETTE HERE
+        self.lock_tool_changer()######################
+        sleep(5.0)
+        self.ur.movel(self.pipette_approach,self.accel_mss,speed_ms,0,0)
+        sleep(1)
+        speed_ms = 0.1
+        self.ur.movel(self.pipette_above,self.accel_mss,speed_ms,0,0)
+        sleep(2)
+        print("Pipette successfully picked up")
+       
+
+    def place_pipette(self):
+        """
+        Description: Moves the robot to the pipette docking location and the places the pipette.
+        """
+
+        print("Placing the pipette...")
+        speed_ms = 0.5
+        self.ur.movel(self.pipette_above,self.ur.accel_radss, self.speed_ms,0,0)
+        sleep(2)
+        self.ur.movel(self.pipette_approach,self.ur.accel_mss,speed_ms,0,0) 
+        sleep(1)
+        speed_ms = 0.01
+        self.ur.movel(self.pipette_loc,self.ur.accel_mss,speed_ms,0,0)
+        sleep(5)
+        # Detach pipette
+        self.unlock_tool_changer() ############################
+        sleep(5.0)
+        self.ur.movel(self.pipette_approach,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+        speed_ms = 0.500
+        self.ur.movel(self.pipette_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(2)
+        print("Pipette successfully placed")
+
+
+    def pick_tip(self, x=0, y=0):
+        """
+        Description: Picks up a new tip from the first location on the pipette bin.
+        """
+
+        print("Picking up the first pipette tip...")
+        speed_ms = 0.100
+
+        self.ur.movel(self.tip1_above,self.ur.accel_radss,self.speed_rads,0,0)
+        sleep(2)
+        speed_ms = 0.01
+        self.ur.movel(self.tip1_approach,self.ur.accel_radss,self.speed_rads,0,0)
+        sleep(2)    
+        self.ur.movel(self.tip1_loc,self.ur.accel_mss,speed_ms,0,0)
+        sleep(3)
+        self.ur.movel(self.tip1_approach,self.ur.accel_mss,speed_ms,0,0)
+        sleep(2)
+        speed_ms = 0.1
+        self.ur.movel(self.tip1_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(2)
+        print("Pipette tip successfully picked up")
+
+    def pick_tip2(self, x=0, y=0):
+        """
+        Description: Picks up a new tip from the second location on the pipette bin.
+        """
+        
+        print("Picking up the second pipette tip...")
+        speed_ms = 0.100
+        self.ur.movel(self.tip2_above,self.accel_radss,self.speed_rads,0,0)
+        sleep(2)
+        speed_ms = 0.01
+        self.ur.movel(self.tip2_approach,self.accel_radss,self.speed_rads,0,0)
+        sleep(2)    
+        self.ur.movel(self.tip2_loc,self.accel_mss,speed_ms,0,0)
+        sleep(3)
+        self.ur.movel(self.tip2_approach,self.accel_mss,speed_ms,0,0)
+        sleep(2)
+        speed_ms = 0.1
+        self.ur.movel(self.tip2_above,self.accel_mss,speed_ms,0,0)
+        sleep(2)    
+        print("Second pipette tip successfully picked up")
+
+       
+
+    def make_sample(self):
+        
+        """
+        Description: 
+            - Makes a new sample on the 96 well plate.
+            - Mixes to liquits in a single well and uses a new pipette tip for each liquid.
+            - In order to mix the liquids together, pipette performs aspirate and dispense operation multiple times in the well that contains both the liquids.
+        """
+        print("Making a sample using two liquids...")
+        
+        # MOVE TO THE FIRT SAMPLE LOCATION
+        speed_ms = 0.1
+        self.ur.movel(self.sample1_above,self.ur.accel_mss,self.speed_ms,0,0)
+        sleep(2)
+        self.ur.movel(self.sample1,self.ur.accel_mss,speed_ms,0,0)
+        sleep(2)
+
+        # ASPIRATE FIRST SAMPLE
+        self.aspirate_pipette()
+        self.ur.movel(self.sample1_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+
+        # MOVE TO THE 1ST WELL
+        self.ur.movel(self.well1_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+        self.ur.movel(self.well1,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+
+        # DISPENSE FIRST SAMPLE INTO FIRST WELL
+        self.dispense_pipette()
+        self.ur.movel(self.well1_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+
+        # Changing tip
+        self.drop_tip_to_trash()
+        self.pick_tip2()
+
+        # MOVE TO THE SECON SAMPLE LOCATION
+        self.ur.movel(self.sample2_above,self.ur.accel_mss,self.speed_ms,0,0)
+        sleep(3)
+        self.ur.movel(self.sample2,self.ur.accel_mss,speed_ms,0,0)
+        sleep(2)
+
+        # ASPIRATE SECOND SAMPLE
+        self.aspirate_pipette()       
+        self.ur.movel(self.sample2_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+
+        # MOVE TO THE 1ST WELL
+        self.ur.movel(self.well1_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)    
+        self.ur.movel(self.well1,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+
+        # DISPENSE SECOND SAMPLE INTO FIRST WELL
+        self.dispense_pipette()
+
+        # MIX SAMPLE
+        for i in range(3):
+            self.aspirate_pipette()
+            self.dispense_pipette()
+
+        # Aspirate all the liquid   
+        self.aspirate_pipette()
+        self.aspirate_pipette()
+        self.ur.movel(self.well1_above,self.ur.accel_mss,speed_ms,0,0)
+        sleep(1)
+        print("Sample is prepared")
+
+
+    def aspirate_pipette(self):
+        """
+        Description: 
+            - Drives pipette to aspirate liquid. 
+            - Number of motor steps to aspirate liquid is stored in "self.pipette_aspirate_value".
+            - Pipette is controlled by pyepics PV commands.
+        """
+        print("Aspirating the sample...")
+        current_value = self.pipette.get()
+        self.pipette.put(float(current_value) + self.pipette_aspirate_value)
+        sleep(1)
+
+    def dispense_pipette(self):
+        """
+        Description: 
+            - Drives pipette to dispense liquid. 
+            - Number of motor steps to dispense liquid is stored in "self.pipette_dispense_value".
+            - Pipette is controlled by pyepics PV commands.
+        """
+        print("Dispensing sample")
+        current_value = self.pipette.get()
+        self.pipette.put(float(current_value)+ self.pipette_dispense_value)
+        sleep(1)
+
+    def create_droplet(self):
+        """
+        Description: 
+            - Drives pipette to create a droplet.
+            - Number of motor steps to create a droplet is stored in "self.droplet_value".
+            - Pipette is controlled by pyepics PV commands.
+        """
+        print("Creating a droplet...")
+        current_value = self.pipette.get()
+        self.pipette.put(float(current_value) - self.droplet_value)
+        sleep(10)
+
+        
+
+    def retrieve_droplet(self):
+        """
+        Description: 
+            - Retrieves the droplet back into the pipette tip.
+            - Number of motor steps to retrieve a droplet is stored in "self.droplet_value".
+            - Pipette is controlled by pyepics PV commands.
+        """
+        print("Retrieving droplet...")
+        current_value = self.pipette.get()
+        self.pipette.put(float(current_value) + self.droplet_value + 0.5)
+        sleep(1)
+    
+    def drop_tip_to_trash(self):        
+        """
+        Description: Drops the pipette tip by driving the pipette all the way to the lowest point.
+        """
+
+        print("Droping tip to the trash bin...")
+        # Move to the trash bin location
+        self.ur.movel(self.trash_bin_above, self.accel_mss, self.speed_ms,0,0)
+        sleep(2)
+        self.ur.movel(self.trash_bin, self.accel_mss, self.speed_ms, 0, 0)
+        sleep(2)
+        self.eject_tip()
+        sleep(1)
+        self.ur.movel(self.trash_bin_above, self.accel_mss, self.speed_ms,0,0)
+        sleep(2)
+
+    def eject_tip(self):
+        """
+        Description: Ejects the pipette tip
+        """
+        print("Ejecting the tip")
+        self.pipette.put(self.pipette_drop_tip_value)
+        sleep(2)
+        self.pipette.put(0)
+        sleep(2)
+  
+
+    def empty_tip(self):
+        """
+        Description: Dispenses all the liquid inside pipette tip.
+        """
+        try:
+            print("Empting tip...")
+            speed_ms = 0.5  
+            # Moving the robot to the empty tube location
+            self.ur.movel(self.empty_tube_above,self.ur.accel_mss,self.speed_ms,0,0)
+            sleep(2)
+            speed_ms = 0.1
+            self.ur.movel(self.empty_tube,self.ur.accel_mss,speed_ms,0,0)
+            sleep(2)
+
+            # Drive the pipette three times to dispense all the liquid inside the pipette tip.
+            for i in range(3):
+                self.dispense_pipette()
+                sleep(1)
+
+            self.ur.movel(self.empty_tube_above,self.ur.accel_mss,speed_ms,0,0)
+            sleep(1)
+        
+        except Exception as err:
+            print("Empting tip failed: ", err)
+
+    def droplet_exp(self, tip_number_1:int = None, tip_number_2:int = None):
+        """
+        Description: Runs the full droplet experiment by calling the functions that perform each step in the experiment.
+        """
+        print("-*-*-* Starting the droplet experiment *-*-*-")
+        self.pick_pipette()
+        self.home_robot()
+        self.pick_tip()
+        self.make_sample()
+        self.home_robot()
+        self.place_pipette()
+        self.create_droplet()
+        self.retrieve_droplet()
+        self.pick_pipette()
+        self.home_robot()
+        self.empty_tip()
+        self.drop_tip_to_trash()
+        self.home_robot()
+        self.place_pipette()
+        print("-*-*-* Droplet experiment is completed *-*-*-")
+        self.disconnect_robot()
+
 
 class ToolChangerController():
     
@@ -362,7 +659,7 @@ class ToolChangerController():
         self.pv = tool_changer_pv
         self.connect_tool_changer()
         
-    def connect_tool_changer(self, ):
+    def connect_tool_changer(self):
         """
         Connect tool changer
         """
@@ -376,3 +673,37 @@ class ToolChangerController():
 
         else:
             print("Tool changer is connected.")
+
+    
+    def get_tool_changer_status(self):
+        """
+        Description: 
+            - Gets the tool changer current status. 
+            - Tool changer is controlled by pyepics PV commands.
+        """
+        status = self.tool_changer.get()
+        return status
+
+    def lock_tool_changer(self):
+        """
+        Description: 
+            - Locks the tool changer. 
+            - Tool changer is controlled by pyepics PV commands.
+        """
+        try:
+            print("Locking the tool changer...")
+            self.tool_changer.put(1)
+        except Exception as err:
+            print("Error accured while locking the tool changer: ", err)
+
+    def unlock_tool_changer(self):
+        """
+        Description: 
+            - Unlocks the tool changer. 
+            - Tool changer is controlled by pyepics PV commands.
+        """
+        try:
+            print("Unlocking the tool changer...")
+            self.tool_changer.put(0)
+        except Exception as err:
+            print("Error accured while unlocking the tool changer: ", err)
