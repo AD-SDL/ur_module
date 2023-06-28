@@ -11,7 +11,6 @@ import json
 
 from ur_dashboard import UR_DASHBOARD
 from ur_tools import *
-# import ur_driver.robotiq_gripper as robotiq_gripper
 from urx import Robot, RobotException
 
 
@@ -155,12 +154,12 @@ class UR(UR_DASHBOARD):
         self.home(home_J)
 
     def run_droplet(self):
-        pipette_controller = pipette_controller.PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur)
         pipette_controller.create_droplet()
         pipette_controller.retrieve_droplet()
 
     def dispose_tip(self):
-        pipette= pipette_controller.PipetteController(ur_connection=self.ur)
+        pipette= PipetteController(ur_connection=self.ur)
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
         self.home(home_J)
@@ -175,8 +174,8 @@ class UR(UR_DASHBOARD):
         print("-*-*-* Starting the droplet experiment *-*-*-")
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
-        pipette = ur_tools.pipette_controller.PipetteController(ur_connection=self.ur)
-        tool_changer = tool_changer_controller.ToolChangerController()
+        pipette_controller = PipetteController(ur_connection=self.ur)
+        tool_changer_controller = ToolChangerController()
 
  
 
@@ -270,20 +269,5 @@ class UR(UR_DASHBOARD):
 
 
 
-class ScrewdriverController():
-    
 
-    def __init__(self ):
-        """"""
-        self.home_urp = "home_screwdriver.urp"
-        self.drive_forward_urp = "home_screwdriver.urp"
-        self.driver_backward_urp = "home_screwdriver.urp"
-
-    def check_screwdriver_controls(self):
-        pass  
-    def get_urp_programs(self):
-        # Read from file and save it on the ur 
-        pass
-    def update_urp_programs(self):
-        pass
 
