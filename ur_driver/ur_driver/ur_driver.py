@@ -140,6 +140,9 @@ class UR(UR_DASHBOARD):
         pipette_controller.move_pipette_dock()
         tool_changer_controller.unlock_tool_changer()
         pipette_controller.lift_pipette_on_dock()  
+        pipette_controller.disconnect_pipette()
+        tool_changer_controller.disconnect_tool_changer()
+
 
     def create_sample(self):
         """"""
@@ -152,21 +155,24 @@ class UR(UR_DASHBOARD):
         pipette_controller.pick_tip()
         pipette_controller.make_sample()
         self.home(home_J)
+        pipette_controller.disconnect_pipette()
 
     def run_droplet(self):
         pipette_controller = PipetteController(ur_connection=self.ur)
         pipette_controller.create_droplet()
         pipette_controller.retrieve_droplet()
+        pipette_controller.disconnect_pipette()
+
 
     def dispose_tip(self):
-        pipette= PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur)
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
+        self.home(home_J)
+        pipette_controller.empty_tip()
+        pipette_controller.drop_tip_to_trash()
+        self.home(home_J)
+        pipette_controller.disconnect_pipette()
 
-        self.home(home_J)
-        pipette.empty_tip()
-        pipette.drop_tip_to_trash()
-        self.home(home_J)
-        
     def droplet_exp(self, tip_number_1:int = None, tip_number_2:int = None):
         """
         Description: Runs the full droplet experiment by calling the functions that perform each step in the experiment.
