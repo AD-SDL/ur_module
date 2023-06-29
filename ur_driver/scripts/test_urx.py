@@ -3,7 +3,16 @@ from time import sleep
 from math import radians, pi
 import math3d as m3d
 
-robot = Robot("192.168.1.102")
+robot = Robot("192.168.1.100")
+
+# Set TCP
+robot.set_tcp()
+
+# Set Payload
+robot.set_payload()
+
+# Set robot to freedrive for 60 seconds
+robot.set_freedrive()
 
 # Get robot current location based on joint angles
 robot.getj()
@@ -12,7 +21,7 @@ robot.getj()
 robot.getl()
 
 # Joint movement using joint angles in radians
-robot.movej((radians(-97.88), radians(-119.54), radians(-41.06), radians(-109.47), radians(90.48), radians(82.48)), acc = 0.01, vel = 0.01)
+robot.movej([radians(-97.88), radians(-119.54), radians(-41.06), radians(-109.47), radians(90.48), radians(82.48)], acc = 0.1, vel = 0.1)
 
 # Linear movement, using cartesian coordinates with respect to base reference frame
 robot.movel([-0.22575, -0.65792, 0.39771, 2.216, 2.196, -0.043], acc=0.01, vel=0.01)
