@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import os
 from glob import glob
 
@@ -17,7 +17,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Kendrick, Doga Ozgulbas',
+    maintainer='Doga Ozgulbas',
     maintainer_email='dozgulbas@anl.gov',
     description='TODO: Package description',
     license='TODO: License declaration',
@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'ur_driver = ur_driver.ur_driver:main',
+            'ur_tools = ur_driver.ur_driver.ur_tools',
 
         ],
     },
