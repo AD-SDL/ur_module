@@ -13,10 +13,9 @@ from .ur_tools import *
 from urx import Robot, RobotException
 
 
-class Connection(UR_DASHBOARD):
+class Connection():
     """Connection to the UR robot to be shared within UR driver """
     def __init__(self,  IP:str = "146.137.240.38", PORT: int = 29999) -> None:
-        super().__init__(IP=IP, PORT=PORT)
 
         self.IP = IP
         self.PORT = PORT
@@ -48,7 +47,7 @@ class Connection(UR_DASHBOARD):
         self.connection.close()
         print("Robot connection is closed.")
 
-class UR():
+class UR(UR_DASHBOARD):
     
 
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
@@ -57,8 +56,13 @@ class UR():
         #     raise Exception("Robot connection is not established")
         # else:
         #     self.ur = connection
+        super().__init__(IP=IP, PORT=PORT)
+
+        self.IP = IP
+        self.PORT = PORT
         
-        self.ur_connection = Connection(IP="192.168.1.100", PORT= 29999).connection
+        self.ur_connection = Connection(IP = self.IP, PORT = self.PORT).connection
+        
         self.acceleration = 0.5
         self.velocity = 0.2
         self.speed_ms    = 0.750
@@ -222,11 +226,11 @@ class UR():
         while program_status == "BUSY":
             if self.get_movement_state() == "READY":
                 ready_status_count += 1
-                if ready_status_count >=3:
+                if ready_status_count >=6:
                     program_status = "READY"
             else:
                 ready_status_count = 0
-            sleep(2)
+            sleep(3)
 
         #TODO: FIX the output loggings 
 
