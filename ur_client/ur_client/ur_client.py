@@ -7,7 +7,6 @@ from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor
 from std_msgs.msg import String
 
 from ur_driver.ur_driver import UR 
-# import ur_driver.ur_driver.ur_tools
 from time import sleep
 import socket
 import json
@@ -84,7 +83,7 @@ class URClient(Node):
     def connect_robot(self):
         
         try:
-            self.ur = UR(self.IP, gripper = self.gripper, tool_changer_pv = self.tool_changer_pv, pipette_pv =self.pipette_pv, camera_pv = self.camera_pv)
+            self.ur = UR(self.IP)
         except Exception as err:
             self.get_logger().error(str(err))
         else:
