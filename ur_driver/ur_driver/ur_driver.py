@@ -51,13 +51,14 @@ class Connection(UR_DASHBOARD):
 class UR():
     
 
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999, connection = None):
+    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
         
-        if not connection:
-            raise Exception("Robot connection is not established")
-        else:
-            self.ur = connection
-    
+        # if not connection:
+        #     raise Exception("Robot connection is not established")
+        # else:
+        #     self.ur = connection
+        
+        self.ur_connection = Connection(IP="192.168.1.100", PORT= 29999).connection
         self.acceleration = 0.5
         self.velocity = 0.2
         self.speed_ms    = 0.750
@@ -73,11 +74,11 @@ class UR():
 
     def get_joint_angles(self):
         
-        return self.ur.getj()
+        return self.ur_connection.getj()
     
     def get_cartesian_coordinates(self):
         
-        return self.ur.getl()
+        return self.ur_connection.getl()
     
     def get_movement_state(self):
         current_location = self.get_joint_angles()
@@ -101,14 +102,14 @@ class UR():
             home_loc = home_location
         else:
             home_loc = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
-        self.ur.movej(home_loc, self.acceleration, self.velocity, 0, 0)
+        self.ur_connection.movej(home_loc, self.acceleration, self.velocity, 0, 0)
         sleep(4)
 
         print("Robot moved to home location")
 
     def pick_pipette(self):
 
-        pipette_controller = PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur_connection)
         tool_changer_controller = ToolChangerController()
 
         pipette_controller.move_pipette_dock()
@@ -117,7 +118,7 @@ class UR():
 
     def place_pipette(self):
 
-        pipette_controller = PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur_connection)
         tool_changer_controller = ToolChangerController()
 
         pipette_controller.move_pipette_dock()
@@ -132,7 +133,7 @@ class UR():
 
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
-        pipette_controller = PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur_connection)
         pipette_controller.connect_pipette()
         self.home(home_J)
         pipette_controller.pick_tip()
@@ -141,14 +142,14 @@ class UR():
         pipette_controller.disconnect_pipette()
 
     def run_droplet(self):
-        pipette_controller = PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur_connection)
         pipette_controller.create_droplet()
         pipette_controller.retrieve_droplet()
         pipette_controller.disconnect_pipette()
 
 
     def dispose_tip(self):
-        pipette_controller = PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur_connection)
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
         self.home(home_J)
         pipette_controller.empty_tip()
@@ -163,7 +164,7 @@ class UR():
         print("-*-*-* Starting the droplet experiment *-*-*-")
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
-        pipette_controller = PipetteController(ur_connection=self.ur)
+        pipette_controller = PipetteController(ur_connection=self.ur_connection)
         tool_changer_controller = ToolChangerController()
 
         pipette_controller.move_pipette_dock()
@@ -184,10 +185,10 @@ class UR():
         '''
         Make a transfer using the finger gripper
         ''' 
-        self.ur.set_tcp((0, 0, 0, 0, 0, 0))
-        gripper_controller = FingerGripperController(IP = self.IP, ur_connection = self.ur)
+        self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
+        gripper_controller = FingerGripperController(IP = self.IP, ur_connection = self.ur_connection)
         gripper_controller.connect_gripper()
-        # robot.ur.set_payload(2, (0, 0, 0.1))
+        # robot.ur_connection.set_payload(2, (0, 0, 0.1))
 
         gripper_controller.pick(pos1)
         gripper_controller.place(pos2)
@@ -243,8 +244,7 @@ if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot_connection = Connection(IP="192.168.1.100")
-    robot = UR(connection = robot_connection.connection)
+    robot = UR(IP="192.168.1.100")
     print(robot.get_joint_angles())
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     #     robot.get_overall_robot_status()
     #     sleep(0.5)
 
-    robot_connection.disconnect_ur()
+    robot.ur_connection.disconnect_ur()
 
 
 
