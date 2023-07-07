@@ -8,8 +8,8 @@ from time import sleep
 from copy import deepcopy
 import json
 
-from ur_dashboard import UR_DASHBOARD
-from ur_tools import *
+from ur_driver.ur_dashboard import UR_DASHBOARD
+from .ur_tools import *
 from urx import Robot, RobotException
 
 
