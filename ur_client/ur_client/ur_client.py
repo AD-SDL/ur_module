@@ -84,6 +84,7 @@ class URClient(Node):
         
         try:
             self.ur = UR(self.IP)
+
         except Exception as err:
             self.get_logger().error(str(err))
         else:
@@ -140,7 +141,7 @@ class URClient(Node):
         except Exception as general_err:
             self.get_logger().error(str(general_err))
             
-        if self.state != "ur CONNECTION ERROR":
+        if self.state != "UR CONNECTION ERROR":
 
             if self.ur.remote_control_status == False:
                 self.get_logger().error("Please put the UR into remote mode using the Teach Pendant")
