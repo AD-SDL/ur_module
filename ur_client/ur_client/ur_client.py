@@ -287,7 +287,7 @@ def main(args = None):
             ur_client.get_logger().info('Keyboard interrupt, shutting down.\n')
         finally:
             executor.shutdown()
-            ur_client.ur.disconnect_ur()
+            ur_client.ur.ur_connection.disconnect_ur()
             ur_client.destroy_node()
     finally:
         rclpy.shutdown()
