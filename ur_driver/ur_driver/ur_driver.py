@@ -146,7 +146,7 @@ class UR(UR_DASHBOARD):
         pipette_controller.drop_tip_to_trash()
         pipette_controller.pick_tip(tip_loc = tip2_loc)
         pipette_controller.transfer_sample(sample_loc = sample2_loc)
-        pipette_controller.mix_samples(well_loc=well_loc)
+        pipette_controller.mix_samples(well_loc = well_loc)
         self.home(home_J)
         pipette_controller.disconnect_pipette()
 
@@ -168,26 +168,27 @@ class UR(UR_DASHBOARD):
 
     def droplet_exp(self, tip_number_1:int = None, tip_number_2:int = None):
         """
+        DEPRECATED
         Description: Runs the full droplet experiment by calling the functions that perform each step in the experiment.
         """
         print("-*-*-* Starting the droplet experiment *-*-*-")
-        home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
+        # home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
-        pipette_controller = PipetteController(ur_connection=self.ur_connection)
-        tool_changer_controller = ToolChangerController()
+        # pipette_controller = PipetteController(ur_connection=self.ur_connection)
+        # tool_changer_controller = ToolChangerController()
 
-        pipette_controller.move_pipette_dock()
-        tool_changer_controller.lock_tool_changer()
-        pipette_controller.lift_pipette_on_dock()    
+        # pipette_controller.move_pipette_dock()
+        # tool_changer_controller.lock_tool_changer()
+        # pipette_controller.lift_pipette_on_dock()    
 
-        self.home(home_J)
-        pipette_controller.empty_tip()
-        pipette_controller.drop_tip_to_trash()
-        self.home(home_J)
+        # self.home(home_J)
+        # pipette_controller.empty_tip()
+        # pipette_controller.drop_tip_to_trash()
+        # self.home(home_J)
 
-        pipette_controller.move_pipette_dock()
-        tool_changer_controller.unlock_tool_changer()
-        pipette_controller.lift_pipette_on_dock()         
+        # pipette_controller.move_pipette_dock()
+        # tool_changer_controller.unlock_tool_changer()
+        # pipette_controller.lift_pipette_on_dock()         
         print("-*-*-* Droplet experiment is completed *-*-*-")
         
     def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
