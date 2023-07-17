@@ -118,7 +118,6 @@ class PipetteController():
         self.ur.movel(self.pipette_above,self.accel_mss,speed_ms,0,0)
         sleep(2)
         print("Pipette successfully picked up")
-       
 
     def pick_tip(self, tip_loc, x=0, y=0):
         """

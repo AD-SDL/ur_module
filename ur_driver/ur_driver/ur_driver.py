@@ -156,7 +156,6 @@ class UR(UR_DASHBOARD):
         pipette_controller.retrieve_droplet()
         pipette_controller.disconnect_pipette()
 
-
     def dispose_tip(self):
         pipette_controller = PipetteController(ur_connection=self.ur_connection)
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
