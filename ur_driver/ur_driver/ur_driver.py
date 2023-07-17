@@ -131,8 +131,7 @@ class UR(UR_DASHBOARD):
         pipette_controller.disconnect_pipette()
         tool_changer_controller.disconnect_tool_changer()
 
-
-    def create_sample(self):
+    def create_sample(self, tip1_loc = None, tip2_loc = None):
         """"""
 
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
