@@ -5,6 +5,7 @@ import torch
 import numpy as np
 from torchvision.transforms import functional as F
 from ultralytics import YOLO
+from math import cos, degrees
 
 model_file_path = '/home/rpl/Documents/best.pt'
 # Load the trained YOLO model
@@ -71,9 +72,22 @@ while True:
         center_x = int((xmin + xmax) / 2)
         center_y = int((ymin + ymax) / 2) #calculate the center of the object
 
-        depth_intrin = depth_frame.profile.as_video_stream_profile().instrinsics
-        
+        depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+        object_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [center_x, center_y], depth_value)
+        print(object_point)
+        adjacent_lenght = cos(degrees(-0.18179000461484232))*object_point[2]
+
+        # object_x = object_point[0]
+        # object_y = object_point[1]
+
+        # xmin_meters = object_x - (xmin - center_x) * object_x / center_x
+        # xmax_meters = object_x + (center_x - xmax) * object_x / center_x
     
+        #[0.011060149408876896, 0.016587208956480026, 0.492000013589859]
+        [0.12418392300605774, -0.04881681874394417, 0.45900002121925354]
+
+        [-0.027446944266557693, 0.13592351973056793, 0.5480000376701355]
+        0.2878764696610664   
         offset_object_x = 320 - center_x
         offset_object_y = 240 - center_y
 
