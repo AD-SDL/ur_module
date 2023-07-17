@@ -163,7 +163,7 @@ class PipetteController():
         sleep(2)    
         print("Second pipette tip successfully picked up")
 
-    def make_sample(self):
+    def transfer_sample(self):
         
         """
         Description: 
