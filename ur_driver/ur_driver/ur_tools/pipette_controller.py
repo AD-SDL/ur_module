@@ -163,7 +163,7 @@ class PipetteController():
         sleep(2)    
         print("Second pipette tip successfully picked up")
 
-    def transfer_sample(self):
+    def transfer_sample(self, sample_loc, well_loc):
         
         """
         Description: 
@@ -175,50 +175,44 @@ class PipetteController():
         
         # MOVE TO THE FIRT SAMPLE LOCATION
         speed_ms = 0.1
-        self.ur.movel(self.sample1_above,self.accel_mss,self.speed_ms,0,0)
+
+        sample_above = sample_loc
+        sample_above[2] += 0.05
+        well_above = well_loc
+        well_above[2] += 0.05
+
+        self.ur.movel(sample_above,self.accel_mss,self.speed_ms,0,0)
         sleep(2)
-        self.ur.movel(self.sample1,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(sample_loc,self.accel_mss,speed_ms,0,0)
         sleep(2)
 
         # ASPIRATE FIRST SAMPLE
         self.aspirate_pipette()
-        self.ur.movel(self.sample1_above,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(sample_above,self.accel_mss,speed_ms,0,0)
         sleep(1)
 
         # MOVE TO THE 1ST WELL
-        self.ur.movel(self.well1_above,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(well_above,self.accel_mss,speed_ms,0,0)
         sleep(1)
-        self.ur.movel(self.well1,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(well_loc,self.accel_mss,speed_ms,0,0)
         sleep(1)
 
         # DISPENSE FIRST SAMPLE INTO FIRST WELL
         self.dispense_pipette()
-        self.ur.movel(self.well1_above,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(well_above,self.accel_mss,speed_ms,0,0)
         sleep(1)
 
-        # Changing tip
-        self.drop_tip_to_trash()
-        self.pick_tip2()
 
-        # MOVE TO THE SECON SAMPLE LOCATION
-        self.ur.movel(self.sample2_above,self.accel_mss,self.speed_ms,0,0)
-        sleep(3)
-        self.ur.movel(self.sample2,self.accel_mss,speed_ms,0,0)
-        sleep(2)
+    def mix_samples(self, well_loc):
 
-        # ASPIRATE SECOND SAMPLE
-        self.aspirate_pipette()       
-        self.ur.movel(self.sample2_above,self.accel_mss,speed_ms,0,0)
+        well_above = well_loc
+        well_above[2] += 0.05
+
+         # MOVE TO THE 1ST WELL
+        self.ur.movel(well_above,self.accel_mss,self.speed_ms,0,0)
         sleep(1)
-
-        # MOVE TO THE 1ST WELL
-        self.ur.movel(self.well1_above,self.accel_mss,speed_ms,0,0)
-        sleep(1)    
-        self.ur.movel(self.well1,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(well_loc,self.accel_mss,self.speed_ms,0,0)
         sleep(1)
-
-        # DISPENSE SECOND SAMPLE INTO FIRST WELL
-        self.dispense_pipette()
 
         # MIX SAMPLE
         for i in range(3):
@@ -228,7 +222,8 @@ class PipetteController():
         # Aspirate all the liquid   
         self.aspirate_pipette()
         self.aspirate_pipette()
-        self.ur.movel(self.well1_above,self.accel_mss,speed_ms,0,0)
+        
+        self.ur.movel(well_above,self.accel_mss,self.speed_ms,0,0)
         sleep(1)
         print("Sample is prepared")
 
