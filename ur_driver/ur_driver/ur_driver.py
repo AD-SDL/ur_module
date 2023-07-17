@@ -133,8 +133,10 @@ class UR(UR_DASHBOARD):
 
     def create_sample(self, home = None, sample1_loc = None, sample2_loc = None, well_loc = None, tip1_loc = None, tip2_loc = None):
         """"""
-
-        home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
+        if home:
+            home_J = home
+        else:
+            home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
         pipette_controller = PipetteController(ur_connection=self.ur_connection)
         pipette_controller.connect_pipette()
