@@ -147,27 +147,6 @@ class PipetteController():
         sleep(2)
         print("Pipette tip successfully picked up")
 
-    def pick_tip2(self, x=0, y=0):
-        """
-        Description: Picks up a new tip from the second location on the pipette bin.
-        """
-        
-        print("Picking up the second pipette tip...")
-        speed_ms = 0.100
-        self.ur.movel(self.tip2_above,self.accel_radss,self.speed_rads,0,0)
-        sleep(2)
-        speed_ms = 0.01
-        self.ur.movel(self.tip2_approach,self.accel_radss,self.speed_rads,0,0)
-        sleep(2)    
-        self.ur.movel(self.tip2_loc,self.accel_mss,speed_ms,0,0)
-        sleep(3)
-        self.ur.movel(self.tip2_approach,self.accel_mss,speed_ms,0,0)
-        sleep(2)
-        speed_ms = 0.1
-        self.ur.movel(self.tip2_above,self.accel_mss,speed_ms,0,0)
-        sleep(2)    
-        print("Second pipette tip successfully picked up")
-
     def transfer_sample(self, sample_loc, well_loc):
         
         """
