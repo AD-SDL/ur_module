@@ -131,7 +131,7 @@ class UR(UR_DASHBOARD):
         pipette_controller.disconnect_pipette()
         tool_changer_controller.disconnect_tool_changer()
 
-    def create_sample(self, sample1_loc = None, sample2_loc = None, tip1_loc = None, tip2_loc = None):
+    def create_sample(self, home = None, sample1_loc = None, sample2_loc = None, well_loc = None, tip1_loc = None, tip2_loc = None):
         """"""
 
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
@@ -139,12 +139,12 @@ class UR(UR_DASHBOARD):
         pipette_controller = PipetteController(ur_connection=self.ur_connection)
         pipette_controller.connect_pipette()
         self.home(home_J)
-        pipette_controller.pick_tip(tip1_loc)
-        pipette_controller.transfer_sample(sample1_loc)
+        pipette_controller.pick_tip(tip_loc = tip1_loc)
+        pipette_controller.transfer_sample(sample_loc = sample1_loc)
         pipette_controller.drop_tip_to_trash()
-        pipette_controller.pick_tip(tip2_loc)
-        pipette_controller.transfer_sample(sample2_loc)
-        pipette_controller.mix_samples()
+        pipette_controller.pick_tip(tip_loc = tip2_loc)
+        pipette_controller.transfer_sample(sample_loc = sample2_loc)
+        pipette_controller.mix_samples(well_loc=well_loc)
         self.home(home_J)
         pipette_controller.disconnect_pipette()
 
