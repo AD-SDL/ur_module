@@ -120,25 +120,30 @@ class PipetteController():
         print("Pipette successfully picked up")
        
 
-    def pick_tip(self, x=0, y=0):
+    def pick_tip(self, tip_loc, x=0, y=0):
         """
         Description: Picks up a new tip from the first location on the pipette bin.
         """
 
+        tip_approach = tip_loc
+        tip_approach[2] += 0.02
+        tip_above = tip_loc
+        tip_above[2] += 0.075
+
         print("Picking up the first pipette tip...")
         speed_ms = 0.100
 
-        self.ur.movel(self.tip1_above,self.accel_radss,self.speed_rads,0,0)
+        self.ur.movel(tip_above,self.accel_radss,self.speed_rads,0,0)
         sleep(2)
         speed_ms = 0.01
-        self.ur.movel(self.tip1_approach,self.accel_radss,self.speed_rads,0,0)
+        self.ur.movel(tip_approach,self.accel_radss,self.speed_rads,0,0)
         sleep(2)    
-        self.ur.movel(self.tip1_loc,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(tip_loc,self.accel_mss,speed_ms,0,0)
         sleep(3)
-        self.ur.movel(self.tip1_approach,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(tip_approach,self.accel_mss,speed_ms,0,0)
         sleep(2)
         speed_ms = 0.1
-        self.ur.movel(self.tip1_above,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(tip_above,self.accel_mss,speed_ms,0,0)
         sleep(2)
         print("Pipette tip successfully picked up")
 
@@ -222,7 +227,7 @@ class PipetteController():
         # Aspirate all the liquid   
         self.aspirate_pipette()
         self.aspirate_pipette()
-        
+
         self.ur.movel(well_above,self.accel_mss,self.speed_ms,0,0)
         sleep(1)
         print("Sample is prepared")
