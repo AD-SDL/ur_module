@@ -7,9 +7,10 @@ from torchvision.transforms import functional as F
 from ultralytics import YOLO
 from urx import Robot
 from math import radians
-from urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripperhgk
+from urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper
 
-get_joint_positions = 
+
+# get_joint_positions = 
 
 # UR robot configuration
 robot_ip = "192.168.1.102"
@@ -21,7 +22,7 @@ model_file_path = '/home/rpl/Documents/best.pt'
 model = YOLO(model_file_path)
 
 # Set the desired objects to detect
-desired_objects = ['wellplates', 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']
+desired_objects = ['wellplates'], #'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']
 
 # Initialize the Intel RealSense camera pipeline
 pipeline = rs.pipeline()
@@ -30,7 +31,6 @@ config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, 30)  # Color str
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)  # Depth stream configuration
 profile = pipeline.start(config)
 
-desired_position = 
 # Start capturing and processing frames
 while True:
     # Wait for the next set of frames
@@ -68,10 +68,7 @@ while True:
         cv2.circle(img, (center_x, center_y), 5, (0, 0, 255), -1)
         cv2.circle(img, (320, 240), 5, (0, 0, 255), -1)
 
-        # Move the robot based on the offset
-        desired_position = [center_x * 0.01, center_y * 0.01, 0.4, 0, 0, 0]
-        
-        robot.movel(desired_position, acc=0.01, vel=0.01)
+
     
     
     # # ************************Modifications 7/13************************
