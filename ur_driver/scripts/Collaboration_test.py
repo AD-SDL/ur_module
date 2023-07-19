@@ -100,8 +100,6 @@ while True:
                 robot.movel(0, p, 0, 0, 0, 0, 0, 0) 
     center_object_frame()
 
-    def calc_d2():
-        get_actual_tcp_pose()
     
     # # Move the the gripper above the object
     # robot.movel(object_x_gripper, object_y_gripper, object_z_gripper + .1, 0, 0, accel= 0.4, vel = 0.2 )

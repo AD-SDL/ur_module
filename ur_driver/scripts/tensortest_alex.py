@@ -3,11 +3,11 @@ import pyrealsense2 as rs
 import time
 import torch
 import numpy as np
-# from urx import Robot
+from urx import Robot
 from torchvision.transforms import functional as F
 from ultralytics import YOLO
-from math import cos, degrees, radians
-# from urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper as gripper
+import math 
+from urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper as gripper
 
 # Define the file path for the YOLO model
 model_file_path = '/home/rpl/Documents/best.pt'
@@ -25,9 +25,8 @@ config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, 30)  # Color str
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)  # Depth stream configuration
 profile = pipeline.start(config)
 
-# def camera_adjust():
 # Start the URX robot connection
-# robot = Robot("192.168.1.100")
+robot = Robot("192.168.1.100")
 
 while True:
     # Wait for the next set of frames
@@ -65,24 +64,32 @@ while True:
         center_x = int((xmin + xmax) / 2)
         center_y = int((ymin + ymax) / 2)
 
-        # Adjust the camera to center the object in the frame
+        # obtain the x y and z distance of the center of the object to the center of the frame
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
         object_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [center_x, center_y], depth_value)
-        # robot.translate_tool([-object_point[0], -object_point[1], 0], acc=0.2, vel=0.2)
+        
+        # Adjust the camera to center the object in the frame
+        robot.translate_tool([-object_point[0], -object_point[1], 0], acc=0.2, vel=0.2)
         print("XYZ: " + object_point)
+       
         time.sleep(0.5)
 
-        # Obtain the adjacent point above the object
-        adjacent_length = cos(degrees(1.530305837852959)) * object_point[2]
+        robot.getl()
 
+        angle = robot.getl([3])
+
+        # Obtain the adjacent point above the object
+        adjacent_length = math.cos(angle) * object_point[2]
+
+        
         # Print the adjacent length
         print("Adjacent Length: " + adjacent_length)
 
         # go towards adjacent point
-        # robot.translate_tool([0, 0, adjacent_length], acc=0.2, vel=0.2)
+        robot.translate_tool([0, 0, adjacent_length], acc=0.2, vel=0.2)
 
         # Rotate the tool downwards to look at the object
-        # robot.movej([0, 0, 0, 0, radians(90 - angle), 0], acc=0.2, vel=0.2)
+        robot.movej([0, 0, 0, 0, ((math.pi/2) - angle), 0], acc=0.2, vel=0.2)
 
         offset_object_x = 320 - center_x
         offset_object_y = 240 - center_y
@@ -90,53 +97,94 @@ while True:
         print("Offset from center (X, Y):", offset_object_x, offset_object_y)
 
         # Recenter the object in the frame if necessary
-        # if offset_object_x & offset_object_y > 0:
-        #     depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
-        #     object_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [center_x, center_y], depth_value)
-        #     robot.translate_tool([-object_point[0], -object_point[1], 0], acc=0.2, vel=0.2)    
+        if offset_object_x & offset_object_y > 0:
+            depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+            object_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [center_x, center_y], depth_value)
+            robot.translate_tool([-object_point[0], -object_point[1], 0], acc=0.2, vel=0.2)    
 
-        # angle = 0
-        # # Rotate the gripper to find the smallest bounding box area on top of the object
-        # while angle >= 0 & angle <=360:
-        #     angle += 2
-        #     robot.movej([0, 0, 0, 0, 0, radians(angle)], acc=0.2, vel=0.2)
-        #     smallest_product = float('inf')
-        #     previous_product = None
+        ########################## Calculate the smallest area of the boundary box  ##############################
+        
+        # Define the initial rotation angle and increment
+        current_angle = robot.getl([5])
+        angle_increment = 10
 
-        #     # Find the surface area of the object's bounding box
-        #     current_product = (ymax - ymin) * (xmax - xmin)
+        # Load the image
+        img = cv2.imread("your_image.jpg")
 
-        #     # Check if the current product is smaller than the smallest_product and the previous product is not None
-        #     if current_product < smallest_product and previous_product is not None:
-        #         break
+        # Calculate the center of the image
+        height, width = img.shape[:2]
+        center = (width // 2, height // 2)
 
-        #     smallest_product = min(smallest_product, current_product)
-        #     previous_product = current_product
+        # Initialize variables to track the smallest area and the corresponding best angle
+        smallest_area = float('inf')
+        best_angle = current_angle
 
+        while current_angle <= 270:
+            # Calculate the rotation matrix
+            rotation_matrix = cv2.getRotationMatrix2D(center, current_angle, 1.0)
+
+            # Calculate the new image dimensions after rotation
+            cos = np.abs(rotation_matrix[0, 0])
+            sin = np.abs(rotation_matrix[0, 1])
+            new_width = int((height * sin) + (width * cos))
+            new_height = int((height * cos) + (width * sin))
+
+            # Adjust the rotation matrix for image padding
+            rotation_matrix[0, 2] += (new_width / 2) - center[0]
+            rotation_matrix[1, 2] += (new_height / 2) - center[1]
+
+            # Apply the rotation to the image
+            rotated_img = cv2.warpAffine(img, rotation_matrix, (new_width, new_height))
+
+            # Perform object detection on the rotated image
+            boxes = model(rotated_img)[0].boxes
+
+            # Calculate the area of the bounding box
+            xmin, ymin, xmax, ymax = boxes.xyxy[0]  # Assuming there is only one bounding box
+            area = (xmax - xmin) * (ymax - ymin)
+
+            # Check if the current area is smaller than the smallest area
+            if area < smallest_area:
+                smallest_area = area
+                best_angle = current_angle
+
+            # Break the loop if the area is as small as possible
+            if smallest_area == 0:
+                break
+
+            current_angle += angle_increment
+
+        # Display the best angle and smallest area
+        print("Best Angle:", best_angle)
+        print("Smallest Area:", smallest_area)
+        
+        #####################################################################################
         time.sleep(0.5)
 
+        # rotate the gripper along the z axis to grab the image
+        robot.movej([0, 0, 0, 0, 0, math.radians(best_angle)], acc = 0.2, vel = 0.2)
+
         # move the gripper towards the object
-        # robot.translate_tool(0, 0, object_point[2], acc=0.2, vel=0.2)
+        robot.translate_tool(0, 0, object_point[2], acc=0.2, vel=0.2)
 
         # # close the gripper to obtain the object
-        # gripper.close_gripper()
+        gripper.close_gripper()
 
         # # move the gripper back to the adjacent point
-        # robot.translate_tool(0, 0, -object_point[2], acc=0.2, vel=0.2)
+        robot.translate_tool(0, 0, -object_point[2], acc=0.2, vel=0.2)
 
-    # Display the image
-    cv2.imshow("Original Image", img)
+        # Display the image
+        cv2.imshow("Original Image", img)
 
-    # Exit the loop if 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        # Exit the loop if 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
     # Stop the pipeline and release resources
     pipeline.stop()
     cv2.destroyAllWindows()
 
-# if __name__ == '__main__':
-#     camera_adjust()
+
 
 
 
