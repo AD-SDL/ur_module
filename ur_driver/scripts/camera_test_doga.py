@@ -198,19 +198,25 @@ def point_gripper_downwards(robot):
     current_pose[5] = math.pi * current_pose[5] / rotation_magnitude
     
     robot.movel(current_pose, acc=0.2, vel=0.2)  # move the robot
-
+    print("HERE")
 if __name__ == "__main__":
     # main()
     robot = connect_robot()
-    point_gripper_downwards(robot)
+    # point_gripper_downwards(robot)
     # current_location = robot.getl()
+    # current_joints = robot.getj()
     # print(current_location)
+    # print(current_joints)
     # gripper_flat = current_location
     # gripper_flat[3] = 3.14
     # gripper_flat[4] = 0.0
     # gripper_flat[5] = 0.0
+    # # print(robot.get_ori)
+    # robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
+    # new_joints = robot.getj()
+    # new_joints[5] = current_joints[5]
+    # robot.movej(new_joints,0.2,0.2) 
 
-    robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
     # loc = robot.getl()
     # loc[0]-=0.5
     # robot.movel(loc, 0.2,0.2)
