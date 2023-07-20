@@ -23,7 +23,7 @@ def load_model():
     # Load the trained YOLO model
     model = YOLO(model_file_path)
     # Set the desired objects to detect
-    desired_objects = ['wellplates'] #, 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']  #list of known objects
+    desired_objects = ['tipboxes'] #, 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']  #list of known objects
     return model
 
 def start_streaming():
@@ -181,9 +181,9 @@ def main():
         object_point = center_the_gripper(robot, model, object_center, pipeline)
     print("OBJECT_POINT: " , object_point)
     
-    robot_rotation_angle = align_gripper(pipeline, model)
+    # robot_rotation_angle = align_gripper(pipeline, model)
 
-    robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
+    # robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
 
 if __name__ == "__main__":
     main()
