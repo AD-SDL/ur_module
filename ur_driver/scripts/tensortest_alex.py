@@ -10,7 +10,7 @@ import math
 from urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper as gripper
 
 # Define the file path for the YOLO model
-model_file_path = '/home/rpl/Documents/best.pt'
+model_file_path = 'best.pt'
 
 # Load the trained YOLO model
 model = YOLO(model_file_path)
@@ -26,7 +26,7 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)  # Depth stre
 profile = pipeline.start(config)
 
 # Start the URX robot connection
-robot = Robot("192.168.1.100")
+robot = Robot("192.168.1.102")
 
 while True:
     # Wait for the next set of frames
@@ -104,85 +104,85 @@ while True:
 
         ########################## Calculate the smallest area of the boundary box  ##############################
         
-        # Define the initial rotation angle and increment
-        current_angle = robot.getl([5])
-        angle_increment = 10
+        # # Define the initial rotation angle and increment
+        # current_angle = robot.getl([5])
+        # angle_increment = 10
 
-        # Load the image
-        img = cv2.imread("your_image.jpg")
+        # # Load the image
+        # img = cv2.imread("your_image.jpg")
 
-        # Calculate the center of the image
-        height, width = img.shape[:2]
-        center = (width // 2, height // 2)
+        # # Calculate the center of the image
+        # height, width = img.shape[:2]
+        # center = (width // 2, height // 2)
 
-        # Initialize variables to track the smallest area and the corresponding best angle
-        smallest_area = float('inf')
-        best_angle = current_angle
+        # # Initialize variables to track the smallest area and the corresponding best angle
+        # smallest_area = float('inf')
+        # best_angle = current_angle
 
-        while current_angle <= 270:
-            # Calculate the rotation matrix
-            rotation_matrix = cv2.getRotationMatrix2D(center, current_angle, 1.0)
+        # while current_angle <= 270:
+        #     # Calculate the rotation matrix
+        #     rotation_matrix = cv2.getRotationMatrix2D(center, current_angle, 1.0)
 
-            # Calculate the new image dimensions after rotation
-            cos = np.abs(rotation_matrix[0, 0])
-            sin = np.abs(rotation_matrix[0, 1])
-            new_width = int((height * sin) + (width * cos))
-            new_height = int((height * cos) + (width * sin))
+        #     # Calculate the new image dimensions after rotation
+        #     cos = np.abs(rotation_matrix[0, 0])
+        #     sin = np.abs(rotation_matrix[0, 1])
+        #     new_width = int((height * sin) + (width * cos))
+        #     new_height = int((height * cos) + (width * sin))
 
-            # Adjust the rotation matrix for image padding
-            rotation_matrix[0, 2] += (new_width / 2) - center[0]
-            rotation_matrix[1, 2] += (new_height / 2) - center[1]
+        #     # Adjust the rotation matrix for image padding
+        #     rotation_matrix[0, 2] += (new_width / 2) - center[0]
+        #     rotation_matrix[1, 2] += (new_height / 2) - center[1]
 
-            # Apply the rotation to the image
-            rotated_img = cv2.warpAffine(img, rotation_matrix, (new_width, new_height))
+        #     # Apply the rotation to the image
+        #     rotated_img = cv2.warpAffine(img, rotation_matrix, (new_width, new_height))
 
-            # Perform object detection on the rotated image
-            boxes = model(rotated_img)[0].boxes
+        #     # Perform object detection on the rotated image
+        #     boxes = model(rotated_img)[0].boxes
 
-            # Calculate the area of the bounding box
-            xmin, ymin, xmax, ymax = boxes.xyxy[0]  # Assuming there is only one bounding box
-            area = (xmax - xmin) * (ymax - ymin)
+        #     # Calculate the area of the bounding box
+        #     xmin, ymin, xmax, ymax = boxes.xyxy[0]  # Assuming there is only one bounding box
+        #     area = (xmax - xmin) * (ymax - ymin)
 
-            # Check if the current area is smaller than the smallest area
-            if area < smallest_area:
-                smallest_area = area
-                best_angle = current_angle
+        #     # Check if the current area is smaller than the smallest area
+        #     if area < smallest_area:
+        #         smallest_area = area
+        #         best_angle = current_angle
 
-            # Break the loop if the area is as small as possible
-            if smallest_area == 0:
-                break
+        #     # Break the loop if the area is as small as possible
+        #     if smallest_area == 0:
+        #         break
 
-            current_angle += angle_increment
+        #     current_angle += angle_increment
 
-        # Display the best angle and smallest area
-        print("Best Angle:", best_angle)
-        print("Smallest Area:", smallest_area)
+        # # Display the best angle and smallest area
+        # print("Best Angle:", best_angle)
+        # print("Smallest Area:", smallest_area)
         
-        #####################################################################################
-        time.sleep(0.5)
+        # #####################################################################################
+        # time.sleep(0.5)
 
-        # rotate the gripper along the z axis to grab the image
-        robot.movej([0, 0, 0, 0, 0, math.radians(best_angle)], acc = 0.2, vel = 0.2)
+        # # rotate the gripper along the z axis to grab the image
+        # robot.movej([0, 0, 0, 0, 0, math.radians(best_angle)], acc = 0.2, vel = 0.2)
 
-        # move the gripper towards the object
-        robot.translate_tool(0, 0, object_point[2], acc=0.2, vel=0.2)
+        # # move the gripper towards the object
+        # robot.translate_tool(0, 0, object_point[2], acc=0.2, vel=0.2)
 
-        # # close the gripper to obtain the object
-        gripper.close_gripper()
+        # # # close the gripper to obtain the object
+        # gripper.close_gripper()
 
-        # # move the gripper back to the adjacent point
-        robot.translate_tool(0, 0, -object_point[2], acc=0.2, vel=0.2)
+        # # # move the gripper back to the adjacent point
+        # robot.translate_tool(0, 0, -object_point[2], acc=0.2, vel=0.2)
 
-        # Display the image
-        cv2.imshow("Original Image", img)
+        # # Display the image
+        # cv2.imshow("Original Image", img)
 
         # Exit the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    # Stop the pipeline and release resources
-    pipeline.stop()
-    cv2.destroyAllWindows()
+# Stop the pipeline and release resources
+pipeline.stop()
+cv2.destroyAllWindows()
 
 
 
