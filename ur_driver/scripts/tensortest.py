@@ -64,42 +64,42 @@ def camera():
         # boxes = model(img)[0].boxes  # Perform object detection
         # find_angle = model(rotated_img, conf=0.01)[0].boxes  # Perform object detection
 
-        # from pprint import pprint
+        from pprint import pprint
 
-        # print(boxes.xyxy)
-        # print(boxes.cls)
+        print(boxes.xyxy)
+        print(boxes.cls)
 
-        # for (xmin, ymin, xmax, ymax), cls in zip(boxes.xyxy, boxes.cls):
-        #     depth_value = depth_frame.get_distance(int((xmin + xmax) / 2), int((ymin + ymax) / 2))
-        #     distance = depth_value
-        #     center_x = int((xmin + xmax) / 2)
-        #     center_y = int((ymin + ymax) / 2) #calculate the center of the object
+        for (xmin, ymin, xmax, ymax), cls in zip(boxes.xyxy, boxes.cls):
+            depth_value = depth_frame.get_distance(int((xmin + xmax) / 2), int((ymin + ymax) / 2))
+            distance = depth_value
+            center_x = int((xmin + xmax) / 2)
+            center_y = int((ymin + ymax) / 2) #calculate the center of the object
 
-        #     depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
-        #     object_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [center_x, center_y], depth_value)
-        #     print(object_point)
-        #     # adjacent_length = cos(degrees(-0.18179000461484232))*object_point[2]
+            depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+            object_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [center_x, center_y], depth_value)
+            print(object_point)
+            # adjacent_length = cos(degrees(-0.18179000461484232))*object_point[2]
 
-        #     # object_x = object_point[0]
-        #     # object_y = object_point[1]
+            # object_x = object_point[0]
+            # object_y = object_point[1]
 
-        #     # xmin_meters = object_x - (xmin - center_x) * object_x / center_x
-        #     # xmax_meters = object_x + (center_x - xmax) * object_x / center_x
+            # xmin_meters = object_x - (xmin - center_x) * object_x / center_x
+            # xmax_meters = object_x + (center_x - xmax) * object_x / center_x
         
-        #     #[0.011060149408876896, 0.016587208956480026, 0.492000013589859]
-        #     # [0.12418392300605774, -0.04881681874394417, 0.45900002121925354]
+            #[0.011060149408876896, 0.016587208956480026, 0.492000013589859]
+            # [0.12418392300605774, -0.04881681874394417, 0.45900002121925354]
 
-        #     # [-0.027446944266557693, 0.13592351973056793, 0.5480000376701355]
-        #     # 0.2878764696610664   
-        #     offset_object_x = 320 - center_x
-        #     offset_object_y = 240 - center_y
+            # [-0.027446944266557693, 0.13592351973056793, 0.5480000376701355]
+            # 0.2878764696610664   
+            offset_object_x = 320 - center_x
+            offset_object_y = 240 - center_y
 
-        #     print("Offset from center (X, Y):", offset_object_x, offset_object_y)
+            print("Offset from center (X, Y):", offset_object_x, offset_object_y)
 
-        #     cv2.rectangle(img, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 255, 0), 2)
-        #     cv2.putText(img, f"{distance:.2f}m", (int(xmin), int(ymin) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-        #     cv2.circle(img, (center_x, center_y), 5, (0, 0, 255), -1) #put the circle in the center with a filled in line
-        #     cv2.circle(img, (320, 240), 5, (0, 0, 255), -1) #put the circle in the center with a filled in line
+            cv2.rectangle(img, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 255, 0), 2)
+            cv2.putText(img, f"{distance:.2f}m", (int(xmin), int(ymin) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            cv2.circle(img, (center_x, center_y), 5, (0, 0, 255), -1) #put the circle in the center with a filled in line
+            cv2.circle(img, (320, 240), 5, (0, 0, 255), -1) #put the circle in the center with a filled in line
             
         # for (xmin, ymin, xmax, ymax), cls in zip(find_angle.xyxy, find_angle.cls):
             

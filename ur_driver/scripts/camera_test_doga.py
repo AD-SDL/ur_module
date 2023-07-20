@@ -15,7 +15,7 @@ from urx import Robot
 def connect_robot():
     robot = Robot("192.168.1.102")
     home = [0.29276956938468857, 0.4911629986137578, 0.2089015639442738, 2.653589770443803, 0.6925181364927394, 0.994258374012048]
-    robot.movel(home, acc=0.2, vel=0.2)
+    # robot.movel(home, acc=0.2, vel=0.2)
     return robot
 
 def load_model():
@@ -23,7 +23,7 @@ def load_model():
     # Load the trained YOLO model
     model = YOLO(model_file_path)
     # Set the desired objects to detect
-    desired_objects = ['tipboxes'] #, 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']  #list of known objects
+    desired_objects = ['wellplates'] #, 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']  #list of known objects
     return model
 
 def start_streaming():
@@ -111,46 +111,84 @@ def center_the_gripper(robot, model, object_center, pipeline):
 
         return object_point
 
-def move_over_object(robot, object_point):
-    # Assuming the gripper's current location is above the object,
-    # move down by 10 centimeters along the y-axis
-    object_x, object_y, object_z = object_point
-    desired_height = object_y - 0.1  # Move down 10 centimeters above the object
-    robot.translate_tool([object_x, desired_height, object_z], acc=1, vel=0.2)
+def move_over_object(robot, adjacent_length):
+    fixed_height = 0.05
+    desired_position = adjacent_length - fixed_height
+    robot.translate_tool([0, desired_position, 0], 0.2, 0.2)
 
-def gripper_position():
+def gripper_position(object_point, robot):
     # Points the gripper downwards to prepare the gripper to pick up object
 
-    pos_x = 3.1415
-    pos_z = 0
+    robot.getl()
+    trans_z = object_point[2]
+    current_location = robot.getl()
+
+    angle =  robot.getl()[3]
+    gripper_flat = current_location
+    gripper_flat[3] = 3.14
+    gripper_flat[4] = 0.0
+    gripper_flat[5] = 0.0
+
+    adjacent_length = math.cos(degrees(angle)) * trans_z
+
+    robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
+
+    print ('adjacent_length: ', adjacent_length)
+
+    return adjacent_length
 
 
 def adjust_gripper():
     # rotate the gripper so it's aligned with the object
     pass
 
-def grab():
-    pass
+def frame_areas(boxes):
+    return [box.bounding_boxes[0] for box in boxes]
 
-def main(): 
+def main():
     robot = connect_robot()
     model = load_model()
     pipeline = start_streaming()
 
     object_center = allign_object(pipeline, model)
+    if object_center:
+        object_point = center_the_gripper(robot, model, object_center, pipeline)
+        
 
-    while True:
-        object_center = allign_object(pipeline, model)
-        if object_center:
-            object_point = center_the_gripper(robot, model, object_center, pipeline)
-            # move_over_object(robot, object_point)
+    # you are closing the pipeline earlier so you need reopen it before you get a new frame 
+    # Capture a new image from the camera
+    frames = pipeline.wait_for_frames()
+    color_frame = frames.get_color_frame()
+    img = np.asanyarray(color_frame.get_data())
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    rotation_angle = 1
+    # Rotate the image
+    rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), rotation_angle, 1.0)
+    rotated_img = cv2.warpAffine(img, rotation_matrix, (img.shape[1], img.shape[0]))
+
+
+    boxes = model(rotated_img, conf=0.01)[0].boxes
+
+
+    # Update the smallest_frame variable if a smaller frame area is found
+    for area in frame_areas:
+        if area < smallest_frame_area:
+            frame_areas = frame_areas(boxes)    
+            smallest_frame_area = min(frame_areas)
+            smallest_frame_area = area
+            rotation_angle += 1 # Increase rotation_angle for the next iteration
+        elif rotation_angle > 45 and smallest_frame_area < area:
             break
-    pipeline.close()
+        # Break the loop when a small frame area is found
+    
+    robot.movej(robot.getj()[:-1] + [math.radians(rotation_angle)], acc=0.2, vel=0.2)
 
-    move_over_object(robot, object_point)
+
 
 if __name__ == "__main__":
-    main()  
+  main()
+
 # # This updated code creates a new canvas (initialized with zeros) with the same dimensions as the original image. The rotated image is then pasted onto the canvas, considering its position within the canvas based on the center point.
 
 # The resulting composite canvas will show the non-rotated image with the rotated image positioned correctly within it. You can modify the canvas if you prefer a different color or transparency for the padded area.
