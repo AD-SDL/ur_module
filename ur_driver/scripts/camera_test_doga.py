@@ -174,10 +174,7 @@ def center_the_gripper(robot, model, object_center, pipeline):
 #         image_rotation_angle += 1  # Increase image_rotation_angle for the next iteration
 
 #     robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
-
-def main():
-    robot = connect_robot()
-
+def move_gripper_perpendicular(robot):
     current_orientation = robot.get_orientation()
     euler_angles = current_orientation.to_euler(encoding = "xyz")
     print(euler_angles)
@@ -188,79 +185,25 @@ def main():
     current_orientation.rotate_xt(move_rx)
     current_orientation.rotate_yt(move_ry)
     robot.set_orientation(current_orientation,0.2,0.2)
-    # model = load_model()
-    # pipeline = start_streaming()
+    
+def main():
+    robot = connect_robot()
+    model = load_model()
+    pipeline = start_streaming()
 
     
-    # object_center = allign_object(pipeline, model)
+    object_center = allign_object(pipeline, model)
 
-    # if object_center:
-    #     object_point = center_the_gripper(robot, model, object_center, pipeline)
-    #     print("OBJECT_POINT: " , object_point)
+    if object_center:
+        object_point = center_the_gripper(robot, model, object_center, pipeline)
+        print("OBJECT_POINT: " , object_point)
 
-    #     move_over_object(object_point, robot)
-    #     align_gripper(pipeline, model, robot)
-
-def point_gripper_downwards(robot):
-    current_pose = robot.getl()  # get current pose
-
-    # Calculate the rotation magnitude (the angle)
-    rotation_magnitude = math.sqrt(current_pose[3]**2 + current_pose[4]**2 + current_pose[5]**2)
-
-    # Rotate around x-axis by 180 degrees while preserving the rotation around z-axis
-    current_pose[3] = math.pi * current_pose[3] / rotation_magnitude
-    current_pose[4] = math.pi * current_pose[4] / rotation_magnitude
-    current_pose[5] = math.pi * current_pose[5] / rotation_magnitude
-    
-    robot.movel(current_pose, acc=0.2, vel=0.2)  # move the robot
-# def rotate_gripper_to_look_down(robot, delta_pitch= 45):
-#     current_pose = robot.getl()  # Get the current pose (position and orientation) of the end-effector
-#     # Convert current orientation from quaternion to Euler angles (rx, ry, rz)
-#     current_orientation = current_pose[3:]
-
-#     w = math.sqrt(1-(current_orientation[0]**2 +current_orientation[1]**2 + current_orientation[2]**2))
-#     (rx, ry, rz) = euler.quat2euler([w,current_orientation[0],current_orientation[1],current_orientation[2]], 'sxyz')
-#     print(rx,ry,rz)
-#     # Increase the pitch angle while maintaining the roll and yaw angles
-#     ry += math.radians(delta_pitch)
-#     # Convert back from Euler angles to quaternion
-#     new_orientation = euler.euler2quat(rx, ry, rz, 'sxyz')
-#     print(new_orientation)
-#     # Construct the new pose
-#     new_pose = list(current_pose[0:3]) + list(new_orientation)
-#     # robot.movel(new_pose, acc=0.1, vel=0.1)  # Move the robot to the new pose
+        move_over_object(object_point, robot)
+        align_gripper(pipeline, model, robot)
 
 if __name__ == "__main__":
     main()
-    # robot = connect_robot()
-    # rotate_gripper_to_look_down(robot)
-    # point_gripper_downwards(robot)
-    # current_location = robot.getl()
 
-    # # current_joints = robot.getj()
-    # print(current_location)
-    # current_location[1]+=0.1
-    # robot.movel(current_location, 0.2,0.2)
-    # print(current_joints)
-    # gripper_flat = current_location
-    # gripper_flat[3] = 3.14
-    # gripper_flat[4] = 0.0
-    # gripper_flat[5] = 0.0
-    # # print(robot.get_ori)
-    # robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
-    # new_joints = robot.getj()
-    # new_joints[5] = current_joints[5]
-    # robot.movej(new_joints,0.2,0.2) 
-
-    # loc = robot.getl()
-    # loc[0]-=0.5
-    # robot.movel(loc, 0.2,0.2)
-    # pose = robot.get_pose()
-    # roll, pitch, yaw = pose.()
-    # print("Roll: ", roll)
-    # print("Pitch: ", pitch)
-    # print("Yaw: ", yaw)
-    
 
 # # This updated code creates a new canvas (initialized with zeros) with the same dimensions as the original image. The rotated image is then pasted onto the canvas, considering its position within the canvas based on the center point.
 
