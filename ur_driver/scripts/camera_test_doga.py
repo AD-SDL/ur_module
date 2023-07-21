@@ -6,12 +6,15 @@ import torch
 import numpy as np
 from torchvision.transforms import functional as F
 from ultralytics import YOLO
-from math import cos, degrees
+import math
+from math import degrees
 from urx.robotiq_two_finger_gripper import Robotiq_Two_Finger_Gripper as gripper
 from urx import Robot
 
 # Start the URX robot connection
 robot = Robot("192.168.1.102")
+home = [0.29276956938468857, 0.4911629986137578, 0.2089015639442738, 2.653589770443803, 0.6925181364927394, 0.994258374012048]
+robot.movel(home, 0.2,0.2)
 
 model_file_path = 'best.pt'
 # Load the trained YOLO model
@@ -25,10 +28,16 @@ config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, 30)  # Color str
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)  # Depth stream configuration
 profile = pipeline.start(config) 
 
+# def calculate_orientation_difference(pose1, pose2):
+#     rpy1 = pose1.get()
+#     rpy2 = pose2.()
+#     rpy_difference = robot.(pose1[0], pose1[1], pose1[2], rpy1[0], rpy1[1], rpy1[2], pose2[0], pose2[1], pose2[2], rpy2[0], rpy2[1], rpy2[2])
+#     return rpy_difference
 # Wait for the next set of frames
 # Start capturing and processing frames
-while True:
-    # # Wait for the next set of frames
+# while True:
+def allign_object():
+        # # Wait for the next set of frames
     frames = pipeline.wait_for_frames()
 
     # Get color and depth frames
@@ -36,7 +45,7 @@ while True:
     depth_frame = frames.get_depth_frame()
 
     if not color_frame or not depth_frame:
-        continue
+        return
 
     # Convert the color frame to a numpy array
     img = np.asanyarray(color_frame.get_data())
@@ -81,8 +90,6 @@ while True:
         offset_object_x = 320 - center_x
         offset_object_y = 240 - center_y
 
-        
-
         print("Offset from center (X, Y):", offset_object_x, offset_object_y)
 
         # Adjust the camera to center the object in the frame
@@ -90,40 +97,82 @@ while True:
         object_point = rs.rs2_deproject_pixel_to_point(depth_intrin, [center_x, center_y], depth_value)
         # cv2.imshow("Original Image", img)
         # split the string into indv. integers and store them into a list
-        trans_x = object_point[0]
-        trans_y = object_point[1]
+        trans_x = object_point[0] 
+        trans_y = object_point[1] 
         trans_z = object_point[2]
         print("XYZ: ", object_point)
 
         # if abs(object_point[0]) < 0.40 or abs(object_point[1]) < 0.40:
-
-        robot.translate_tool([-trans_x, (-trans_y), 0], acc=0.2, vel=0.2)
-        time.sleep(1)
-
-        
+    
         # boxes = model(img)[0].boxes  # Perform object detection
-
-
+        
         # Obtain the adjacent point above the object
-
-        adjacent_length = np.cos(degrees(1.530305837852959)) * object_point[2]
-
-        # Print the adjacent length
-        print("Adjacent Length: ", adjacent_length)
+        time.sleep(10)
 
         cv2.rectangle(img, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 255, 0), 2)
         cv2.putText(img, f"{distance:.2f}m", (int(xmin), int(ymin) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
         cv2.circle(img, (center_x, center_y), 5, (0, 0, 255), -1) #put the circle in the center with a filled in line
         cv2.circle(img, (320, 240), 5, (0, 0, 255), -1) #put the circle in the center with a filled in line
+        if abs(offset_object_x) < 10 and abs(offset_object_y) < 10:
+            # robot.translate_tool([-trans_x, -trans_y, adjacent_length + 0.1], acc=0.4, vel=0.2)
+            time.sleep(5)
+            pass
+        if trans_z != 0:
+            robot.translate_tool([ -trans_x, -trans_y, 0], acc= 1, vel=0.2)
+
+            
+
+        # Stop the pipeline and release resources
+        pipeline.stop()
+        cv2.destroyAllWindows()
+        return object_point
+    
+def move_onto_object(object_point):
+            
+        trans_z = object_point[2]
         
+        # time.sleep(1)
+
+        current_location_l = robot.getl()
+
+        angle = robot.getl()[3]
+        gripper_flat = current_location_l
+        gripper_flat[3] = 3.14
+        gripper_flat[4] = 0.0
+        gripper_flat[5] = 0.0  
+        # num_z = int(trans_z)
+
+        # Obtain the adjacent point above the object
+        adjacent_length = math.cos(degrees(angle)) * trans_z
+
+        # time.sleep(1)
+        robot.movel(gripper_flat, acc = 1 , vel = 0.2)
+
+        
+        # Print the adjacent length
+        print("Adjacent Length: ", adjacent_length)
+
+        # go towards adjacent point
+        # time.sleep(0.5)
+
+        robot.translate_tool([adjacent_length + 0.09, 0, 0 ], acc= 1, vel=0.2)
+        time.sleep(10) 
+def test():
+            object_frame = robot.get_pose()
+            
+            gripper_roll = math.pi
+            gripper_pitch = 0.0
+            gripper_yaw = 0.0
+            
+            orientation_difference = calculate_orientation_difference(object_frame, [0, 0, 0, gripper_roll, gripper_pitch, gripper_yaw])
+
+            robot.movel_tool([0,0,0, orientation_difference[0], orientation_difference[1], orientation_difference[2]], acc=0.5, vel=0.2)
     # for (xmin, ymin, xmax, ymax), cls in zip(find_angle.xyxy, find_angle.cls):
            
     #         center_x = int((xmin + xmax) / 2)
     #         center_y = int((ymin + ymax) / 2) #calculate the center of the object
     #         offset_object_x = 320 - center_x
     #         offset_object_y = 240 - center_y
-
-    #         print("Offset from center (X, Y):", offset_object_x, offset_object_y)
 
     #         cv2.rectangle(rotated_img, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 255, 0), 2)
     #         cv2.circle(rotated_img, (center_x, center_y), 5, (0, 0, 255), -1) #put the circle in the center with a filled in line
@@ -146,22 +195,19 @@ while True:
     # rotated_image = cv2.warpAffine(img, rotation_matrix, (640, 480))
 
     # cv2.imshow("Object Detection", rotated_image)
-    cv2.imshow("Original Image", img)
+    # cv2.imshow("Original Image", img)
     # cv2.imshow("Rotated Image", rotated_img)
 
     # cv2.imshow("Rotated Image", rotated_image)
     # cv2.imshow("Composite Canvas", canvas)
 
     # Exit the loop if 'q' is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Stop the pipeline and release resources
-pipeline.stop()
-cv2.destroyAllWindows()
 
 
-
+def main():
+    object_point = allign_object()
+    move_onto_robot(object_point)
+    allign_object()
 """
 This updated code creates a new canvas (initialized with zeros) with the same dimensions as the original image. The rotated image is then pasted onto the canvas, considering its position within the canvas based on the center point.
 
