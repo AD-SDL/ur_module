@@ -121,59 +121,53 @@ def center_the_gripper(robot, model, object_center, pipeline):
 
     return object_point
 
-# def move_over_object(object_point, robot):
-#     adjacent_length = get_adjacent_lenght(object_point,robot)
+def move_over_object(object_point, robot):
+    adjacent_length = get_adjacent_lenght(object_point,robot)
 
-#     current_location = robot.getl()
-#     gripper_flat = current_location
-#     gripper_flat[3] = 3.14
-#     gripper_flat[4] = 0.0
-#     gripper_flat[5] = 0.0
+    move_gripper_perpendicular(robot)
 
-#     robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
+    fixed_height = 0.00 #0.05
+    desired_position = adjacent_length - fixed_height
+    robot.translate_tool([desired_position,0 , 0], 0.2, 0.2)
 
-#     fixed_height = 0.00 #0.05
-#     desired_position = adjacent_length - fixed_height
-#     robot.translate_tool([0, desired_position, 0], 0.2, 0.2)
+def get_adjacent_lenght(object_point, robot):
+    # Points the gripper downwards to prepare the gripper to pick up object
 
-# def get_adjacent_lenght(object_point, robot):
-#     # Points the gripper downwards to prepare the gripper to pick up object
+    trans_z = object_point[2]
+    angle =  robot.getl()[3]
 
-#     trans_z = object_point[2]
-#     angle =  robot.getl()[3]
+    adjacent_length = math.cos(degrees(angle)) * trans_z
+    print ('adjacent_length: ', adjacent_length)
 
-#     adjacent_length = math.cos(degrees(angle)) * trans_z
+    return adjacent_length
 
-#     print ('adjacent_length: ', adjacent_length)
+def find_frame_areas(boxes):
+    return [(box[0], box[1], box[2], box[3]) for box in boxes]
 
-#     return adjacent_length
+def align_gripper(pipeline, model, robot):
 
-# def find_frame_areas(boxes):
-#     return [box.[0], box.[1], box.[2], box.[3] for box in boxes]
-
-# def align_gripper(pipeline, model, robot):
-
-#     img = capture_image(pipeline)
-#     # rotate the gripper so it's aligned with the object
-#     image_rotation_angle = 1
-#     robot_rotation_angle = 0  # initialize robot_rotation_angle to 0
-#     smallest_frame_area = float('inf')  # set initial smallest_frame_area to be infinity
-#     while True:
-#         # Rotate the image
-#         rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), image_rotation_angle, 1.0)
-#         rotated_img = cv2.warpAffine(img, rotation_matrix, (img.shape[1], img.shape[0]))
-#         boxes = model(rotated_img, conf=0.01)[0].boxes
-#         frame_areas = find_frame_areas(boxes)
+    img = capture_image(pipeline)
+    # rotate the gripper so it's aligned with the object
+    image_rotation_angle = 1
+    robot_rotation_angle = 0  # initialize robot_rotation_angle to 0
+    smallest_frame_area = float('inf')  # set initial smallest_frame_area to be infinity
+    while True:
+        # Rotate the image
+        rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), image_rotation_angle, 1.0)
+        rotated_img = cv2.warpAffine(img, rotation_matrix, (img.shape[1], img.shape[0]))
+        boxes = model(rotated_img, conf=0.01)[0].boxes
+        frame_areas = find_frame_areas(boxes)
         
-#         current_frame_area = min(frame_areas)
-#         if current_frame_area < smallest_frame_area:
-#             smallest_frame_area = current_frame_area
-#             robot_rotation_angle = image_rotation_angle
-#         elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
-#             break  # Break the loop when a small frame area is found
-#         image_rotation_angle += 1  # Increase image_rotation_angle for the next iteration
+        current_frame_area = min(frame_areas)
+        if current_frame_area < smallest_frame_area:
+            smallest_frame_area = current_frame_area
+            robot_rotation_angle = image_rotation_angle
+        elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
+            break  # Break the loop when a small frame area is found
+        image_rotation_angle += 1  # Increase image_rotation_angle for the next iteration
 
-#     robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
+    robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
+
 def move_gripper_perpendicular(robot):
     current_orientation = robot.get_orientation()
     euler_angles = current_orientation.to_euler(encoding = "xyz")
@@ -191,7 +185,6 @@ def main():
     model = load_model()
     pipeline = start_streaming()
 
-    
     object_center = allign_object(pipeline, model)
 
     if object_center:
