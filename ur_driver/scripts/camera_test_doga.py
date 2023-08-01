@@ -19,11 +19,11 @@ def connect_robot():
     return robot
 
 def load_model():
-    model_file_path = 'best.pt'
+    model_file_path = '/home/rpl/wei_ws/src/ur_module/ur_driver/scripts/best.pt'
     # Load the trained YOLO model
     model = YOLO(model_file_path)
     # Set the desired objects to detect
-    desired_objects = ['wellplates'] #, 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']  #list of known objects
+    desired_objects = ['tipboxes'] #, 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']  #list of known objects
     return model
 
 def start_streaming():
@@ -120,7 +120,7 @@ def center_the_gripper(robot, model, object_center, pipeline):
     return object_point
 
 def move_over_object(object_point, robot):
-    adjacent_length = get_adjacent_lenght(object_point)
+    adjacent_length = get_adjacent_lenght(object_point,robot)
 
     current_location = robot.getl()
     gripper_flat = current_location
@@ -188,7 +188,19 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    robot = connect_robot()
+    current_location = robot.getl()
+    print(current_location)
+    gripper_flat = current_location
+    gripper_flat[3] = 3.14
+    gripper_flat[4] = 0.0
+    gripper_flat[5] = 0.0
+
+    robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
+    # loc = robot.getl()
+    # loc[0]-=0.5
+    # robot.movel(loc, 0.2,0.2)
 
 # # This updated code creates a new canvas (initialized with zeros) with the same dimensions as the original image. The rotated image is then pasted onto the canvas, considering its position within the canvas based on the center point.
 
