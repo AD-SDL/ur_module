@@ -34,6 +34,15 @@ def start_streaming():
     profile = pipeline.start(config)
     return pipeline
 
+def capture_image(pipeline):
+    # Capture a new image from the camera
+    frames = pipeline.wait_for_frames()
+    color_frame = frames.get_color_frame()
+    img = np.asanyarray(color_frame.get_data())
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    return img
+
 def get_object_center(boxes):
     if len(boxes) > 0:
         xmin, ymin, xmax, ymax = boxes[0].xyxy[0]
@@ -137,15 +146,12 @@ def gripper_position(object_point, robot):
 
     return adjacent_length
 
-
-def allign_gripper():
-    # rotate the gripper so it's aligned with the object
-    pass
-
 def find_frame_areas(boxes):
     return [box.bounding_boxes[0] for box in boxes]
 
-def align_gripper(img, model):
+def align_gripper(pipeline, model):
+    img = capture_image(pipeline)
+    # rotate the gripper so it's aligned with the object
     image_rotation_angle = 1
     robot_rotation_angle = 0  # initialize robot_rotation_angle to 0
     smallest_frame_area = float('inf')  # set initial smallest_frame_area to be infinity
@@ -173,23 +179,14 @@ def main():
 
     if object_center:
         object_point = center_the_gripper(robot, model, object_center, pipeline)
-
-    # Capture a new image from the camera
-    frames = pipeline.wait_for_frames()
-    color_frame = frames.get_color_frame()
-    img = np.asanyarray(color_frame.get_data())
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-    robot_rotation_angle = align_gripper(img, model)
+    print("OBJECT_POINT: " , object_point)
+    
+    robot_rotation_angle = align_gripper(pipeline, model)
 
     robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
 
 if __name__ == "__main__":
     main()
-
-
-if __name__ == "__main__":
-  main()
 
 # # This updated code creates a new canvas (initialized with zeros) with the same dimensions as the original image. The rotated image is then pasted onto the canvas, considering its position within the canvas based on the center point.
 
