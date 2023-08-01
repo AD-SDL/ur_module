@@ -138,33 +138,17 @@ def gripper_position(object_point, robot):
     return adjacent_length
 
 
-def adjust_gripper():
+def allign_gripper():
     # rotate the gripper so it's aligned with the object
     pass
 
 def find_frame_areas(boxes):
     return [box.bounding_boxes[0] for box in boxes]
 
-def main():
-    robot = connect_robot()
-    model = load_model()
-    pipeline = start_streaming()
-    object_center = allign_object(pipeline, model)
-
-    if object_center:
-        object_point = center_the_gripper(robot, model, object_center, pipeline)
-
-
-     # Capture a new image from the camera
-    frames = pipeline.wait_for_frames()
-    color_frame = frames.get_color_frame()
-    img = np.asanyarray(color_frame.get_data())
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
+def align_gripper(img, model):
     image_rotation_angle = 1
     robot_rotation_angle = 0  # initialize robot_rotation_angle to 0
     smallest_frame_area = float('inf')  # set initial smallest_frame_area to be infinity
-    
     while True:
         # Rotate the image
         rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), image_rotation_angle, 1.0)
@@ -179,8 +163,29 @@ def main():
         elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
             break  # Break the loop when a small frame area is found
         image_rotation_angle += 1  # Increase image_rotation_angle for the next iteration
+    return robot_rotation_angle
+
+def main():
+    robot = connect_robot()
+    model = load_model()
+    pipeline = start_streaming()
+    object_center = allign_object(pipeline, model)
+
+    if object_center:
+        object_point = center_the_gripper(robot, model, object_center, pipeline)
+
+    # Capture a new image from the camera
+    frames = pipeline.wait_for_frames()
+    color_frame = frames.get_color_frame()
+    img = np.asanyarray(color_frame.get_data())
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    robot_rotation_angle = align_gripper(img, model)
 
     robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
