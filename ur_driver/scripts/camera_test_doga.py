@@ -53,7 +53,8 @@ def get_object_center(boxes):
         return None
 
 def allign_object(pipeline, model):
-    while True:
+    object_center = None
+    while object_center is None:
         frames = pipeline.wait_for_frames()
         color_frame = frames.get_color_frame()
         depth_frame = frames.get_depth_frame()
@@ -67,8 +68,7 @@ def allign_object(pipeline, model):
 
         boxes = model(img)[0].boxes  # Perform object detection
         object_center = get_object_center(boxes)
-        break
-
+        
     return object_center
 
 def center_the_gripper(robot, model, object_center, pipeline):
@@ -114,33 +114,35 @@ def center_the_gripper(robot, model, object_center, pipeline):
 
         if trans_z != 0:
             robot.translate_tool([-trans_x, -trans_y, 0], acc=1, vel=0.2)
+            break  # break after moving the robot over the first object
 
-        time.sleep(5)
-        cv2.destroyAllWindows()
+        # time.sleep(5)             
+        # cv2.destroyAllWindows()
 
-        return object_point
+    return object_point
 
-def move_over_object(robot, adjacent_length):
-    fixed_height = 0.05
-    desired_position = adjacent_length - fixed_height
-    robot.translate_tool([0, desired_position, 0], 0.2, 0.2)
+def move_over_object(object_point, robot):
+    adjacent_length = get_adjacent_lenght(object_point)
 
-def gripper_position(object_point, robot):
-    # Points the gripper downwards to prepare the gripper to pick up object
-
-    robot.getl()
-    trans_z = object_point[2]
     current_location = robot.getl()
-
-    angle =  robot.getl()[3]
     gripper_flat = current_location
     gripper_flat[3] = 3.14
     gripper_flat[4] = 0.0
     gripper_flat[5] = 0.0
 
-    adjacent_length = math.cos(degrees(angle)) * trans_z
-
     robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
+
+    fixed_height = 0.00 #0.05
+    desired_position = adjacent_length - fixed_height
+    robot.translate_tool([0, desired_position, 0], 0.2, 0.2)
+
+def get_adjacent_lenght(object_point, robot):
+    # Points the gripper downwards to prepare the gripper to pick up object
+
+    trans_z = object_point[2]
+    angle =  robot.getl()[3]
+
+    adjacent_length = math.cos(degrees(angle)) * trans_z
 
     print ('adjacent_length: ', adjacent_length)
 
@@ -149,7 +151,8 @@ def gripper_position(object_point, robot):
 def find_frame_areas(boxes):
     return [box.bounding_boxes[0] for box in boxes]
 
-def align_gripper(pipeline, model):
+def align_gripper(pipeline, model, robot):
+
     img = capture_image(pipeline)
     # rotate the gripper so it's aligned with the object
     image_rotation_angle = 1
@@ -169,7 +172,8 @@ def align_gripper(pipeline, model):
         elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
             break  # Break the loop when a small frame area is found
         image_rotation_angle += 1  # Increase image_rotation_angle for the next iteration
-    return robot_rotation_angle
+        
+    robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
 
 def main():
     robot = connect_robot()
@@ -180,10 +184,10 @@ def main():
     if object_center:
         object_point = center_the_gripper(robot, model, object_center, pipeline)
     print("OBJECT_POINT: " , object_point)
-    
-    robot_rotation_angle = align_gripper(pipeline, model)
 
-    robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
+    move_over_object(object_point, robot)
+    align_gripper(pipeline, model, robot)
+
 
 if __name__ == "__main__":
     main()
