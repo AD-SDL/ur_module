@@ -108,8 +108,6 @@ def center_the_gripper(robot, model, object_center, pipeline):
         trans_y = object_point[1]
         trans_z = object_point[2]
 
-        # robot.translate_tool([-trans_x, -trans_y, 0], acc=0.2, vel=0.2)
-
         print("XYZ: " + str(object_point))
 
         if trans_z != 0:
@@ -172,7 +170,7 @@ def align_gripper(pipeline, model, robot):
         elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
             break  # Break the loop when a small frame area is found
         image_rotation_angle += 1  # Increase image_rotation_angle for the next iteration
-        
+
     robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
 
 def main():
@@ -183,10 +181,10 @@ def main():
 
     if object_center:
         object_point = center_the_gripper(robot, model, object_center, pipeline)
-    print("OBJECT_POINT: " , object_point)
+        print("OBJECT_POINT: " , object_point)
 
-    move_over_object(object_point, robot)
-    align_gripper(pipeline, model, robot)
+        move_over_object(object_point, robot)
+        align_gripper(pipeline, model, robot)
 
 
 if __name__ == "__main__":
