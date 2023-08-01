@@ -142,48 +142,45 @@ def adjust_gripper():
     # rotate the gripper so it's aligned with the object
     pass
 
-def frame_areas(boxes):
+def find_frame_areas(boxes):
     return [box.bounding_boxes[0] for box in boxes]
 
 def main():
     robot = connect_robot()
     model = load_model()
     pipeline = start_streaming()
-
     object_center = allign_object(pipeline, model)
+
     if object_center:
         object_point = center_the_gripper(robot, model, object_center, pipeline)
-        
 
-    # you are closing the pipeline earlier so you need reopen it before you get a new frame 
-    # Capture a new image from the camera
+
+     # Capture a new image from the camera
     frames = pipeline.wait_for_frames()
     color_frame = frames.get_color_frame()
     img = np.asanyarray(color_frame.get_data())
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-    rotation_angle = 1
-    # Rotate the image
-    rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), rotation_angle, 1.0)
-    rotated_img = cv2.warpAffine(img, rotation_matrix, (img.shape[1], img.shape[0]))
-
-
-    boxes = model(rotated_img, conf=0.01)[0].boxes
-
-
-    # Update the smallest_frame variable if a smaller frame area is found
-    for area in frame_areas:
-        if area < smallest_frame_area:
-            frame_areas = frame_areas(boxes)    
-            smallest_frame_area = min(frame_areas)
-            smallest_frame_area = area
-            rotation_angle += 1 # Increase rotation_angle for the next iteration
-        elif rotation_angle > 45 and smallest_frame_area < area:
-            break
-        # Break the loop when a small frame area is found
+    image_rotation_angle = 1
+    robot_rotation_angle = 0  # initialize robot_rotation_angle to 0
+    smallest_frame_area = float('inf')  # set initial smallest_frame_area to be infinity
     
-    robot.movej(robot.getj()[:-1] + [math.radians(rotation_angle)], acc=0.2, vel=0.2)
+    while True:
+        # Rotate the image
+        rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), image_rotation_angle, 1.0)
+        rotated_img = cv2.warpAffine(img, rotation_matrix, (img.shape[1], img.shape[0]))
+        boxes = model(rotated_img, conf=0.01)[0].boxes
+        frame_areas = find_frame_areas(boxes)
+        
+        current_frame_area = min(frame_areas)
+        if current_frame_area < smallest_frame_area:
+            smallest_frame_area = current_frame_area
+            robot_rotation_angle = image_rotation_angle
+        elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
+            break  # Break the loop when a small frame area is found
+        image_rotation_angle += 1  # Increase image_rotation_angle for the next iteration
 
+    robot.movej(robot.getj()[:-1] + [math.radians(robot_rotation_angle)], acc=0.2, vel=0.2)
 
 
 if __name__ == "__main__":
