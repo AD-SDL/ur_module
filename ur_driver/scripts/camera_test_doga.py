@@ -185,7 +185,7 @@ def main():
 
         move_over_object(object_point, robot)
         align_gripper(pipeline, model, robot)
-        
+
 def point_gripper_downwards(robot):
     current_pose = robot.getl()  # get current pose
 
@@ -198,7 +198,21 @@ def point_gripper_downwards(robot):
     current_pose[5] = math.pi * current_pose[5] / rotation_magnitude
     
     robot.movel(current_pose, acc=0.2, vel=0.2)  # move the robot
-
+import urx
+from transforms3d import euler, quaternions
+import math
+def rotate_gripper_to_look_down(robot, delta_pitch):
+    current_pose = robot.getl()  # Get the current pose (position and orientation) of the end-effector
+    # Convert current orientation from quaternion to Euler angles (rx, ry, rz)
+    current_orientation = current_pose[3:]
+    (rx, ry, rz) = euler.quat2euler(current_orientation, 'sxyz')
+    # Increase the pitch angle while maintaining the roll and yaw angles
+    ry += math.radians(delta_pitch)
+    # Convert back from Euler angles to quaternion
+    new_orientation = euler.euler2quat(rx, ry, rz, 'sxyz')
+    # Construct the new pose
+    new_pose = list(current_pose[0:3]) + list(new_orientation)
+    robot.movel(new_pose, acc=0.1, vel=0.1)  # Move the robot to the new pose
 if __name__ == "__main__":
     # main()
     robot = connect_robot()
