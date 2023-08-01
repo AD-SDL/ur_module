@@ -185,17 +185,30 @@ def main():
 
         move_over_object(object_point, robot)
         align_gripper(pipeline, model, robot)
+        
+def point_gripper_downwards(robot):
+    current_pose = robot.getl()  # get current pose
 
+    # Calculate the rotation magnitude (the angle)
+    rotation_magnitude = math.sqrt(current_pose[3]**2 + current_pose[4]**2 + current_pose[5]**2)
+
+    # Rotate around x-axis by 180 degrees while preserving the rotation around z-axis
+    current_pose[3] = math.pi * current_pose[3] / rotation_magnitude
+    current_pose[4] = math.pi * current_pose[4] / rotation_magnitude
+    current_pose[5] = math.pi * current_pose[5] / rotation_magnitude
+    
+    robot.movel(current_pose, acc=0.2, vel=0.2)  # move the robot
 
 if __name__ == "__main__":
     # main()
     robot = connect_robot()
-    current_location = robot.getl()
-    print(current_location)
-    gripper_flat = current_location
-    gripper_flat[3] = 3.14
-    gripper_flat[4] = 0.0
-    gripper_flat[5] = 0.0
+    point_gripper_downwards(robot)
+    # current_location = robot.getl()
+    # print(current_location)
+    # gripper_flat = current_location
+    # gripper_flat[3] = 3.14
+    # gripper_flat[4] = 0.0
+    # gripper_flat[5] = 0.0
 
     robot.movel(gripper_flat, acc = 0.5, vel = 0.2)
     # loc = robot.getl()
