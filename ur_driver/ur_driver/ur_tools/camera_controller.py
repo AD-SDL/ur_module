@@ -19,7 +19,7 @@ from urx import Robot
 class CameraController():
 
 
-    def __init__(self, ur_connection = None, target_object = None) -> None:
+    def __init__(self, robot_IP, ur_connection = None, target_object = None) -> None:
         """This is a camera controller class created for the UR robots to utilize Intel Realsense D400 series cameres. 
            Functionalities:  - Object detection based on a pre-trained YOLO model with 5 different labwares.
                              - Plan a robot trajectory to pick up the objects based on distance and object reference frame imformation obtained from the camera.
@@ -47,6 +47,12 @@ class CameraController():
         if self.target_object not in self.model_object_list:
             raise Exception("Target object category doesn't exist in the trained model object list")
         
+        self.gripper = RobotiqGripper()
+        print('Connecting to gripper...')
+        self.gripper.connect(robot_IP, 63352)
+        self.gripper.activate()
+        self.gripper.move_and_wait_for_pos(0, 150, 0)
+    
     def start_camera_stream(self) -> None:
         """ Starts the Intel realsense camera pipeline 
         :param:  None
@@ -57,7 +63,7 @@ class CameraController():
         config = realsense.config()
         config.enable_stream(realsense.stream.color, 640, 480, realsense.format.rgb8, 30)  # Color stream configuration
         config.enable_stream(realsense.stream.depth, 640, 480, realsense.format.z16, 30)  # Depth stream configuration
-        profile = self.pipeline.start(config)
+        self.pipeline.start(config)
 
     def capture_image(self) -> cv2:
         """ Capture a new image from the camera
