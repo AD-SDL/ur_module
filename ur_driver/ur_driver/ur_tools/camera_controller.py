@@ -42,7 +42,10 @@ class CameraController():
 
         self.default_yolo_model_path = "best.pt"
         self.model_object_list = ['deepwellplates', 'tipboxes', 'hammers', 'wellplates', 'wellplate_lids'] 
-        self.target_object = target_object
+        self.target_object = target_object.lower()
+
+        if self.target_object not in self.model_object_list:
+            raise Exception("Target object category doesn't exist in the trained model object list")
         
     def start_camera_stream(self) -> None:
         """ Starts the Intel realsense camera pipeline 
@@ -57,7 +60,8 @@ class CameraController():
         profile = self.pipeline.start(config)
 
     def capture_image(self) -> cv2:
-        # Capture a new image from the camera
+        """ Capture a new image from the camera
+        """
         frames = self.pipeline.wait_for_frames()
         color_frame = frames.get_color_frame()
         img = np.asanyarray(color_frame.get_data())
@@ -66,6 +70,8 @@ class CameraController():
         return img
     
     def load_yolo_model(self, model_path = None):
+        """
+        """
         if not model_path:
             model_file_path = self.default_yolo_model_path
         else:
@@ -74,5 +80,4 @@ class CameraController():
         # Load the trained YOLO model
         model = YOLO(model_file_path)
         # Set the desired objects to detect
-        desired_objects = ['deepwellplates'] #, 'tipboxes', 'hammers', 'deepwellplates', 'wellplate_lids']  #list of known objects
         return model
