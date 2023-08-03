@@ -79,7 +79,7 @@ class CameraController:
         Capture a new image from the camera.
 
         Returns:
-            tuple: The captured image, color frame, and depth frame.
+            Tuple[np.array, 'realsense.frame', 'realsense.frame']: The captured image and the color and depth frames.
         """
         frames = self.pipeline.wait_for_frames()
         color_frame = frames.get_color_frame()
@@ -95,12 +95,49 @@ class CameraController:
         Loads the trained YOLO model.
 
         Args:
-            model_path (str): Path to the model file, defaults to None.
+            model_path (Optional[str]): Path to the model file, defaults to None.
         """
         model_file_path = model_path if model_path else "best.pt"
         # Load the trained YOLO model
         self.model = YOLO(model_file_path)
 
+    def align_object(self) -> Optional[Tuple[int, int]]:
+        """
+        Aligns the robot arm to the object's center until the center is detected.
+
+        Returns:
+            Optional[Tuple[int, int]]: The x and y coordinates of the object's center if detected, otherwise None.
+        """
+        object_center = None
+        while object_center is None:
+            img, color_frame, depth_frame = self.capture_image()
+
+            if not color_frame or not depth_frame or not img:
+                return None
+
+            boxes = self.model(img)[0].boxes
+            object_center = self._get_object_center(boxes)
+
+        return object_center
+
+    def _get_object_center(self, boxes) -> Optional[Tuple[int, int]]:
+        """
+        Calculates the center of the first detected object if any objects are detected.
+
+        Args:
+            boxes (List[Box]): A list of detected objects represented as boxes.
+
+        Returns:
+            Optional[Tuple[int, int]]: The x and y coordinates of the first object's center if detected, otherwise None.
+        """
+        if len(boxes) > 0:
+            xmin, ymin, xmax, ymax = boxes[0].xyxy[0]
+            center_x = int((xmin + xmax) / 2)
+            center_y = int((ymin + ymax) / 2)
+            return center_x, center_y
+        else:
+            return None
+        
     def _calculate_object_reference_frame(self, depth_frame: 'realsense.frame', center_x: int, center_y: int):
         """
         Get the object reference frame from the depth frame and center of the bounding box.
@@ -110,6 +147,7 @@ class CameraController:
             center_x (int): X coordinate of the object center.
             center_y (int): Y coordinate of the object center.
         """
+
         # Get the intrinsic parameters of the depth frame
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
         # Use the depth value and the center of the bounding box to get the 3D coordinates of the object
