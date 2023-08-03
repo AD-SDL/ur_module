@@ -41,11 +41,11 @@ class CameraController():
         self.ur_connection =  ur_connection 
 
         self.default_yolo_model_path = "best.pt"
-        self.model_object_list = ['deepwellplates', 'tipboxes', 'hammers', 'wellplates', 'wellplate_lids'] 
+        self.class_names = ['deepwellplates', 'tipboxes', 'hammers', 'wellplates', 'wellplate_lids'] 
         self.target_object = target_object.lower()
 
-        if self.target_object not in self.model_object_list:
-            raise Exception("Target object category doesn't exist in the trained model object list")
+        if self.target_object not in self.class_names:
+            raise Exception("Target object category doesn't exist in the trained model class list")
         
         self.gripper = RobotiqGripper()
         print('Connecting to gripper...')
@@ -85,5 +85,4 @@ class CameraController():
 
         # Load the trained YOLO model
         model = YOLO(model_file_path)
-        # Set the desired objects to detect
         return model
