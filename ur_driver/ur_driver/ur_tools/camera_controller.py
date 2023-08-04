@@ -371,7 +371,10 @@ class CameraController:
         """
         Detects, aligns to, and picks up an object using the robot arm and gripper.
         """
-        # TODO: Maybe keep alligning and try to pick up at the same time till object is actually picked up
+        # TODO: Maybe keep alligning and try to pick up at the same time till object is actually picked up.
+        #       When the align object is called, robot arm can also be move towards thte object slowly (0.1 each time) within each loop
+        #       Once robot gets to certain distance it would only perform pick movement quickly.
+        
         for i in range(6):
             object_center = self.align_object()
 
