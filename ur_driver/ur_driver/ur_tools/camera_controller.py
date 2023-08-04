@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, time
 from copy import deepcopy
 from typing import Optional, Tuple, List
 
@@ -66,12 +66,17 @@ class CameraController:
         self.gripper.move_and_wait_for_pos(0, 150, 0)
 
     def start_camera_stream(self) -> None:
-        
-        self.pipeline = realsense.pipeline()
-        config = realsense.config()
-        config.enable_stream(realsense.stream.color, 640, 480, realsense.format.rgb8, 30)
-        config.enable_stream(realsense.stream.depth, 640, 480, realsense.format.z16, 30)
-        self.pipeline.start(config)
+        """Start the Intel realsense camera pipeline"""
+
+        try:
+            self.pipeline = realsense.pipeline()
+            config = realsense.config()
+            config.enable_stream(realsense.stream.color, 640, 480, realsense.format.rgb8, 30)
+            config.enable_stream(realsense.stream.depth, 640, 480, realsense.format.z16, 30)
+            self.pipeline.start(config)
+        except realsense.error as e:
+            print(f"RealSense error {e.get_failed_function()}: {e.get_failed_args()}")
+            print(f"{e.get_description()}")    
 
     def capture_image(self) -> Tuple[np.array, 'realsense.frame', 'realsense.frame']:
         """
@@ -135,15 +140,19 @@ class CameraController:
         else:
             return None
         
-    def align_object(self) -> Optional[Tuple[int, int]]:
+    def align_object(self, timeout = 10) -> Optional[Tuple[int, int]]:
         """
         Aligns the robot arm to the object's center until the center is detected.
+        
+        Args:
+            timeout (int): The maximum amount of time (in seconds) to try aligning the robot arm.
 
         Returns:
             Optional[Tuple[int, int]]: The x and y coordinates of the object's center if detected, otherwise None.
         """
         object_center = None
-        while object_center is None:
+        start_time = time()
+        while object_center is None and time() - start_time < timeout:
             img, color_frame, depth_frame = self.capture_image()
 
             if not color_frame or not depth_frame or not img:
