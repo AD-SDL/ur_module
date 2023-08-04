@@ -1,6 +1,6 @@
 from time import sleep
 from copy import deepcopy
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import cv2
 import pyrealsense2 as realsense
@@ -66,6 +66,7 @@ class CameraController:
         self.gripper.move_and_wait_for_pos(0, 150, 0)
 
     def start_camera_stream(self) -> None:
+        
         self.pipeline = realsense.pipeline()
         config = realsense.config()
         config.enable_stream(realsense.stream.color, 640, 480, realsense.format.rgb8, 30)
@@ -244,18 +245,18 @@ class CameraController:
         self._detect_and_move_to_object(img, depth_frame)
 
     def move_over_object(self, object_point: Tuple[float, float, float]):
-            """
-            Moves the robot arm over the detected object.
+        """
+        Moves the robot arm over the detected object.
 
-            Args:
-                object_point (Tuple[float, float, float]): The 3D coordinates of the object point.
-            """
-            adjacent_length = self._get_adjacent_length(object_point)
+        Args:
+            object_point (Tuple[float, float, float]): The 3D coordinates of the object point.
+        """
+        adjacent_length = self._get_adjacent_length(object_point)
 
-            self._move_gripper_perpendicular()
+        self._move_gripper_perpendicular()
 
-            desired_position = adjacent_length 
-            self.ur_connection.translate_tool([0, desired_position , 0], 1, 0.2)
+        desired_position = adjacent_length 
+        self.ur_connection.translate_tool([0, desired_position , 0], 1, 0.2)
 
     def _get_adjacent_length(self, object_point: Tuple[float, float, float]) -> float:
         """
@@ -290,6 +291,57 @@ class CameraController:
 
         self.ur_connection.set_orientation(current_orientation, 0.2, 0.2)
 
+    def find_frame_areas(self, boxes) -> List[float]:
+        """
+        Determines the areas of bounding boxes of the detected objects.
+        
+        Args:
+            boxes (List[Box]): A list of detected objects represented as boxes.
+            
+        Returns:
+            List[float]: A list of areas of each bounding box.
+        """
+        areas = []
+        for box in boxes:
+            xmin, ymin, xmax, ymax = box.xyxy[0]
+            areas.append((xmax - xmin) * (ymax - ymin))  # Area = width * height
+        return areas
+    
+    def align_gripper(self) -> None:
+        """
+        Rotates the image and aligns the gripper with the target object until a minimum bounding box area is found.
+        
+        Returns:
+            None
+        """
+        img, _, _ = self.capture_image()
+        image_rotation_angle = 1
+        robot_rotation_angle = 0  
+        smallest_frame_area = float('inf')  
+
+        rotate = True  # introduce a flag to control the while loop
+
+        while rotate:
+            rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), image_rotation_angle, 1.0)
+            rotated_img = cv2.warpAffine(img, rotation_matrix, (img.shape[1], img.shape[0]))
+            
+            boxes, classes = self._get_object_predictions(rotated_img)
+            for i, cls in enumerate(classes):
+                if cls != self.target_object:
+                    continue
+                frame_areas = self.find_frame_areas([boxes[i]])
+
+                current_frame_area = min(frame_areas)
+                if current_frame_area < smallest_frame_area:
+                    smallest_frame_area = current_frame_area
+                    robot_rotation_angle = image_rotation_angle
+                elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
+                    rotate = False  # if the smallest frame area is found, stop the while loop
+                    break
+            image_rotation_angle += 1
+
+        self.ur_connection.movej(self.ur_connection.getj()[:-1] + [radians(robot_rotation_angle)], acc=0.2, vel=0.2)
+
     def pick_object(self):
         """
         Detects, aligns to, and picks up an object using the robot arm and gripper.
@@ -319,3 +371,56 @@ class CameraController:
 
         self.ur_connection.movej(drop_off_above, 0.5, 0.5)
         self.ur_connection.movej(waypoint, 0.5, 0.5)
+
+    # Uncompleted
+    def calculate_3d_orientation(self, depth_frame):
+        # Obtain depth data
+        depth_data = np.asanyarray(depth_frame.get_data())
+        # Assuming that we already have the bounding box of the object
+        box = 1 # Bounding box of the detected object
+        # Extract the depth information for the object from the depth data
+        object_depth_data = depth_data[box[1]:box[3], box[0]:box[2]]
+        # Find the 3D orientation based on the object's depth data
+        orientation = 1 # Function to calculate orientation based on depth data
+        # return orientation
+        pass
+
+    # Uncompleted
+    def align_gripper_to_object(self):
+        # Capture image
+        _, _, depth_frame = self.capture_image()
+        # Calculate 3D orientation of the object
+        orientation = self.calculate_3d_orientation(depth_frame)
+        # Align the gripper to the object's 3D orientation
+        self.ur_connection.set_orientation(orientation, acc=0.2, vel=0.2)
+        pass
+
+def main():
+    # Initialize CameraController
+    robot_ip = '192.168.1.10'  # replace with your robot's IP
+    ur_robot = Robot(robot_ip)  # Initialize the UR robot connection
+    target_object = 'wellplates'  # replace with the object you want to pick
+    controller = CameraController(robot_ip, ur_robot, target_object)
+    
+    # Load model and start streaming
+    controller.load_yolo_model('best.pt')  # replace with your model's path
+    controller.start_camera_stream()
+
+    for i in range(6):
+        object_center = controller.align_object()
+
+        if object_center:
+            object_point = controller.center_the_gripper(object_center)
+            print("OBJECT_POINT: ", object_point)
+
+    controller.move_over_object(object_point)
+    sleep(5)
+
+    controller.align_gripper()
+    controller.pick_object()
+
+    #Remember to close the connection
+    ur_robot.close()
+
+if __name__ == "__main__":
+    main()
