@@ -156,7 +156,7 @@ class CameraController:
         else:
             return None
         
-    def align_object(self, timeout = 10) -> Optional[Tuple[int, int]]:
+    def get_object_center(self, timeout = 10) -> Optional[Tuple[int, int]]:
         """
         Aligns the robot arm to the object's center until the center is detected.
         
@@ -220,7 +220,7 @@ class CameraController:
             # Move the robot's tool (e.g. a gripper) to be centered over the object in the x-y plane
             self.ur_connection.translate_tool([-trans_x, -trans_y, 0], acc=self.MOVE_ACC, vel=self.MOVE_VEL)
     
-    def _detect_and_move_to_object(self, img: np.array, depth_frame: 'realsense.frame'):
+    def _detect_and_allign(self, img: np.array, depth_frame: 'realsense.frame'):
         """
         This function takes an image and a depth frame as input, runs the object detection model on the image,
         and checks the classes of detected objects. If the class of a detected object matches the target object,
@@ -267,7 +267,7 @@ class CameraController:
         if not color_frame or not depth_frame or not img:
             raise ValueError("Could not capture image or retrieve color/depth frames")
 
-        self._detect_and_move_to_object(img, depth_frame)
+        self._detect_and_allign(img, depth_frame)
 
     def move_over_object(self, object_point: Tuple[float, float, float]):
         """
@@ -367,16 +367,13 @@ class CameraController:
 
         self.ur_connection.movej(self.ur_connection.getj()[:-1] + [radians(robot_rotation_angle)], acc=0.2, vel=0.2)
 
-    def pick_object(self):
+    def pick_static_object(self):
         """
         Detects, aligns to, and picks up an object using the robot arm and gripper.
         """
-        # TODO: Maybe keep alligning and try to pick up at the same time till object is actually picked up.
-        #       When the align object is called, robot arm can also be move towards thte object slowly (0.1 each time) within each loop
-        #       Once robot gets to certain distance it would only perform pick movement quickly.
-        
+
         for i in range(6):
-            object_center = self.align_object()
+            object_center = self.get_object_center()
 
             if object_center:
                 object_point = self.move_to_object()
@@ -385,7 +382,7 @@ class CameraController:
                 object_point = None
 
         if not object_point:
-            print("Object can;t be found!")
+            print("Object can't be found!")
             return
         
         sleep(4)
@@ -430,13 +427,42 @@ class CameraController:
         # Align the gripper to the object's 3D orientation
         self.ur_connection.set_orientation(orientation, acc=0.2, vel=0.2)
         pass
-    
-    def pick_moving_object(self):
+
+    def pick_dynamic_object(self):
+        """
+        Detects, aligns to, and picks up an object using the robot arm and gripper.
+        """
+        object_grasped = False
+        while not object_grasped:
+            object_center = self.get_object_center()
+
+            if object_center:
+                object_point = self.move_to_object()
+                print(f"OBJECT_POINT: {object_point}")
+            else:
+                object_point = None
+
+        if not object_point:
+            print("Object can't be found!")
+            return
+        
+        sleep(4)
+
+        self.ur_connection.translate_tool([0.02, 0.09, 0], 1, 0.2)
+        self.ur_connection.translate_tool([0, 0, object_point[2]-0.16], 1, 0.2)
+        self.gripper.move_and_wait_for_pos(160, 150, 100)
+        self.ur_connection.translate_tool([0, 0, -(object_point[2]-0.2)], 1, 0.2)
+
+    def pick_conveyor_object(self):
+        # TODO: Maybe keep alligning and try to pick up at the same time till object is actually picked up.
+        #       When the align object is called, robot arm can also be move towards thte object slowly (0.1 each time) within each loop
+        #       Once robot gets to certain distance it would only perform pick movement quickly.
+        
 
         MAX_ATTEMPTS = 5
 
         while True:
-            object_center = self.align_object()
+            object_center = self.get_object_center()
 
             if object_center:
                 object_point = self.center_the_gripper(object_center)
@@ -483,7 +509,7 @@ def main():
     controller.start_camera_stream()
 
     for i in range(6):
-        object_center = controller.align_object()
+        object_center = controller.get_object_center()
 
         if object_center:
             object_point = controller.center_the_gripper(object_center)
@@ -493,7 +519,7 @@ def main():
     sleep(5)
 
     controller.align_gripper()
-    controller.pick_object()
+    controller.pick_static_object()
     controller.pipeline.stop()
 
 if __name__ == "__main__":
