@@ -48,8 +48,8 @@ class CameraController:
         self.object_reference_frame = None
         self.gripper = RobotiqGripper()
 
-        self.MOVE_ACC = 0.5
-        self.MOVE_VEL = 0.5
+        self.MOVE_ACC = 1.0
+        self.MOVE_VEL = 1.0
         self.conveyor_speed = 0.0  # Conveyor speed in meters per second
         self.CLASS_NAMES = ['deepwellplates', 'tipboxes', 'hammers', 'wellplates', 'wellplate_lids']
 
@@ -164,7 +164,7 @@ class CameraController:
             timeout (int): The maximum amount of time (in seconds) to try aligning the robot arm.
 
         Returns:
-            Optional[Tuple[int, int]]: The x and y coordinates of the object's center if detected, otherwise None.
+            Optional[Tuple[int, int]]: The x and y pixel coordinates of the object's center if detected, otherwise None.
         """
         object_xy = None
         start_time = time()
@@ -220,7 +220,7 @@ class CameraController:
             # Move the robot's tool (e.g. a gripper) to the object
             self.ur_connection.translate_tool([-trans_x, -trans_y, move_z], acc=self.MOVE_ACC, vel=self.MOVE_VEL)
   
-    def _detect_and_allign(self, img: np.array, depth_frame: 'realsense.frame'):
+    def _detect_object_coordinates(self, img: np.array, depth_frame: 'realsense.frame'):
         """
         This function takes an image and a depth frame as input, runs the object detection model on the image,
         and checks the classes of detected objects. If the class of a detected object matches the target object,
@@ -246,7 +246,7 @@ class CameraController:
         else:
             raise Exception(f'Target object {self.target_object} not found in the frame.')
 
-    def center_the_gripper(self) -> None:
+    def calculate_object_alignment(self) -> None:
         """
         Method to center the robot gripper over the detected object in its field of view.
         
@@ -263,7 +263,7 @@ class CameraController:
         if not color_frame or not depth_frame or not img:
             raise ValueError("Could not capture image or retrieve color/depth frames")
 
-        self._detect_and_allign(img, depth_frame)
+        self._detect_object_coordinates(img, depth_frame)
 
     def move_over_object(self, object_point: Tuple[float, float, float]) -> None:
         """
@@ -363,7 +363,7 @@ class CameraController:
 
         self.ur_connection.movej(self.ur_connection.getj()[:-1] + [radians(robot_rotation_angle)], acc=0.2, vel=0.2)
 
-    def pick_static_object(self):
+    def pick_static_object(self) -> None:
         """
         Detects, aligns to, and picks up an object using the robot arm and gripper.
         """
@@ -372,7 +372,7 @@ class CameraController:
             object_xy = self.get_object_xy()
 
             if object_xy:
-                self.center_the_gripper()
+                self.calculate_object_alignment()
                 print(f"OBJECT_POINT: {self.object_reference_frame}")
                 self.move_to_object()
             else:
@@ -403,46 +403,45 @@ class CameraController:
         self.ur_connection.movej(waypoint, 0.5, 0.5)
 
     def pick_dynamic_object(self):
-        """
-        Detects, aligns to, and picks up an object using the robot arm and gripper.
+        """ Picks up dynamicly moving objects.
+        Keeps aligning and attemps to pick up at the same time till object is actually picked up.
+        When the align object is called, robot arm also moved towards thte object slowly (0.1 each time) within each loop
+        Once robot gets to certain distance it would only perform pick movement quickly.
+        
         """
         object_grasped = False
         while not object_grasped:
             object_xy = self.get_object_xy()
 
             if object_xy:
-                self.center_the_gripper()
+                self.calculate_object_alignment()
                 print(f"OBJECT_POINT: {self.object_reference_frame}")
-                i
-                self.move_to_object()
-
+                if self.object_reference_frame[2] > 0.31:
+                    self.move_to_object(move_z=0.01)
+                elif self.object_reference_frame[2] < 0.31:
+                    self.ur_connection.translate_tool([0.02, 0.09, 0.25], self.MOVE_ACC, self.MOVE_VEL)
+                    self.gripper.move_and_wait_for_pos(160, 150, 100)
+                    self.ur_connection.translate_tool([0, 0, -0.25], self.MOVE_ACC, self.MOVE_VEL)
+                    object_grasped = True
             else:
+                # TODO: Try keeping the same pixel location for depth sensing to contunie the pick up movement
+                #       if the object was initially detected but throughout the movement process detection cannot be made because of the camera errors.
+                #
                 self.object_reference_frame  = None
 
         if not self.object_reference_frame:
             print("Object can't be found!")
             return
         
-        sleep(4)
-
-        self.ur_connection.translate_tool([0.02, 0.09, 0], 1, 0.2)
-        self.ur_connection.translate_tool([0, 0, self.object_reference_frame[2]-0.16], 1, 0.2)
-        self.gripper.move_and_wait_for_pos(160, 150, 100)
-        self.ur_connection.translate_tool([0, 0, -(self.object_reference_frame[2]-0.2)], 1, 0.2)
-
     def pick_conveyor_object(self):
-        # TODO: Maybe keep alligning and try to pick up at the same time till object is actually picked up.
-        #       When the align object is called, robot arm can also be move towards thte object slowly (0.1 each time) within each loop
-        #       Once robot gets to certain distance it would only perform pick movement quickly.
-        
-
+        """pick conveyor object"""
         MAX_ATTEMPTS = 5
 
         while True:
             object_xy = self.get_object_xy()
 
             if object_xy:
-                self.center_the_gripper(object_xy)
+                self.calculate_object_alignment(object_xy)
 
                 if self.conveyor_speed != 0:
                     # If the conveyor belt is moving, adjust the target point based on its speed
@@ -512,7 +511,7 @@ def main():
         object_xy = controller.get_object_xy()
 
         if object_xy:
-            controller.center_the_gripper(object_xy)
+            controller.calculate_object_alignment(object_xy)
             print("OBJECT_POINT: ", controller.object_reference_frame)
 
     controller.move_over_object(controller.object_reference_frame)
