@@ -101,25 +101,23 @@ class CameraController:
         # Load the trained YOLO model
         self.model = YOLO(model_file_path)
 
-    def align_object(self) -> Optional[Tuple[int, int]]:
+    def _get_object_predictions(self, img: np.array) -> Tuple[list, list]:
         """
-        Aligns the robot arm to the object's center until the center is detected.
+        Detects objects in the given image using the provided YOLO model.
+
+        Args:
+            model (YOLO): The YOLO model to use for object detection.
+            img (np.array): The image to detect objects in.
 
         Returns:
-            Optional[Tuple[int, int]]: The x and y coordinates of the object's center if detected, otherwise None.
+            Tuple[list, list]: A tuple containing a list of detected boxes and their corresponding classes.
         """
-        object_center = None
-        while object_center is None:
-            img, color_frame, depth_frame = self.capture_image()
+        prediction = self.model(img)[0]
+        boxes = prediction.boxes
+        classes = prediction.cls
 
-            if not color_frame or not depth_frame or not img:
-                return None
-
-            boxes = self.model(img)[0].boxes
-            object_center = self._get_object_center(boxes)
-
-        return object_center
-
+        return boxes, classes
+    
     def _get_object_center(self, boxes) -> Optional[Tuple[int, int]]:
         """
         Calculates the center of the first detected object if any objects are detected.
@@ -137,6 +135,25 @@ class CameraController:
             return center_x, center_y
         else:
             return None
+        
+    def align_object(self) -> Optional[Tuple[int, int]]:
+        """
+        Aligns the robot arm to the object's center until the center is detected.
+
+        Returns:
+            Optional[Tuple[int, int]]: The x and y coordinates of the object's center if detected, otherwise None.
+        """
+        object_center = None
+        while object_center is None:
+            img, color_frame, depth_frame = self.capture_image()
+
+            if not color_frame or not depth_frame or not img:
+                return None
+
+            boxes, classes = self._get_object_predictions(img)
+            object_center = self._get_object_center(boxes)
+
+        return object_center
         
     def _calculate_object_reference_frame(self, depth_frame: 'realsense.frame', center_x: int, center_y: int):
         """
@@ -192,7 +209,7 @@ class CameraController:
             depth_frame ('realsense.frame'): The depth frame from the camera.
         """
 
-        boxes, classes = self.model(img)[0].boxes, self.model(img)[0].classes
+        boxes, classes = self._get_object_predictions(img)
         for (xmin, ymin, xmax, ymax), cls in zip(boxes.xyxy, classes):
             if cls == self.target_object:
                 center_x, center_y = self._calculate_box_center(xmin, xmax, ymin, ymax)
@@ -228,3 +245,67 @@ class CameraController:
 
         self._detect_and_move_to_object(img, depth_frame)
 
+    def move_over_object(self, object_point: Tuple[float, float, float]):
+            """
+            Moves the robot arm over the detected object.
+
+            Args:
+                object_point (Tuple[float, float, float]): The 3D coordinates of the object point.
+            """
+            adjacent_length = self._get_adjacent_length(object_point)
+
+            self._move_gripper_perpendicular()
+
+            desired_position = adjacent_length 
+            self.ur_connection.translate_tool([0, desired_position , 0], 1, 0.2)
+
+
+def get_adjacent_lenght(object_point, robot):
+    # Points the gripper downwards to prepare the gripper to pick up object
+
+    trans_z = object_point[2]
+    angle =  robot.getl()[4]
+
+    adjacent_length = math.cos(degrees(angle)) * trans_z
+    print ('adjacent_length: ', adjacent_length)
+
+    return abs(adjacent_length)
+
+def move_gripper_perpendicular(robot):
+
+    current_orientation = robot.get_orientation()
+    euler_angles = current_orientation.to_euler(encoding = "xyz")
+    print(euler_angles)
+    move_rx = (3.14 - abs(euler_angles[0]))
+    print(move_rx)
+    move_ry = abs(euler_angles[1])
+    print(move_ry)
+    current_orientation.rotate_xt(move_rx)
+    # robot.set_orientation(current_orientation,0.2,0.2)
+    current_orientation.rotate_yt(move_ry)
+    robot.set_orientation(current_orientation,0.2,0.2)
+
+def pick_object(robot, pipeline, model, gripper):
+
+    for i in range(6):
+        object_center = allign_object(pipeline, model)
+
+        if object_center:
+            object_point = center_the_gripper(robot, model, object_center, pipeline)
+            print("OBJECT_POINT: " , object_point)
+    time.sleep(4)
+    robot.translate_tool([0.02,0.09,0],1,0.2)
+    # gripper.move_and_wait_for_pos(0, 150, 0)
+    robot.translate_tool([0,0,object_point[2]-0.16],1,0.2)
+    gripper.move_and_wait_for_pos(160, 150, 100)
+    # gripper.close()1
+    robot.translate_tool([0,0,-(object_point[2]-0.2)],1,0.2)
+    waypoint = [0.2655990719795227, -1.7126232586302699, -1.7399795055389404, -1.254279003744461, -4.749170009289877, -2.394965473805563]
+    drop_off_above = [-1.4304960409747522, -1.0302266043475647, -2.2368316650390625, -1.4599171516350289, -4.7227471510516565, -3.00033146539797]
+    drop_off = [-1.4450705687152308, -1.3130722504905243, -2.613124132156372, -0.8007843655398865, -4.7251179854022425, -3.009803597127096]
+    robot.movej(waypoint,0.5,0.5)
+    robot.movej(drop_off_above,0.5,0.5)
+    robot.movej(drop_off,0.5,0.5)
+    gripper.move_and_wait_for_pos(0, 150, 100)
+    robot.movej(drop_off_above,0.5,0.5)
+    robot.movej(waypoint,0.5,0.5)
