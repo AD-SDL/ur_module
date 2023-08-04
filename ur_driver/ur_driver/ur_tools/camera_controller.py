@@ -491,9 +491,7 @@ def main():
 
     controller.align_gripper()
     controller.pick_object()
-
-    #Remember to close the connection
-    ur_robot.close()
+    controller.pipeline.stop()
 
 if __name__ == "__main__":
     main()
