@@ -50,6 +50,7 @@ class CameraController:
 
         self.MOVE_ACC = 0.5
         self.MOVE_VEL = 0.5
+        self.conveyor_speed = 0.0  # Conveyor speed in meters per second
         self.CLASS_NAMES = ['deepwellplates', 'tipboxes', 'hammers', 'wellplates', 'wellplate_lids']
 
         self._validate_target_object()
@@ -121,6 +122,21 @@ class CameraController:
         classes = prediction.cls
 
         return boxes, classes
+    
+    # This function needs to be implemented:
+    def object_is_within_threshold(self, object_point: Tuple[float, float, float]) -> bool:
+        """
+        Determines whether the object is within a certain distance threshold for picking up.
+        
+        Args:
+            object_point (Tuple[float, float, float]): The 3D coordinates of the object point.
+
+        Returns:
+            bool: True if the object is within the threshold, otherwise False.
+        """
+        threshold = 0.1  # This is an example value and should be adjusted based on your specific requirements
+        distance = np.linalg.norm(np.array(object_point))
+        return distance <= threshold
     
     def _get_object_center(self, boxes) -> Optional[Tuple[int, int]]:
         """
@@ -355,6 +371,7 @@ class CameraController:
         """
         Detects, aligns to, and picks up an object using the robot arm and gripper.
         """
+        # TODO: Maybe keep alligning and try to pick up at the same time till object is actually picked up
         for i in range(6):
             object_center = self.align_object()
 
@@ -363,7 +380,7 @@ class CameraController:
                 print(f"OBJECT_POINT: {object_point}")
             else:
                 object_point = None
-                
+
         if not object_point:
             print("Object can;t be found!")
             return
@@ -410,7 +427,47 @@ class CameraController:
         # Align the gripper to the object's 3D orientation
         self.ur_connection.set_orientation(orientation, acc=0.2, vel=0.2)
         pass
+    
+    def pick_moving_object(self):
 
+        MAX_ATTEMPTS = 5
+
+        while True:
+            object_center = self.align_object()
+
+            if object_center:
+                object_point = self.center_the_gripper(object_center)
+
+                if self.conveyor_speed != 0:
+                    # If the conveyor belt is moving, adjust the target point based on its speed
+                    pickup_delay = self._estimate_pickup_delay(object_point)  # Calculate the delay before the robot arm can pick up the object
+                    object_point[1] += self.conveyor_speed * pickup_delay  # Adjust the target y-coordinate based on the conveyor speed and pickup delay
+
+                self.move_over_object(object_point)
+
+            sleep(5)
+
+            self.align_gripper()
+            self.grip_object()
+
+            if self.has_picked_up_object():
+                break
+
+            num_failed_attempts += 1
+            if num_failed_attempts > MAX_ATTEMPTS:
+                print("Failed to pick up object after multiple attempts.")
+                break
+
+    def _estimate_pickup_delay(self, object_point: Tuple[float, float, float]) -> float:
+        """
+        Estimates the time it will take for the robot arm to reach the target point.
+        For simplicity, this example assumes a constant time delay. In a real application, you might want to calculate this based on the robot's current state and the target point.
+        """
+        robot_position = self.ur_connection.getl()
+        distance_to_target = ((robot_position[0]-object_point[0])**2 + (robot_position[1]-object_point[1])**2 + (robot_position[2]-object_point[2])**2)**0.5
+        time = distance_to_target / self.MOVE_VEL
+        return time    
+    
 def main():
     # Initialize CameraController
     robot_ip = '192.168.1.10'  # replace with your robot's IP
