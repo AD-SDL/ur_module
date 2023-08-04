@@ -361,8 +361,15 @@ class CameraController:
             if object_center:
                 object_point = self.move_to_object()
                 print(f"OBJECT_POINT: {object_point}")
+            else:
+                object_point = None
+                
+        if not object_point:
+            print("Object can;t be found!")
+            return
         
         sleep(4)
+
         self.ur_connection.translate_tool([0.02, 0.09, 0], 1, 0.2)
         self.ur_connection.translate_tool([0, 0, object_point[2]-0.16], 1, 0.2)
         self.gripper.move_and_wait_for_pos(160, 150, 100)
