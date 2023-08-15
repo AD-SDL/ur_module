@@ -146,7 +146,7 @@ class ApsPipetteController():
         sleep(2)
         print("Pipette tip successfully picked up")
 
-    def transfer_sample(self, sample_loc, well_loc):
+    def transfer_sample(self, sample_loc, well_loc = None):
         
         """
         Description: 
@@ -159,31 +159,31 @@ class ApsPipetteController():
         # MOVE TO THE FIRT SAMPLE LOCATION
         speed_ms = 0.1
 
-        sample_above = sample_loc
+        sample_above = deepcopy(sample_loc)
         sample_above[2] += 0.05
-        well_above = well_loc
-        well_above[2] += 0.05
+        # well_above = deepcopy(well_loc)
+        # well_above[2] += 0.05
 
-        self.ur.movel(sample_above,self.accel_mss,self.speed_ms,0,0)
+        self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
         sleep(2)
-        self.ur.movel(sample_loc,self.accel_mss,speed_ms,0,0)
+        self.ur.movel(sample_loc,self.accel_mss,speed_ms)
         sleep(2)
 
         # ASPIRATE FIRST SAMPLE
-        self.aspirate_pipette()
-        self.ur.movel(sample_above,self.accel_mss,speed_ms,0,0)
+        # self.aspirate_pipette() #TODO: ASPIRATE HERE
+        self.ur.movel(sample_above,self.accel_mss,speed_ms)
         sleep(1)
 
         # MOVE TO THE 1ST WELL
-        self.ur.movel(well_above,self.accel_mss,speed_ms,0,0)
-        sleep(1)
-        self.ur.movel(well_loc,self.accel_mss,speed_ms,0,0)
-        sleep(1)
+        # self.ur.movel(well_above,self.accel_mss,speed_ms)
+        # sleep(1)
+        # self.ur.movel(well_loc,self.accel_mss,speed_ms)
+        # sleep(1)
 
-        # DISPENSE FIRST SAMPLE INTO FIRST WELL
-        self.dispense_pipette()
-        self.ur.movel(well_above,self.accel_mss,speed_ms,0,0)
-        sleep(1)
+        # # DISPENSE FIRST SAMPLE INTO FIRST WELL
+        # self.dispense_pipette()
+        # self.ur.movel(well_above,self.accel_mss,speed_ms)
+        # sleep(1)
 
 
     def mix_samples(self, well_loc):
