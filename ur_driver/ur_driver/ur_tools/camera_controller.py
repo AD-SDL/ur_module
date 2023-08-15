@@ -12,7 +12,7 @@ from torchvision.transforms import functional as F
 from ultralytics import YOLO
 import numpy as np
 
-from robotiq_gripper_driver import RobotiqGripper
+# from robotiq_gripper_driver import RobotiqGripper
 from urx import Robot
 
 
@@ -301,16 +301,24 @@ class CameraController:
         """
         Adjusts the gripper to a perpendicular orientation.
         """
+       
         current_orientation = self.ur_connection.get_orientation()
         euler_angles = current_orientation.to_euler(encoding="xyz")
-
+        print(euler_angles)
         move_rx = (3.14 - abs(euler_angles[0]))
-        move_ry = abs(euler_angles[1])
+
+        if euler_angles[1] < 0: 
+            move_ry = abs(euler_angles[1])
+        else:
+            move_ry = -(euler_angles[1])
+
 
         current_orientation.rotate_xt(move_rx)
-        current_orientation.rotate_yt(move_ry)
+        current_orientation.rotate_yt(-move_ry)
+        # print(move_ry)
 
         self.ur_connection.set_orientation(current_orientation, 0.2, 0.2)
+
 
     def find_frame_areas(self, boxes) -> List[float]:
         """

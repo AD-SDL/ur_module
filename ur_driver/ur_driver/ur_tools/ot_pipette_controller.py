@@ -3,11 +3,11 @@ from copy import deepcopy
 
 import epics
 
-class PipetteController():
+class OTPipetteController():
 
     def __init__(self, pipette_pv:str = None, ur_connection = None):
         """
-        Initializes the PipetteController class.
+        Initializes the OTPipetteController class to controll the OpenTron pipettes.
         
         Parameters:
         - pipette_pv (str): The EPICS process variable (PV) for the pipette.
