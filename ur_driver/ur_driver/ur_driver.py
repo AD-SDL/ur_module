@@ -207,7 +207,7 @@ class UR(UR_DASHBOARD):
     def droplet_v2(self, tool_loc = [-0.30533163571362804, 0.293042569973924, 0.234306520730365, -3.1414391023029085, 0.014564845435757333, 0.0040377171549781125]):
         home = [1.9320199489593506, -1.7363797626891078, -0.8551535606384277, -2.118720670739645, -4.710012499486105, 0.36904168128967285]
         tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
-
+        sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
         wingman_tool = WMToolChangerController(tool_location = tool_loc, horizontal_axis = "y", ur_connection = self.ur_connection)
         pipette = ApsPipetteController(ur_connection = self.ur_connection)
         
@@ -215,6 +215,7 @@ class UR(UR_DASHBOARD):
         wingman_tool.pick_tool()
         self.home(home)
         pipette.pick_tip(tip_loc=tip1)
+        pipette.transfer_sample(sample_loc=sample)
         self.home(home)
         wingman_tool.place_tool()
         self.home(home)
