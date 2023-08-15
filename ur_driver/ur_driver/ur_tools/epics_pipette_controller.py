@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import epics
 
-class PipetteController():
+class EpicsPipetteController():
 
     def __init__(self, pipette_pv:str = None, ur_connection = None):
         """
