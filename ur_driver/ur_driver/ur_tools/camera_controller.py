@@ -12,7 +12,7 @@ from torchvision.transforms import functional as F
 from ultralytics import YOLO
 import numpy as np
 
-from robotiq_gripper_driver import RobotiqGripper
+# from robotiq_gripper_driver import RobotiqGripper
 from urx import Robot
 
 
