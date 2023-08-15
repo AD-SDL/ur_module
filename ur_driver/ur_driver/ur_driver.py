@@ -8,8 +8,8 @@ from time import sleep
 from copy import deepcopy
 import json
 
-from ur_driver.ur_dashboard import UR_DASHBOARD
-from .ur_tools import *
+from ur_dashboard import UR_DASHBOARD
+from ur_tools import *
 from urx import Robot, RobotException
 
 
@@ -60,11 +60,11 @@ class UR(UR_DASHBOARD):
 
         self.IP = IP
         self.PORT = PORT
-        
-        self.ur_connection = Connection(IP = self.IP, PORT = self.PORT).connection
+        self.ur = Connection(IP = self.IP, PORT = self.PORT)
+        self.ur_connection = self.ur.connection
         
         self.acceleration = 0.5
-        self.velocity = 0.2
+        self.velocity = 0.5
         self.speed_ms    = 0.750
         self.speed_rads  = 0.750
         self.accel_mss   = 1.200
@@ -106,10 +106,10 @@ class UR(UR_DASHBOARD):
             home_loc = home_location
         else:
             home_loc = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
-        self.ur_connection.movej(home_loc, self.acceleration, self.velocity, 0, 0)
-        sleep(4)
+        self.ur_connection.movej(home_loc, self.acceleration + 0.5, self.velocity + 0.5, 0, 0)
+        sleep(2.5)
 
-        print("Robot moved to home location")
+        print("Robot homed")
 
     def pick_ot_pipette(self):
 
@@ -204,6 +204,21 @@ class UR(UR_DASHBOARD):
         print('Finished transfer')
         gripper_controller.disconnect_gripper()
 
+    def droplet_v2(self, tool_loc = [-0.30533163571362804, 0.293042569973924, 0.234306520730365, -3.1414391023029085, 0.014564845435757333, 0.0040377171549781125]):
+        home = [1.9320199489593506, -1.7363797626891078, -0.8551535606384277, -2.118720670739645, -4.710012499486105, 0.36904168128967285]
+        tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
+
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, horizontal_axis = "y", ur_connection = self.ur_connection)
+        pipette = ApsPipetteController(ur_connection = self.ur_connection)
+        
+        self.home(home)
+        wingman_tool.pick_tool()
+        self.home(home)
+        pipette.pick_tip(tip_loc=tip1)
+        self.home(home)
+        wingman_tool.place_tool()
+        self.home(home)
+
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
 
         """"""
@@ -253,8 +268,9 @@ if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot = UR(IP="192.168.1.100")
-    print(robot.get_joint_angles())
+    robot = UR(IP="164.54.116.129")
+    # print(robot.get_joint_angles())
+    robot.droplet_v2()
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
@@ -264,7 +280,7 @@ if __name__ == "__main__":
     #     robot.get_overall_robot_status()
     #     sleep(0.5)
 
-    robot.ur_connection.disconnect_ur()
+    robot.ur.disconnect_ur()
 
 
 
