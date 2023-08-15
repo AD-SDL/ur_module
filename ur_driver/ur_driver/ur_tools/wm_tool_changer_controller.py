@@ -26,7 +26,7 @@ class WMToolChangerController():
         else:
             self.location = self.tool_dock_l
 
-        self.tool_above = self.location
+        self.tool_above = deepcopy(self.location)
         self.tool_above[2] += 0.05
         self.tool_front = None
         self._get_tool_front()
@@ -34,7 +34,7 @@ class WMToolChangerController():
     def _get_tool_front(self):
         """
         """
-        self.tool_front = self.location
+        self.tool_front = deepcopy(self.location)
         if self.axis == "x":
             self.tool_front[0] += 0.1
         elif self.axis == "-x":
@@ -62,7 +62,6 @@ class WMToolChangerController():
         """
         try:
             print("Picking up the tool...")
-         
             self.robot.movel(self.tool_above, 1, 1)
             self.robot.movel(self.location, 0.5, 0.5)
             self.robot.movel(self.tool_front, 0.5, 0.5)
