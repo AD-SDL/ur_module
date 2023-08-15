@@ -43,7 +43,6 @@ class URClient(Node):
         state_cb_group = ReentrantCallbackGroup()
         description_cb_group = ReentrantCallbackGroup()
 
-
         state_publisher_period = 0.5  # seconds
         self.state_refresher_period = state_publisher_period + 1.0  # seconds
 
@@ -93,7 +92,7 @@ class URClient(Node):
     def stateRefresherCallback(self):
         """ Refreshes the robot states if robot cannot update the state parameters automatically because it is not running any jobs
        
-         Parameters:
+        Parameters:
         -----------
             None
         Returns
@@ -214,7 +213,9 @@ class URClient(Node):
         The actionCallback function is a service that can be called to execute the available actions the robot
         can preform.
         '''
-        
+        self.action_flag = "BUSY"
+        sleep(self.state_refresher_period + 0.1)
+
         if request.action_handle=='transfer':
             self.action_flag = "BUSY"
             vars = json.loads(request.vars)
@@ -225,9 +226,8 @@ class URClient(Node):
                 return 
 
             pos1 = vars.get('pos1')
-            self.get_logger().info(str(pos1))
             pos2 = vars.get('pos2')
-            self.get_logger().info(str(pos2))
+            # self.get_logger().info(str(pos1), str(pos2))
 
             try:
                 self.ur.transfer(pos1, pos2)            
@@ -243,15 +243,13 @@ class URClient(Node):
                 return response
             
         elif request.action_handle == 'run_urp_program':
-            self.action_flag = "BUSY"
 
             vars = json.loads(request.vars)
             self.get_logger().info(str(vars))
 
             local_urp_path = vars.get('local_urp_path', None)
-            self.get_logger().info(str(local_urp_path))
             program_name = vars.get('program_name', None)
-            self.get_logger().info(str(program_name))
+            # self.get_logger().info(str(local_urp_path), str(program_name))
 
             if not program_name: 
                 self.get_logger().err("Program name is not provided!")
@@ -271,6 +269,92 @@ class URClient(Node):
                 return response
             #BUG: Action response never sent back
 
+        elif request.action_handle == 'pick_tool':
+
+            vars = json.loads(request.vars)
+            self.get_logger().info(str(vars))
+
+            home_loc = vars.get('home', None)
+            tool_loc = vars.get('tool_loc', None)
+            # self.get_logger().info(str(home_loc),str(tool_loc))
+
+            if not home_loc or tool_loc:
+                response.action_response = -1
+                response.action_msg = "Transfer failed"
+                self.state = "ERROR"
+                return response
+            
+            try:
+                self.ur.pick_tool(home_loc, tool_loc)            
+            except Exception as er:
+                response.action_response = -1
+                response.action_msg = "Pick tool failed"
+                self.state = "ERROR"
+            else:
+                response.action_response = 0
+                response.action_msg = "Pick tool successfully completed"
+                self.state = "COMPLETED"
+            finally:
+                return response 
+            
+        elif request.action_handle == 'place_tool':
+
+            vars = json.loads(request.vars)
+            self.get_logger().info(str(vars))
+
+            home_loc = vars.get('home', None)
+            tool_loc = vars.get('tool_loc', None)
+            # self.get_logger().info(str(home_loc),str(tool_loc))
+
+            if not home_loc or tool_loc:
+                response.action_response = -1
+                response.action_msg = "Transfer failed"
+                self.state = "ERROR"
+                return response
+            
+            try:
+                self.ur.place_tool(home_loc, tool_loc)            
+            except Exception as er:
+                response.action_response = -1
+                response.action_msg = "Place tool failed"
+                self.state = "ERROR"
+            else:
+                response.action_response = 0
+                response.action_msg = "Place tool successfully completed"
+                self.state = "COMPLETED"
+            finally:
+                return response 
+            
+        elif request.action_handle == 'create_sample':
+
+            vars = json.loads(request.vars)
+            self.get_logger().info(str(vars))
+
+            home_loc = vars.get('home', None)
+            tip_loc = vars.get('tip_loc', None)
+            sample_loc = vars.get('sample_loc', None)
+
+            self.get_logger().info(str(home_loc), str(tip_loc), str(sample_loc))
+   
+            if not home_loc or not tip_loc or not sample_loc:
+                response.action_response = -1
+                response.action_msg = "Transfer failed"
+                self.state = "ERROR"
+                return response
+            
+            try:
+                self.ur.create_sample(home_loc, tip_loc, sample_loc)            
+            except Exception as er:
+                response.action_response = -1
+                response.action_msg = "Create sample failed"
+                self.state = "ERROR"
+            else:
+                response.action_response = 0
+                response.action_msg = "Create sample successfully completed"
+                self.state = "COMPLETED"
+            finally:
+                return response 
+            
 def main(args = None):
 
     rclpy.init(args=args)  # initialize Ros2 communication
