@@ -3,15 +3,45 @@ from copy import deepcopy
 
 import epics
 
-class WMToolChangerController():
-    """Initilizes the WMToolChangerController to pick and place tools with the Wingman tool changers"""    
+class ATIToolChangerController():
     
-    def __init__(self, tool_location:str = None):
+
+    def __init__(self, tool_changer_pv:str = None):
         self.current_tool = None
-        self.location = tool_location
+        self.pv = tool_changer_pv
         self.connect_tool_changer()
         
-    def get_tool_status(self):
+    def connect_tool_changer(self):
+        """
+        Connect tool changer
+        """
+
+        try:
+            # Establishing a connection with the tool changer on EPICS
+            self.tool_changer = epics.PV(self.pv)
+
+        except Exception as err:
+            print("Tool changer error: ", err)
+
+        else:
+            print("Tool changer is connected.")
+
+    def disconnect_tool_changer(self):
+        """
+        Disconnect tool changer
+        """
+
+        try:
+            # Closing the connection with the tool changer on EPICS
+            self.tool_changer.disconnect()
+
+        except Exception as err:
+            print("Tool changer error: ", err)
+
+        else:
+            print("Tool changer is disconnected.")
+
+    def get_tool_changer_status(self):
         """
         Description: 
             - Gets the tool changer current status. 
@@ -20,7 +50,7 @@ class WMToolChangerController():
         status = self.tool_changer.get()
         return status
 
-    def pick_tool(self, ):
+    def lock_tool_changer(self):
         """
         Description: 
             - Locks the tool changer. 
@@ -32,7 +62,7 @@ class WMToolChangerController():
         except Exception as err:
             print("Error accured while locking the tool changer: ", err)
 
-    def place_tool(self):
+    def unlock_tool_changer(self):
         """
         Description: 
             - Unlocks the tool changer. 
@@ -43,9 +73,3 @@ class WMToolChangerController():
             self.tool_changer.put(0)
         except Exception as err:
             print("Error accured while unlocking the tool changer: ", err)
-
-    def discover_tool(self):
-        """
-        Discover if a tool is currently attached and which tool it is.
-        """
-        pass
