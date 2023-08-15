@@ -4,7 +4,7 @@ from copy import deepcopy
 
 class ApsPipetteController():
 
-    def __init__(self, pipette_pv:str = None, ur_connection = None):
+    def __init__(self, ur_connection = None):
         """
         Initializes the PipetteController class.
         
@@ -13,7 +13,7 @@ class ApsPipetteController():
         - ur_connection: The connection object for the Universal Robot (UR) robot.
         """
 
-        self.pv = pipette_pv
+
 
         if not ur_connection:
             raise Exception("UR connection is not established")
@@ -124,9 +124,9 @@ class ApsPipetteController():
         Description: Picks up a new tip from the first location on the pipette bin.
         """
 
-        tip_approach = tip_loc
+        tip_approach = deepcopy(tip_loc)
         tip_approach[2] += 0.02
-        tip_above = tip_loc
+        tip_above = deepcopy(tip_loc)
         tip_above[2] += 0.075
 
         print("Picking up the first pipette tip...")
