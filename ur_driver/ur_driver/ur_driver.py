@@ -9,7 +9,8 @@ from copy import deepcopy
 import json
 
 from ur_driver.ur_dashboard import UR_DASHBOARD
-from .ur_tools import *
+# from .ur_tools import *
+from ur_tools.aps_pipette_controller import ApsPipetteController
 from urx import Robot, RobotException
 
 
@@ -292,9 +293,9 @@ if __name__ == "__main__":
     home = [1.9320199489593506, -1.7363797626891078, -0.8551535606384277, -2.118720670739645, -4.710012499486105, 0.36904168128967285]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
-    robot.pick_tool(home,tool_loc)
-    robot.create_sample(home, tip1, sample)
-    robot.place_tool(home,tool_loc)
+    # robot.pick_tool(home,tool_loc)
+    # robot.create_sample(home, tip1, sample)
+    # robot.place_tool(home,tool_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
