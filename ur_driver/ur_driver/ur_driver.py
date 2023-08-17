@@ -8,11 +8,9 @@ from time import sleep
 from copy import deepcopy
 import json
 
-from ur_driver.ur_dashboard import UR_DASHBOARD
-# from .ur_tools import *
-from ur_tools.aps_pipette_controller import ApsPipetteController
+from .ur_dashboard import UR_DASHBOARD
+from .ur_tools import *
 from urx import Robot, RobotException
-
 
 class Connection():
     """Connection to the UR robot to be shared within UR driver """

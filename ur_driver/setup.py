@@ -7,7 +7,7 @@ package_name = 'ur_driver'
 setup(
     name = package_name,
     version='0.0.0',
-    packages=[package_name],
+    packages=find_packages(),
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -25,8 +25,6 @@ setup(
     entry_points={
         'console_scripts': [
             'ur_driver = ur_driver.ur_driver:main',
-            'ur_tools = ur_driver.ur_driver.ur_tools',
-
         ],
     },
 )
