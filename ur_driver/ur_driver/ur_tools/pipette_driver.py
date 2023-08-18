@@ -451,7 +451,7 @@ if __name__ == "__main__":
     a.initialize()
     # print(a.get_speed_start(), a.get_speed_stop(),a.get_speed())
     # a.aspirate(vol=20)
-    # a.dispense(vol=20)
+    a.dispense(vol=2)
     # cmd = '/1'
     # if len(sys.argv)<2:
     #     cmd += 'z1600A0A10z0R'
