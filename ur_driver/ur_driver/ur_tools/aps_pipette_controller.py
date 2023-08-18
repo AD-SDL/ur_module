@@ -126,7 +126,7 @@ class ApsPipetteController():
 
         # ASPIRATE FIRST SAMPLE
         # self.aspirate_pipette() #TODO: ASPIRATE HERE
-        self.pipette.dispense(vol=20)
+        self.pipette.aspirate(vol=20)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
         sleep(1)
 
@@ -149,9 +149,36 @@ class ApsPipetteController():
             - Pipette is controlled by RS485 commication.
         """
         print("Creating a droplet...")
-        self.pipette.dispense(vol=2)
+        self.pipette.dispense(percent=1)
         sleep(5)
         # self.pipette.aspirate(vol=2)
+
+    def empty_tip(self, sample_loc):
+        """
+        Description: 
+            - Makes a new sample on the 96 well plate.
+            - Mixes to liquits in a single well and uses a new pipette tip for each liquid.
+            - In order to mix the liquids together, pipette performs aspirate and dispense operation multiple times in the well that contains both the liquids.
+        """
+        print("Making a sample using two liquids...")
+        
+        # MOVE TO THE FIRT SAMPLE LOCATION
+        speed_ms = 0.1
+        sample_above = deepcopy(sample_loc)
+        sample_above[2] += 0.1
+        # well_above = deepcopy(well_loc)
+        # well_above[2] += 0.05
+
+        self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
+        sleep(2)
+        self.ur.movel(sample_loc,self.accel_mss,speed_ms)
+        sleep(2)
+
+        # ASPIRATE FIRST SAMPLE
+        # self.aspirate_pipette() #TODO: ASPIRATE HERE
+        self.pipette.dispense(vol=20)
+        self.ur.movel(sample_above,self.accel_mss,speed_ms)
+        sleep(1)
 
     def mix_samples(self, well_loc):
 
@@ -216,24 +243,4 @@ class ApsPipetteController():
         self.pipette.put(0)
         sleep(2)
   
-    def empty_tip(self):
-        """
-        Description: Dispenses all the liquid inside pipette tip.
-        """
-        print("Empting tip...")
-        speed_ms = 0.5  
-        # Moving the robot to the empty tube location
-        self.ur.movel(self.empty_tube_above,self.accel_mss,self.speed_ms,0,0)
-        sleep(2)
-        speed_ms = 0.1
-        self.ur.movel(self.empty_tube,self.accel_mss,speed_ms,0,0)
-        sleep(2)
-
-        # Drive the pipette three times to dispense all the liquid inside the pipette tip.
-        for i in range(3):
-            self.dispense_pipette()
-            sleep(1)
-
-        self.ur.movel(self.empty_tube_above,self.accel_mss,speed_ms,0,0)
-        sleep(1)
     
