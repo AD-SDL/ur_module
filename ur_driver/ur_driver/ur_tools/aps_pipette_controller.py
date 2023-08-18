@@ -41,15 +41,23 @@ class ApsPipetteController():
         """
 
         try:
-            # Establishing a connection with the pipette on EPICS
+            # Establishing a connection with the pipette on RS485 comminication
             self.pipette = PipetteDriver()
-            
+            comm_setting = self.pipette._comm_setting
+            self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
+                                          parity=comm_setting["parity"],
+                                          stop_bits=comm_setting["stop_bits"],
+                                          rx_idle_chars=comm_setting["rx_idle_chars"],
+                                          tx_idle_chars=comm_setting["tx_idle_chars"])        
+            self.pipette.connect(hostname=self.IP)
+            self.pipette.initialize()
+
         except Exception as err:
             print("Pipette error: ", err)
 
         else:
             print("Pipette is connected")
-        pass
+
 
     def disconnect_pipette(self):
         """
@@ -66,37 +74,6 @@ class ApsPipetteController():
         else:
             print("Pipette is disconnected")
 
-    def move_pipette_dock(self):
-        """
-        Description: Moves the robot to the doscking location and then picks up the pipette.
-        """
-        print("Picking up the pipette...")
-        accel_mss = 1.00
-        speed_ms = 1.00
-    
-        print("Picking up the pipette...")
-        sleep(1)
-        self.ur.movel(self.pipette_above,self.accel_mss,speed_ms,0,0)
-        sleep(2)
-        self.ur.movel(self.pipette_approach,self.accel_mss,speed_ms,0,0)
-        speed_ms = 0.01
-        sleep(1)
-        self.ur.movel(self.pipette_loc,self.accel_mss,speed_ms,0,0)
-        sleep(5)
-        # LOCK THE TOOL CHANGER TO ATTACH THE PIPETTE HERE
-
-    def lift_pipette_on_dock(self):
-        """
-        Description: Moves the robot to the doscking location and then picks up the pipette.
-        """
-        sleep(5.0)
-        self.ur.movel(self.pipette_approach,self.accel_mss,speed_ms,0,0)
-        sleep(1)
-        speed_ms = 0.1
-        self.ur.movel(self.pipette_above,self.accel_mss,speed_ms,0,0)
-        sleep(2)
-        print("Pipette successfully picked up")
-
     def pick_tip(self, tip_loc, x=0, y=0):
         """
         Description: Picks up a new tip from the first location on the pipette bin.
@@ -105,7 +82,7 @@ class ApsPipetteController():
         tip_approach = deepcopy(tip_loc)
         tip_approach[2] += 0.02
         tip_above = deepcopy(tip_loc)
-        tip_above[2] += 0.075
+        tip_above[2] += 0.15
 
         print("Picking up the first pipette tip...")
         speed_ms = 0.100
@@ -138,7 +115,7 @@ class ApsPipetteController():
         speed_ms = 0.1
 
         sample_above = deepcopy(sample_loc)
-        sample_above[2] += 0.05
+        sample_above[2] += 0.1
         # well_above = deepcopy(well_loc)
         # well_above[2] += 0.05
 
@@ -149,6 +126,7 @@ class ApsPipetteController():
 
         # ASPIRATE FIRST SAMPLE
         # self.aspirate_pipette() #TODO: ASPIRATE HERE
+        self.pipette.dispense(vol=20)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
         sleep(1)
 
@@ -163,6 +141,17 @@ class ApsPipetteController():
         # self.ur.movel(well_above,self.accel_mss,speed_ms)
         # sleep(1)
 
+    def create_droplet(self):
+        """
+        Description: 
+            - Drives pipette to create a droplet.
+            - Number of motor steps to create a droplet is stored in "self.droplet_value".
+            - Pipette is controlled by RS485 commication.
+        """
+        print("Creating a droplet...")
+        self.pipette.dispense(vol=2)
+        sleep(5)
+        # self.pipette.aspirate(vol=2)
 
     def mix_samples(self, well_loc):
 
@@ -199,43 +188,6 @@ class ApsPipetteController():
         print("Aspirating the sample...")
         current_value = self.pipette.get()
         self.pipette.put(float(current_value) + self.pipette_aspirate_value)
-        sleep(1)
-
-    def dispense_pipette(self):
-        """
-        Description: 
-            - Drives pipette to dispense liquid. 
-            - Number of motor steps to dispense liquid is stored in "self.pipette_dispense_value".
-            - Pipette is controlled by pyepics PV commands.
-        """
-        print("Dispensing sample")
-        current_value = self.pipette.get()
-        self.pipette.put(float(current_value)+ self.pipette_dispense_value)
-        sleep(1)
-
-    def create_droplet(self):
-        """
-        Description: 
-            - Drives pipette to create a droplet.
-            - Number of motor steps to create a droplet is stored in "self.droplet_value".
-            - Pipette is controlled by pyepics PV commands.
-        """
-        print("Creating a droplet...")
-        current_value = self.pipette.get()
-        self.pipette.put(float(current_value) - self.droplet_value)
-        sleep(10)
-  
-
-    def retrieve_droplet(self):
-        """
-        Description: 
-            - Retrieves the droplet back into the pipette tip.
-            - Number of motor steps to retrieve a droplet is stored in "self.droplet_value".
-            - Pipette is controlled by pyepics PV commands.
-        """
-        print("Retrieving droplet...")
-        current_value = self.pipette.get()
-        self.pipette.put(float(current_value) + self.droplet_value + 0.5)
         sleep(1)
     
     def drop_tip_to_trash(self):        
