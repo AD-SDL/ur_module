@@ -8,8 +8,8 @@ from time import sleep
 from copy import deepcopy
 import json
 
-from .ur_dashboard import UR_DASHBOARD
-from .ur_tools import *
+from ur_dashboard import UR_DASHBOARD
+from ur_tools import *
 from urx import Robot, RobotException
 
 class Connection():
@@ -225,8 +225,7 @@ class UR(UR_DASHBOARD):
         """
          Picks up a new pipette tip and prepares the sample using the pipette
         """
-        pipette = ApsPipetteController(ur_connection = self.ur_connection)
-        
+        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
         self.home(home)
         pipette.pick_tip(tip_loc=tip_loc)
         pipette.transfer_sample(sample_loc=sample_loc)
@@ -234,7 +233,7 @@ class UR(UR_DASHBOARD):
 
     def create_droplet(self):
         """Create droplet"""
-        pipette = ApsPipetteController(ur_connection = self.ur_connection)
+        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
 
@@ -291,7 +290,7 @@ if __name__ == "__main__":
     home = [1.9320199489593506, -1.7363797626891078, -0.8551535606384277, -2.118720670739645, -4.710012499486105, 0.36904168128967285]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
-    # robot.pick_tool(home,tool_loc)
+    robot.pick_tool(home,tool_loc)
     # robot.create_sample(home, tip1, sample)
     # robot.place_tool(home,tool_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
@@ -302,7 +301,7 @@ if __name__ == "__main__":
     #     print(robot.get_movement_state())
     #     robot.get_overall_robot_status()
     #     sleep(0.5)
-
+    
     robot.ur.disconnect_ur()
 
 
