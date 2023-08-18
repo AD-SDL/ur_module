@@ -13,7 +13,7 @@ def generate_launch_description():
     launch_d = LaunchDescription()
 
     ip = LaunchConfiguration("ip")
-    name = LaunchConfiguration("name")
+    robot_name = LaunchConfiguration("name")
     
     declare_use_ur_ip_cmd = DeclareLaunchArgument(
         name = "ip",
@@ -21,8 +21,8 @@ def generate_launch_description():
         description= "Flag to accept UR IP"
         )
     
-    declare_use_ur_name_cmd = DeclareLaunchArgument(
-        name = "name",
+    declare_use_robot_name_cmd = DeclareLaunchArgument(
+        name = "robot_name",
         default_value= "UR5_Client_Node",
         description= "Flag to accept UR node name"
         )
@@ -32,13 +32,13 @@ def generate_launch_description():
             namespace = 'std_ns',
             executable = 'ur_client',
             output = "screen",
-            name=name,
+            name=robot_name,
             parameters = [{"ip":ip}],
             emulate_tty=True
     )
 
     launch_d.add_action(declare_use_ur_ip_cmd)
-    launch_d.add_action(declare_use_ur_name_cmd)
+    launch_d.add_action(declare_use_robot_name_cmd)
     launch_d.add_action(ur_client)
 
     return launch_d
