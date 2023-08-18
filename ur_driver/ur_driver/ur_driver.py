@@ -233,11 +233,14 @@ class UR(UR_DASHBOARD):
         self.home(home)
         pipette.disconnect_pipette()
 
-    def create_droplet(self):
+    def create_droplet(self,home, sample_loc):
         """Create droplet"""
         pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
         pipette.connect_pipette()
         pipette.create_droplet()
+        self.home(home)
+        pipette.empty_tip(sample_loc=sample_loc)     
+        self.home(home)
         pipette.disconnect_pipette()
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
@@ -297,8 +300,8 @@ if __name__ == "__main__":
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
     robot.pick_tool(home,tool_loc)
     robot.create_sample(home, tip1, sample)
+    robot.create_droplet(home=home,sample_loc=sample)
     robot.place_tool(home,tool_loc)
-    # robot.create_droplet()
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
