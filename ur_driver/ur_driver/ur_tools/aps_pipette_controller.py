@@ -1,10 +1,11 @@
 from time import sleep
 from copy import deepcopy
 
+from .pipette_driver import PipetteDriver
 
 class ApsPipetteController():
 
-    def __init__(self, ur_connection = None):
+    def __init__(self, ur_connection = None, IP = None):
         """
         Initializes the PipetteController class.
         
@@ -13,7 +14,7 @@ class ApsPipetteController():
         - ur_connection: The connection object for the Universal Robot (UR) robot.
         """
 
-
+        self.IP = IP
 
         if not ur_connection:
             raise Exception("UR connection is not established")
@@ -64,7 +65,7 @@ class ApsPipetteController():
 
         try:
             # Establishing a connection with the pipette on EPICS
-            self.pipette = epics.PV(self.pv)
+            self.pipette = PipetteDriver()
             
         except Exception as err:
             print("Pipette error: ", err)
