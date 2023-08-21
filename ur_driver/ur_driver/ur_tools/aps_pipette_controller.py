@@ -58,7 +58,6 @@ class ApsPipetteController():
         else:
             print("Pipette is connected")
 
-
     def disconnect_pipette(self):
         """
         Disconnect pipette
@@ -165,8 +164,12 @@ class ApsPipetteController():
         trash_front = deepcopy(eject_tip_loc)
         trash_above[2] += 0.1
         trash_front[0] += 0.01
+        trash_front_above = deepcopy(trash_front)
+        trash_front_above[2] += 0.1
+
         print("Droping tip to the trash bin...")
         # Move to the trash bin location
+        self.ur.movel(trash_front_above, self.accel_mss, self.speed_ms)
         self.ur.movel(trash_front, self.accel_mss, self.speed_ms)
         self.ur.movel(eject_tip_loc, self.accel_mss, self.speed_ms)
         self.ur.movel(trash_above, self.accel_mss, self.speed_ms)
