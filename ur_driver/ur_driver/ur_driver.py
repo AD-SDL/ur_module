@@ -308,8 +308,8 @@ if __name__ == "__main__":
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
     droplet = [-0.21435167102697, 0.31117471247776396, 0.273829131948966, 3.126800328499299, -0.017429873171790906, -0.007516422536326644]
     tip_eject = [0.10270290312926324, 0.2862487614384484, 0.10155903555930355, 3.1268372121718597, -0.01760209112687455, -0.007607510036297549]
-    # robot.pick_tool(home,tool_loc)
-    # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=droplet,tip_trash=tip_eject)
+    robot.pick_tool(home,tool_loc)
+    robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=droplet,tip_trash=tip_eject)
     robot.place_tool(home,tool_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
