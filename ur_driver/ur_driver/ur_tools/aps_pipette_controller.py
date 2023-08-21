@@ -116,32 +116,15 @@ class ApsPipetteController():
 
         sample_above = deepcopy(sample_loc)
         sample_above[2] += 0.1
-        # well_above = deepcopy(well_loc)
-        # well_above[2] += 0.05
 
         self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
-        sleep(2)
         self.ur.movel(sample_loc,self.accel_mss,speed_ms)
-        sleep(2)
 
         # ASPIRATE FIRST SAMPLE
-        # self.aspirate_pipette() #TODO: ASPIRATE HERE
-        self.pipette.aspirate(vol=20)
+        self.pipette.aspirate(vol=25)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
-        sleep(1)
 
-        # MOVE TO THE 1ST WELL
-        # self.ur.movel(well_above,self.accel_mss,speed_ms)
-        # sleep(1)
-        # self.ur.movel(well_loc,self.accel_mss,speed_ms)
-        # sleep(1)
-
-        # # DISPENSE FIRST SAMPLE INTO FIRST WELL
-        # self.dispense_pipette()
-        # self.ur.movel(well_above,self.accel_mss,speed_ms)
-        # sleep(1)
-
-    def create_droplet(self):
+    def create_droplet(self, droplet_loc):
         """
         Description: 
             - Drives pipette to create a droplet.
@@ -149,98 +132,45 @@ class ApsPipetteController():
             - Pipette is controlled by RS485 commication.
         """
         print("Creating a droplet...")
-        self.pipette.dispense(percent=1)
+        self.ur.movel(droplet_loc,self.accel_mss,self.speed_ms)
+        self.pipette.dispense(vol=3)
         sleep(5)
-        # self.pipette.aspirate(vol=2)
+        self.pipette.aspirate(vol=3)
 
     def empty_tip(self, sample_loc):
         """
         Description: 
-            - Makes a new sample on the 96 well plate.
-            - Mixes to liquits in a single well and uses a new pipette tip for each liquid.
-            - In order to mix the liquids together, pipette performs aspirate and dispense operation multiple times in the well that contains both the liquids.
+            - Dispense all the sample inside the pipette.
+         
         """
-        print("Making a sample using two liquids...")
+        print("Emtying the tip...")
         
         # MOVE TO THE FIRT SAMPLE LOCATION
         speed_ms = 0.1
         sample_above = deepcopy(sample_loc)
         sample_above[2] += 0.1
-        # well_above = deepcopy(well_loc)
-        # well_above[2] += 0.05
 
         self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
-        sleep(2)
         self.ur.movel(sample_loc,self.accel_mss,speed_ms)
-        sleep(2)
-
-        # ASPIRATE FIRST SAMPLE
-        # self.aspirate_pipette() #TODO: ASPIRATE HERE
-        self.pipette.dispense(vol=20)
+        self.pipette.dispense(vol=25)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
-        sleep(1)
 
-    def mix_samples(self, well_loc):
-
-        well_above = well_loc
-        well_above[2] += 0.05
-
-         # MOVE TO THE 1ST WELL
-        self.ur.movel(well_above,self.accel_mss,self.speed_ms,0,0)
-        sleep(1)
-        self.ur.movel(well_loc,self.accel_mss,self.speed_ms,0,0)
-        sleep(1)
-
-        # MIX SAMPLE
-        for i in range(3):
-            self.aspirate_pipette()
-            self.dispense_pipette()
-
-        # Aspirate all the liquid   
-        self.aspirate_pipette()
-        self.aspirate_pipette()
-
-        self.ur.movel(well_above,self.accel_mss,self.speed_ms,0,0)
-        sleep(1)
-        print("Sample is prepared")
-
-
-    def aspirate_pipette(self):
+    def eject_tip(self, eject_tip_loc):        
         """
-        Description: 
-            - Drives pipette to aspirate liquid. 
-            - Number of motor steps to aspirate liquid is stored in "self.pipette_aspirate_value".
-            - Pipette is controlled by pyepics PV commands.
+        Description: Drops the pipette tip into trash bin
         """
-        print("Aspirating the sample...")
-        current_value = self.pipette.get()
-        self.pipette.put(float(current_value) + self.pipette_aspirate_value)
-        sleep(1)
-    
-    def drop_tip_to_trash(self):        
-        """
-        Description: Drops the pipette tip by driving the pipette all the way to the lowest point.
-        """
-
+        trash_above = deepcopy(eject_tip_loc)
+        trash_front = deepcopy(eject_tip_loc)
+        trash_above[2] += 0.1
+        trash_front[0] += 0.01
         print("Droping tip to the trash bin...")
         # Move to the trash bin location
-        self.ur.movel(self.trash_bin_above, self.accel_mss, self.speed_ms,0,0)
-        sleep(2)
-        self.ur.movel(self.trash_bin, self.accel_mss, self.speed_ms, 0, 0)
-        sleep(2)
-        self.eject_tip()
-        sleep(1)
-        self.ur.movel(self.trash_bin_above, self.accel_mss, self.speed_ms,0,0)
-        sleep(2)
+        self.ur.movel(self.trash_front, self.accel_mss, self.speed_ms)
+        self.ur.movel(self.eject_tip_loc, self.accel_mss, self.speed_ms)
+        self.ur.movel(self.trash_above, self.accel_mss, self.speed_ms)
 
-    def eject_tip(self):
-        """
-        Description: Ejects the pipette tip
-        """
-        print("Ejecting the tip")
-        self.pipette.put(self.pipette_drop_tip_value)
-        sleep(2)
-        self.pipette.put(0)
-        sleep(2)
-  
-    
+
+if __name__ == "__main__":
+    a = ApsPipetteController()
+
+    a.connect_pipette(hostname="164.54.116.129")
