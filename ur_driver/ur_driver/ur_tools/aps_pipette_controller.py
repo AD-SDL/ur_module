@@ -154,6 +154,7 @@ class ApsPipetteController():
         self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
         self.ur.movel(sample_loc,self.accel_mss,speed_ms)
         self.pipette.dispense(vol=25)
+        sleep(2)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
 
     def eject_tip(self, eject_tip_loc):        
