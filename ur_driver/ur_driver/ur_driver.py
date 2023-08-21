@@ -227,19 +227,27 @@ class UR(UR_DASHBOARD):
         """
         pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
         pipette.connect_pipette()
+        # self.home(home)
+        # pipette.pick_tip(tip_loc=tip_loc)
+        pipette.transfer_sample(sample_loc=sample_loc)
+        # self.home(home)
+        pipette.disconnect_pipette()
+        pass
+
+    def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
+        """Create droplet"""
+
+        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
+        pipette.connect_pipette()
+
         self.home(home)
         pipette.pick_tip(tip_loc=tip_loc)
         pipette.transfer_sample(sample_loc=sample_loc)
         self.home(home)
-        pipette.disconnect_pipette()
-
-    def create_droplet(self,home, sample_loc):
-        """Create droplet"""
-        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
-        pipette.connect_pipette()
-        pipette.create_droplet()
+        pipette.create_droplet(droplet_loc=droplet_loc)
         self.home(home)
         pipette.empty_tip(sample_loc=sample_loc)     
+        pipette.eject_tip(eject_tip_loc=tip_trash)
         self.home(home)
         pipette.disconnect_pipette()
 
@@ -298,9 +306,10 @@ if __name__ == "__main__":
     home = [1.9320199489593506, -1.7363797626891078, -0.8551535606384277, -2.118720670739645, -4.710012499486105, 0.36904168128967285]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
-    robot.pick_tool(home,tool_loc)
-    robot.create_sample(home, tip1, sample)
-    robot.create_droplet(home=home,sample_loc=sample)
+    droplet = [-0.21435167102697, 0.31117471247776396, 0.273829131948966, 3.126800328499299, -0.017429873171790906, -0.007516422536326644]
+    tip_eject = [0.10270290312926324, 0.2862487614384484, 0.10155903555930355, 3.1268372121718597, -0.01760209112687455, -0.007607510036297549]
+    # robot.pick_tool(home,tool_loc)
+    # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=droplet,tip_trash=tip_eject)
     robot.place_tool(home,tool_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
