@@ -165,9 +165,9 @@ class ApsPipetteController():
         trash_front[0] += 0.01
         print("Droping tip to the trash bin...")
         # Move to the trash bin location
-        self.ur.movel(self.trash_front, self.accel_mss, self.speed_ms)
-        self.ur.movel(self.eject_tip_loc, self.accel_mss, self.speed_ms)
-        self.ur.movel(self.trash_above, self.accel_mss, self.speed_ms)
+        self.ur.movel(trash_front, self.accel_mss, self.speed_ms)
+        self.ur.movel(eject_tip_loc, self.accel_mss, self.speed_ms)
+        self.ur.movel(trash_above, self.accel_mss, self.speed_ms)
 
 
 if __name__ == "__main__":
