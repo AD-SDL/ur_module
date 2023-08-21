@@ -110,84 +110,6 @@ class UR(UR_DASHBOARD):
 
         print("Robot homed")
 
-    def pick_ot_pipette(self):
-
-        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
-        tool_changer_controller = ATIToolChangerController()
-
-        pipette_controller.move_pipette_dock()
-        tool_changer_controller.lock_tool_changer()
-        pipette_controller.lift_pipette_on_dock()
-
-    def place_ot_pipette(self):
-
-        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
-        tool_changer_controller = ATIToolChangerController()
-
-        pipette_controller.move_pipette_dock()
-        tool_changer_controller.unlock_tool_changer()
-        pipette_controller.lift_pipette_on_dock()  
-        pipette_controller.disconnect_pipette()
-        tool_changer_controller.disconnect_tool_changer()
-
-    def create_sample_ot(self, home = None, sample1_loc = None, sample2_loc = None, well_loc = None, tip1_loc = None, tip2_loc = None):
-        """"""
-        if home:
-            home_J = home
-        else:
-            home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
-
-        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
-        pipette_controller.connect_pipette()
-        self.home(home_J)
-        pipette_controller.pick_tip(tip_loc = tip1_loc)
-        pipette_controller.transfer_sample(sample_loc = sample1_loc)
-        pipette_controller.drop_tip_to_trash()
-        pipette_controller.pick_tip(tip_loc = tip2_loc)
-        pipette_controller.transfer_sample(sample_loc = sample2_loc)
-        pipette_controller.mix_samples(well_loc = well_loc)
-        self.home(home_J)
-        pipette_controller.disconnect_pipette()
-
-    def run_droplet_ot(self):
-        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
-        pipette_controller.create_droplet()
-        pipette_controller.retrieve_droplet()
-        pipette_controller.disconnect_pipette()
-
-    def dispose_tip_ot(self):
-        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
-        home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
-        self.home(home_J)
-        pipette_controller.empty_tip()
-        pipette_controller.drop_tip_to_trash()
-        self.home(home_J)
-        pipette_controller.disconnect_pipette()
-
-    def droplet_exp_ot(self, tip_number_1:int = None, tip_number_2:int = None):
-        """
-        DEPRECATED
-        Description: Runs the full droplet experiment by calling the functions that perform each step in the experiment.
-        """
-        print("-*-*-* Starting the droplet experiment *-*-*-")
-        # home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
-
-        # pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
-        # tool_changer_controller = ATIToolChangerController()
-
-        # pipette_controller.move_pipette_dock()
-        # tool_changer_controller.lock_tool_changer()
-        # pipette_controller.lift_pipette_on_dock()    
-
-        # self.home(home_J)
-        # pipette_controller.empty_tip()
-        # pipette_controller.drop_tip_to_trash()
-        # self.home(home_J)
-
-        # pipette_controller.move_pipette_dock()
-        # tool_changer_controller.unlock_tool_changer()
-        # pipette_controller.lift_pipette_on_dock()         
-        print("-*-*-* Droplet experiment is completed *-*-*-")
     
     def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
         '''
@@ -221,19 +143,6 @@ class UR(UR_DASHBOARD):
         wingman_tool.place_tool()
         self.home(home)    
     
-    def create_sample(self, home, tip_loc, sample_loc):
-        """
-         Picks up a new pipette tip and prepares the sample using the pipette
-        """
-        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
-        pipette.connect_pipette()
-        # self.home(home)
-        # pipette.pick_tip(tip_loc=tip_loc)
-        pipette.transfer_sample(sample_loc=sample_loc)
-        # self.home(home)
-        pipette.disconnect_pipette()
-        pass
-
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
 
