@@ -122,6 +122,7 @@ class ApsPipetteController():
 
         # ASPIRATE FIRST SAMPLE
         self.pipette.aspirate(vol=25)
+        sleep(2)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
 
     def create_droplet(self, droplet_loc):
