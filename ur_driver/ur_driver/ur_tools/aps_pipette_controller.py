@@ -132,10 +132,16 @@ class ApsPipetteController():
             - Pipette is controlled by RS485 commication.
         """
         print("Creating a droplet...")
+        droplet_front = deepcopy(droplet_loc)
+        droplet_front[1] += 0.1
+        self.ur.movel(droplet_front,self.accel_mss,self.speed_ms)
         self.ur.movel(droplet_loc,self.accel_mss,self.speed_ms)
+        sleep(1)
         self.pipette.dispense(vol=3)
         sleep(5)
         self.pipette.aspirate(vol=3)
+        sleep(1)
+        self.ur.movel(droplet_front,self.accel_mss,self.speed_ms)
 
     def empty_tip(self, sample_loc):
         """
