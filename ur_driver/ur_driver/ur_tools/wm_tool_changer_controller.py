@@ -6,7 +6,7 @@ import epics
 class WMToolChangerController():
     """Initilizes the WMToolChangerController to pick and place tools with the Wingman tool changers"""    
     
-    def __init__(self, tool_location:list = None, horizontal_axis:str = "y", ur_connection = None):
+    def __init__(self, tool_location:list = None, docking_axis:str = "-x", ur_connection = None):
         """
         """
         if not ur_connection:
@@ -14,7 +14,7 @@ class WMToolChangerController():
         
         self.robot = ur_connection
         self.current_tool = None
-        self.axis = horizontal_axis
+        self.axis = docking_axis
 
         self.tool_dock_l = [-0.30533163571362804, 0.293042569973924, 0.234306520730365, -3.1414391023029085, 0.014564845435757333, 0.0040377171549781125]
         self.tool_dock_j = [2.692000389099121, -2.031496664086813, -1.3187065124511719, -1.3587687772563477, -4.709893051777975, 1.129366159439087]
