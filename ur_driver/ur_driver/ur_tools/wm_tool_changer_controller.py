@@ -79,6 +79,7 @@ class WMToolChangerController():
         """
         try:
             print("Placing the tool ...")
+            self.robot.movel(self.tool_front_above, 1, 1)
             self.robot.movel(self.tool_front, 1, 1)
             self.robot.movel(self.location, 0.5, 0.5)
             self.robot.movel(self.tool_above, 0.5, 0.5)
