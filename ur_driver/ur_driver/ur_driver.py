@@ -105,7 +105,7 @@ class UR(UR_DASHBOARD):
         else:
             home_loc = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
         self.ur_connection.movej(home_loc, self.acceleration + 0.5, self.velocity + 0.5, 0, 0)
-        sleep(2.5)
+        sleep(3.5)
 
         print("Robot homed")
 
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     robot = UR(IP="164.54.116.129")
     # print(robot.get_joint_angles())
     tool_loc = [0.32704628917562345, -0.1017379678362813, 0.3642503117806354, -2.1526354130031917, 2.2615882459741723, -0.04632031979240964]
-    home = [0.09527063369750977, -1.664462228814596, -1.197685956954956, -1.8158260784544886, 1.5595473051071167, 0.1429915428161621]
+    home = [0.5431541204452515, -1.693524023095602, -0.7301170229911804, -2.2898713550963343, 1.567720651626587, -1.0230830351458948]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
     droplet = [-0.21435167102697, 0.31117471247776396, 0.273829131948966, 3.126800328499299, -0.017429873171790906, -0.007516422536326644]
@@ -218,10 +218,25 @@ if __name__ == "__main__":
     pipette_loc = [0.21285670041158733, 0.1548897634390196, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     handE_loc = [0.3131286590368134, 0.15480163498252172, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
-
+    target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
+    # robot.home(home)
+    robot.pick_tool(home, pipette_loc,payload=1.2)
+    robot.ur_connection.movel(target,1,1)
+    sleep(1)
+    robot.place_tool(home,pipette_loc)
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.ur_connection.movel(target,1,1)
+    sleep(1)
+    # gripper_controller = FingerGripperController(IP = robot.IP, ur_connection = robot)
+    # gripper_controller.connect_gripper()
+    robot.place_tool(home,handE_loc)
     robot.pick_tool(home, screwdriver_loc,payload=3)
-    # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
+    robot.ur_connection.movel(target,1,1)
+    sleep(1)
     robot.place_tool(home,screwdriver_loc)
+
+    # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
+    # robot.place_tool(home,screwdriver_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
