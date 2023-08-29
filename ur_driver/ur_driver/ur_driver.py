@@ -110,7 +110,6 @@ class UR(UR_DASHBOARD):
 
         print("Robot homed")
 
-    
     def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
         '''
         Make a transfer using the finger gripper
@@ -125,20 +124,20 @@ class UR(UR_DASHBOARD):
         print('Finished transfer')
         gripper_controller.disconnect_gripper()
 
-    def pick_tool(self, home, tool_loc):
+    def pick_tool(self, home, tool_loc, docking_axis = "-x"):
         """
             Picks up a tool using the given tool location
         """
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, horizontal_axis = "y", ur_connection = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
         self.home(home)
         wingman_tool.pick_tool()
         self.home(home)    
 
-    def place_tool(self, home, tool_loc):
+    def place_tool(self, home, tool_loc, docking_axis = "-x"):
         """
             Picks up a tool using the given tool location
         """
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, horizontal_axis = "y", ur_connection = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
         self.home(home)
         wingman_tool.place_tool()
         self.home(home)    
@@ -211,14 +210,14 @@ if __name__ == "__main__":
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot = UR(IP="164.54.116.129")
     # print(robot.get_joint_angles())
-    tool_loc = [-0.30533163571362804, 0.293042569973924, 0.234506520730365, -3.1414391023029085, 0.014564845435757333, 0.0040377171549781125]
-    home = [1.9320199489593506, -1.7363797626891078, -0.8551535606384277, -2.118720670739645, -4.710012499486105, 0.36904168128967285]
+    tool_loc = [0.32704628917562345, -0.1017379678362813, 0.3642503117806354, -2.1526354130031917, 2.2615882459741723, -0.04632031979240964]
+    home = [0.09527063369750977, -1.664462228814596, -1.197685956954956, -1.8158260784544886, 1.5595473051071167, 0.1429915428161621]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
     droplet = [-0.21435167102697, 0.31117471247776396, 0.273829131948966, 3.126800328499299, -0.017429873171790906, -0.007516422536326644]
     tip_eject = [0.10270290312926324, 0.2862487614384484, 0.10155903555930355, 3.1268372121718597, -0.01760209112687455, -0.007607510036297549]
-    robot.pick_tool(home,tool_loc)
-    robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
+    robot.pick_tool(home, tool_loc)
+    # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
     robot.place_tool(home,tool_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
