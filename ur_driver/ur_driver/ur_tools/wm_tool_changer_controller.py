@@ -67,7 +67,7 @@ class WMToolChangerController():
             self.robot.movel(self.tool_above, 1, 1)
             self.robot.movel(self.location, 0.5, 0.5)
             self.robot.movel(self.tool_front, 0.5, 0.5)
-            self.robot.movel(self.tool_above, 1, 1)
+            self.robot.movel(self.tool_front_above, 1, 1)
 
         except Exception as err:
             print("Error accured while picking up the tool changer: ", err)
