@@ -31,7 +31,7 @@ class WMToolChangerController():
         self.tool_front = None
         self._get_tool_front()
         self.tool_front_above = deepcopy(self.tool_front)
-        self.tool_front_above[2] += 0.2
+        self.tool_front_above[2] += 0.25
 
     def _get_tool_front(self):
         """
