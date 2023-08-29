@@ -30,6 +30,8 @@ class WMToolChangerController():
         self.tool_above[2] += 0.05
         self.tool_front = None
         self._get_tool_front()
+        self.tool_front_above = deepcopy(self.tool_front)
+        self.tool_front_above[2] += 0.2
 
     def _get_tool_front(self):
         """
@@ -65,6 +67,7 @@ class WMToolChangerController():
             self.robot.movel(self.tool_above, 1, 1)
             self.robot.movel(self.location, 0.5, 0.5)
             self.robot.movel(self.tool_front, 0.5, 0.5)
+            self.robot.movel(self.tool_above, 1, 1)
 
         except Exception as err:
             print("Error accured while picking up the tool changer: ", err)
