@@ -61,7 +61,7 @@ class UR(UR_DASHBOARD):
         self.PORT = PORT
         self.ur = Connection(IP = self.IP, PORT = self.PORT)
         self.ur_connection = self.ur.connection
-        
+        self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.acceleration = 0.5
         self.velocity = 0.5
         self.speed_ms    = 0.750
@@ -70,7 +70,6 @@ class UR(UR_DASHBOARD):
         self.accel_radss = 1.200
         self.blend_radius_m = 0.001
         self.ref_frame = [0,0,0,0,0,0]
-
         self.robot_current_joint_angles = None
         self.get_movement_state()
         #TODO: get the information of what is the current tool attached to UR. Maybe keep the UR unattached after the tools were used? Run a senity check at the beginning to findout if a tool is connected 
@@ -114,7 +113,6 @@ class UR(UR_DASHBOARD):
         '''
         Make a transfer using the finger gripper
         ''' 
-        self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         gripper_controller = FingerGripperController(IP = self.IP, ur_connection = self.ur_connection)
         gripper_controller.connect_gripper()
         # robot.ur_connection.set_payload(2, (0, 0, 0.1))
@@ -124,16 +122,17 @@ class UR(UR_DASHBOARD):
         print('Finished transfer')
         gripper_controller.disconnect_gripper()
 
-    def pick_tool(self, home, tool_loc, docking_axis = "-x"):
+    def pick_tool(self, home, tool_loc, docking_axis = "y", payload = 0.12):
         """
             Picks up a tool using the given tool location
         """
+        self.ur_connection.set_payload(payload)
         wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
         self.home(home)
         wingman_tool.pick_tool()
         self.home(home)    
 
-    def place_tool(self, home, tool_loc, docking_axis = "-x"):
+    def place_tool(self, home, tool_loc, docking_axis = "y"):
         """
             Picks up a tool using the given tool location
         """

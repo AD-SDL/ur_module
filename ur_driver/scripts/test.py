@@ -63,7 +63,7 @@ while True:
 
     # Display the color image with bounding boxes
     cv2.imshow("Object Detection", img)
-    # cv2.imshow("depth", depth)
+    cv2.imshow("depth", depth)
 
 
     # Exit the loop if 'q' is pressed
