@@ -11,7 +11,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 # Generate interfaces for actions
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "action/robot_command.action"
+  "action/RobotAction.action"
 )
 
 
