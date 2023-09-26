@@ -1,9 +1,5 @@
-string action_goal
-string vars
+string robot_goal
 ---
-int16 action_result
-string action_msg
-string action_log
+string robot_response 
 ---
-float32 percent_completed
-float32 percentage_current
+string robot_feedback
