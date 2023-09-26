@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'ur_client = ur_client.ur_client:main',
+            'test = ur_client.test'
 
         ],
     },
