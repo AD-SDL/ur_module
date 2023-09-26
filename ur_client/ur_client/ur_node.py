@@ -37,7 +37,7 @@ class URNode(Node):
 
         goal_handle.succeed()
         result = RobotAction.Result()
-        result.robot_response = goal_handle.request.robot_goal
+        result.robot_response = goal_handle.request.robot_goal + " completed"
         return result
 
 def main(args=None):
