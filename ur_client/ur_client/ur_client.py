@@ -11,8 +11,8 @@ from time import sleep
 import socket
 import json
 
-from wei_services.srv import WeiDescription 
-from wei_services.srv import WeiActions  
+# from wei_services.srv import WeiDescription 
+# from wei_services.srv import WeiActions  
 
 class URClient(Node):
     '''
