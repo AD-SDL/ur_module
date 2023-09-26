@@ -4,3 +4,6 @@ string vars
 int16 action_response
 string action_msg
 string action_log
+---
+float32 percent_completed
+float32 percentage_current
