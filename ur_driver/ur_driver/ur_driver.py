@@ -208,8 +208,7 @@ class UR(UR_DASHBOARD):
 
         """"""
         if not program_name:
-            print("Provide program name!")
-            return
+            raise ValueError("Provide program name!")
         
         ur_program_path = "/programs/" + program_name 
 
