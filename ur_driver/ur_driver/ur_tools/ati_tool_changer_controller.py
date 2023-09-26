@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import epics
 
-class ToolChangerController():
+class ATIToolChangerController():
     
 
     def __init__(self, tool_changer_pv:str = None):

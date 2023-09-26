@@ -8,10 +8,9 @@ from time import sleep
 from copy import deepcopy
 import json
 
-from ur_driver.ur_dashboard import UR_DASHBOARD
+from .ur_dashboard import UR_DASHBOARD
 from .ur_tools import *
 from urx import Robot, RobotException
-
 
 class Connection():
     """Connection to the UR robot to be shared within UR driver """
@@ -60,11 +59,11 @@ class UR(UR_DASHBOARD):
 
         self.IP = IP
         self.PORT = PORT
-        
-        self.ur_connection = Connection(IP = self.IP, PORT = self.PORT).connection
+        self.ur = Connection(IP = self.IP, PORT = self.PORT)
+        self.ur_connection = self.ur.connection
         
         self.acceleration = 0.5
-        self.velocity = 0.2
+        self.velocity = 0.5
         self.speed_ms    = 0.750
         self.speed_rads  = 0.750
         self.accel_mss   = 1.200
@@ -106,24 +105,24 @@ class UR(UR_DASHBOARD):
             home_loc = home_location
         else:
             home_loc = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
-        self.ur_connection.movej(home_loc, self.acceleration, self.velocity, 0, 0)
-        sleep(4)
+        self.ur_connection.movej(home_loc, self.acceleration + 0.5, self.velocity + 0.5, 0, 0)
+        sleep(2.5)
 
-        print("Robot moved to home location")
+        print("Robot homed")
 
-    def pick_pipette(self):
+    def pick_ot_pipette(self):
 
-        pipette_controller = PipetteController(ur_connection=self.ur_connection)
-        tool_changer_controller = ToolChangerController()
+        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
+        tool_changer_controller = ATIToolChangerController()
 
         pipette_controller.move_pipette_dock()
         tool_changer_controller.lock_tool_changer()
         pipette_controller.lift_pipette_on_dock()
 
-    def place_pipette(self):
+    def place_ot_pipette(self):
 
-        pipette_controller = PipetteController(ur_connection=self.ur_connection)
-        tool_changer_controller = ToolChangerController()
+        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
+        tool_changer_controller = ATIToolChangerController()
 
         pipette_controller.move_pipette_dock()
         tool_changer_controller.unlock_tool_changer()
@@ -131,14 +130,14 @@ class UR(UR_DASHBOARD):
         pipette_controller.disconnect_pipette()
         tool_changer_controller.disconnect_tool_changer()
 
-    def create_sample(self, home = None, sample1_loc = None, sample2_loc = None, well_loc = None, tip1_loc = None, tip2_loc = None):
+    def create_sample_ot(self, home = None, sample1_loc = None, sample2_loc = None, well_loc = None, tip1_loc = None, tip2_loc = None):
         """"""
         if home:
             home_J = home
         else:
             home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
-        pipette_controller = PipetteController(ur_connection=self.ur_connection)
+        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
         pipette_controller.connect_pipette()
         self.home(home_J)
         pipette_controller.pick_tip(tip_loc = tip1_loc)
@@ -150,14 +149,14 @@ class UR(UR_DASHBOARD):
         self.home(home_J)
         pipette_controller.disconnect_pipette()
 
-    def run_droplet(self):
-        pipette_controller = PipetteController(ur_connection=self.ur_connection)
+    def run_droplet_ot(self):
+        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
         pipette_controller.create_droplet()
         pipette_controller.retrieve_droplet()
         pipette_controller.disconnect_pipette()
 
-    def dispose_tip(self):
-        pipette_controller = PipetteController(ur_connection=self.ur_connection)
+    def dispose_tip_ot(self):
+        pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
         home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
         self.home(home_J)
         pipette_controller.empty_tip()
@@ -165,7 +164,7 @@ class UR(UR_DASHBOARD):
         self.home(home_J)
         pipette_controller.disconnect_pipette()
 
-    def droplet_exp(self, tip_number_1:int = None, tip_number_2:int = None):
+    def droplet_exp_ot(self, tip_number_1:int = None, tip_number_2:int = None):
         """
         DEPRECATED
         Description: Runs the full droplet experiment by calling the functions that perform each step in the experiment.
@@ -173,8 +172,8 @@ class UR(UR_DASHBOARD):
         print("-*-*-* Starting the droplet experiment *-*-*-")
         # home_J = [2.017202138900757, -1.137721137409546, -0.9426093101501465, -2.6425615749754847, -4.693090263997213, -3.8424256483661097]
 
-        # pipette_controller = PipetteController(ur_connection=self.ur_connection)
-        # tool_changer_controller = ToolChangerController()
+        # pipette_controller = OTPipetteController(ur_connection=self.ur_connection)
+        # tool_changer_controller = ATIToolChangerController()
 
         # pipette_controller.move_pipette_dock()
         # tool_changer_controller.lock_tool_changer()
@@ -189,7 +188,7 @@ class UR(UR_DASHBOARD):
         # tool_changer_controller.unlock_tool_changer()
         # pipette_controller.lift_pipette_on_dock()         
         print("-*-*-* Droplet experiment is completed *-*-*-")
-        
+    
     def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
         '''
         Make a transfer using the finger gripper
@@ -203,6 +202,39 @@ class UR(UR_DASHBOARD):
         gripper_controller.place(pos2)
         print('Finished transfer')
         gripper_controller.disconnect_gripper()
+
+    def pick_tool(self, home, tool_loc):
+        """
+            Picks up a tool using the given tool location
+        """
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, horizontal_axis = "y", ur_connection = self.ur_connection)
+        self.home(home)
+        wingman_tool.pick_tool()
+        self.home(home)    
+
+    def place_tool(self, home, tool_loc):
+        """
+            Picks up a tool using the given tool location
+        """
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, horizontal_axis = "y", ur_connection = self.ur_connection)
+        self.home(home)
+        wingman_tool.place_tool()
+        self.home(home)    
+    
+    def create_sample(self, home, tip_loc, sample_loc):
+        """
+         Picks up a new pipette tip and prepares the sample using the pipette
+        """
+        pipette = ApsPipetteController(ur_connection = self.ur_connection)
+        
+        self.home(home)
+        pipette.pick_tip(tip_loc=tip_loc)
+        pipette.transfer_sample(sample_loc=sample_loc)
+        self.home(home)
+
+    def create_droplet(self):
+        """Create droplet"""
+        pipette = ApsPipetteController(ur_connection = self.ur_connection)
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
 
@@ -252,8 +284,15 @@ if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot = UR(IP="192.168.1.100")
-    print(robot.get_joint_angles())
+    robot = UR(IP="164.54.116.129")
+    # print(robot.get_joint_angles())
+    tool_loc = [-0.30533163571362804, 0.293042569973924, 0.234306520730365, -3.1414391023029085, 0.014564845435757333, 0.0040377171549781125]
+    home = [1.9320199489593506, -1.7363797626891078, -0.8551535606384277, -2.118720670739645, -4.710012499486105, 0.36904168128967285]
+    tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
+    sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
+    # robot.pick_tool(home,tool_loc)
+    # robot.create_sample(home, tip1, sample)
+    # robot.place_tool(home,tool_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
@@ -263,7 +302,7 @@ if __name__ == "__main__":
     #     robot.get_overall_robot_status()
     #     sleep(0.5)
 
-    robot.ur_connection.disconnect_ur()
+    robot.ur.disconnect_ur()
 
 
 
