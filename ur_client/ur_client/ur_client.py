@@ -2,6 +2,7 @@
 
 import rclpy  # import Rospy
 from rclpy.node import Node  # import Rospy Node
+from rclpy.action import ActionServer
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor
 from std_msgs.msg import String
@@ -26,59 +27,25 @@ class URClient(Node):
 
         self.ur = None
         self.IP = None
-        self.receive_launch_parameters()    
+        self._receive_launch_parameters()    
         
         self.get_logger().info("Received IP: " + str(self.IP))
         self.get_logger().info("Tools: " + "Gripper: " + str(self.gripper))
+        self._action_server = ActionServer(
+            self,
+            Fibonacci,
+            'fibonacci',
+            self.execute_callback)
+        self._connect_robot()
 
-        self.connect_robot()
 
-        self.state = "UNKNOWN"
-        self.robot_status = None
-        self.action_flag = "READY"
-        
-        action_cb_group = ReentrantCallbackGroup()
-        state_refresher_cb_group = ReentrantCallbackGroup()
-        state_cb_group = ReentrantCallbackGroup()
-        description_cb_group = ReentrantCallbackGroup()
-
-        state_publisher_period = 0.5  # seconds
-        self.state_refresher_period = state_publisher_period + 1.0  # seconds
-
-        self.statePub = self.create_publisher(String, self.node_name + '/state', 10)
-        self.stateTimer = self.create_timer(state_publisher_period, self.stateCallback, callback_group = state_cb_group)
-        
-        self.StateRefresherTimer = self.create_timer(self.state_refresher_period, callback = self.stateRefresherCallback, callback_group = state_refresher_cb_group)
-
-        self.action_handler = self.create_service(WeiActions, self.node_name + "/action_handler", self.actionCallback, callback_group=action_cb_group)
-
-        self.description={}
-        self.descriptionSrv = self.create_service(WeiDescription, self.node_name + "/description_handler", self.descriptionCallback, callback_group=description_cb_group)
-    
-    def receive_launch_parameters(self):
+    def _receive_launch_parameters(self):
         
         self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter 
         self.IP = self.get_parameter('ip').get_parameter_value().string_value     
-        
-        self.declare_parameter('gripper', False)       # Declaring parameter 
-        self.gripper = self.get_parameter('gripper').get_parameter_value().bool_value
-       
-        self.declare_parameter('vacuum_gripper', False)       # Declaring parameter 
-        self.vacuum_gripper = self.get_parameter('vacuum_gripper').get_parameter_value().bool_value
 
-        self.declare_parameter('screwdriver', False)       # Declaring parameter 
-        self.screwdriver = self.get_parameter('screwdriver').get_parameter_value().bool_value
 
-        self.declare_parameter('pipette_pv', "None")       # Declaring parameter 
-        self.pipette_pv = eval(self.get_parameter('pipette_pv').get_parameter_value().string_value )
-        
-        self.declare_parameter('tool_changer_pv', "None")       # Declaring parameter 
-        self.tool_changer_pv = eval(self.get_parameter('tool_changer_pv').get_parameter_value().string_value)
-
-        self.declare_parameter('camera_pv', "None")       # Declaring parameter 
-        self.camera_pv = eval(self.get_parameter('camera_pv').get_parameter_value().string_value)
-
-    def connect_robot(self):
+    def _connect_robot(self):
         
         try:
             self.ur = UR(self.IP)
@@ -186,26 +153,6 @@ class URClient(Node):
             self.get_logger().error(msg.data)
             self.get_logger().warn("Trying to connect again! IP: " + self.IP)
             # self.connect_robot()
-
-    def descriptionCallback(self, request, response):
-        """The descriptionCallback function is a service that can be called to showcase the available actions a robot
-        can preform as well as deliver essential information required by the master node.
-
-        Parameters:
-        -----------
-        request: str
-            Request to the robot to deliver actions
-        response: str
-            The actions a robot can do, will be populated during execution
-
-        Returns
-        -------
-        str
-            The robot steps it can do
-        """
-        response.description_response = str(self.description)
-
-        return response
 
     def actionCallback(self, request, response):
         '''

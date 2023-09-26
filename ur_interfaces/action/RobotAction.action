@@ -1,7 +1,7 @@
-string action_handle
+string action_goal
 string vars
 ---
-int16 action_response
+int16 action_result
 string action_msg
 string action_log
 ---
