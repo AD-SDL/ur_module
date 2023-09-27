@@ -4,7 +4,7 @@ from rclpy.node import Node
 from time import sleep
 from ur_interfaces.action import RobotAction
 
-class URNode(Node):
+class URNode(Node): # ACTION SERVER
 
     '''
     The init function is neccesary for the URCLient class to initialize all variables, parameters, and other functions.
@@ -27,10 +27,9 @@ class URNode(Node):
 
         feedback = RobotAction.Feedback()
 
-        #TEST
         for i in range(20):
-            feedback.robot_feedback = str(i)
-            self.get_logger().info('Feedback: {0}'.format(feedback.robot_feedback))
+            feedback.robot_feedback = ' Busy ' + str(i) +' seconds'
+            self.get_logger().info('Feedback:'+ (feedback.robot_feedback))
 
             goal_handle.publish_feedback(feedback)
             sleep(1)
