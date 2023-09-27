@@ -7,7 +7,7 @@ from rclpy.node import Node
 from ur_interfaces.action import RobotAction
 
 
-class UrClient(Node):
+class UrClient(Node): # ACTION CLIENT
 
     def __init__(self, TEMP_NODE_NAME = "Ur_Node"):
 
@@ -16,13 +16,15 @@ class UrClient(Node):
 
         self.ur = None
         self.IP = None
-
+        self.goal = None
         self._action_client = ActionClient(self, RobotAction, self.node_name + '/robot_action')
 
     def send_goal(self, robot_goal):
+        self.goal = robot_goal
+        
         goal_msg = RobotAction.Goal()
         goal_msg.robot_goal = robot_goal
-
+        
         self._action_client.wait_for_server()
     
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
@@ -32,11 +34,11 @@ class UrClient(Node):
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected :(')
+            self.get_logger().warn('Goal rejected :(')
             return
 
         self.get_logger().info('Goal accepted :)')
-
+        self.get_logger().info("Action started: " + self.goal)
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)
 
@@ -47,7 +49,7 @@ class UrClient(Node):
 
     def feedback_callback(self, feedback_msg):
         feedback = feedback_msg.feedback
-        self.get_logger().info('Received feedback: {0}'.format(feedback.robot_feedback))
+        self.get_logger().info('Received feedback:' + feedback.robot_feedback)
 
 
 def main(args=None):
