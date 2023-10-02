@@ -27,7 +27,7 @@ def generate_launch_description():
         description= "Flag to accept UR node name"
         )
    
-    ur_client = Node(
+    ur_action_server = Node(
             package = 'ur_node',
             namespace = 'std_ns',
             executable = 'ur_action_server',
@@ -39,6 +39,6 @@ def generate_launch_description():
 
     launch_d.add_action(declare_use_ur_ip_cmd)
     launch_d.add_action(declare_use_ur_name_cmd)
-    launch_d.add_action(ur_client)
+    launch_d.add_action(ur_action_server)
 
     return launch_d
