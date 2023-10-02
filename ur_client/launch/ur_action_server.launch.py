@@ -23,14 +23,14 @@ def generate_launch_description():
     
     declare_use_ur_name_cmd = DeclareLaunchArgument(
         name = "name",
-        default_value= "UR5_Client_Node",
+        default_value= "ur_action_server",
         description= "Flag to accept UR node name"
         )
    
     ur_client = Node(
             package = 'ur_client',
             namespace = 'std_ns',
-            executable = 'ur_client',
+            executable = 'ur_action_server',
             output = "screen",
             name=name,
             parameters = [{"ip":ip}],
