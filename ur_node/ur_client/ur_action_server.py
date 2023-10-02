@@ -31,9 +31,6 @@ class UrActionServer(Node): #ACTION SERVER
 
         self._receive_launch_parameters()  
 
-        if self.IP != "None":  
-            self._connect_robot()
-
         self.state = "UNKNOWN"
         self.robot_status = None
         self.action_flag = "READY"
@@ -42,6 +39,7 @@ class UrActionServer(Node): #ACTION SERVER
         self._action_server = ActionServer(self, RobotAction, action_name, self.action_callback)
 
         self.get_logger().info("Listening for action calls over: " + action_name)
+    
     def _receive_launch_parameters(self):
         
         self.node_name = self.get_name()
@@ -59,8 +57,16 @@ class UrActionServer(Node): #ACTION SERVER
             self.get_logger().info("ur connected")
 
     def action_callback(self, goal_handle):
-        self.get_logger().info('Executing goal...')
+        # self.get_logger().info('Executing goal...')
         self.get_logger().info(str(goal_handle.request.robot_goal))
+        goal_handle.accepted()
+        
+        if self.IP != "None":  
+            self._connect_robot()
+            self._action_handle(goal = goal_handle)
+        else:
+            #Use MoveIt
+            pass
 
         feedback = RobotAction.Feedback()
 
@@ -71,10 +77,31 @@ class UrActionServer(Node): #ACTION SERVER
             goal_handle.publish_feedback(feedback)
             sleep(1)
 
-        goal_handle.succeed()
+    
+    def _action_handle(self, goal):
+        
+        robot_command = json.loads(goal.request.robot_goal)
         result = RobotAction.Result()
-        result.robot_response = goal_handle.request.robot_goal + " completed"
-        return result
+
+        if "transfer" in robot_command.keys():
+            self.get_logger().info("Executing a transfer")
+            vars = robot_command.get("transfer")
+            source_loc = vars.get("source")
+            target_loc = vars.get("target")
+        
+        try:
+            self.ur.transfer(source_loc, target_loc)            
+        except Exception as er:
+            msg = {-1:"Transfer failed"}
+            goal.aborted()
+            result.robot_response = json.dumps(msg)
+        else:
+            msg = {0:"Transfer completed"}
+            goal.succeed()
+            result.robot_response = json.dumps(msg)
+        finally:
+            return result   
+
 
 def main(args=None):
     rclpy.init(args=args)
