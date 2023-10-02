@@ -23,26 +23,32 @@ class UrActionServer(Node): #ACTION SERVER
     def __init__(self, TEMP_NODE_NAME = "ur_action_server"):
 
         super().__init__(TEMP_NODE_NAME)
-        self.node_name = self.get_name()
+        
 
         self.ur = None
         self.IP = None
-        self.receive_launch_parameters()    
+        self.node_name = None
 
-        self.connect_robot()
+        self._receive_launch_parameters()  
+
+        if self.IP != "None":  
+            self._connect_robot()
 
         self.state = "UNKNOWN"
         self.robot_status = None
         self.action_flag = "READY"
 
-        self._action_server = ActionServer(self, RobotAction, self.node_name + '/robot_action', self.action_callback)
-   
-    def receive_launch_parameters(self):
+        action_name = self.node_name + '/robot_action'
+        self._action_server = ActionServer(self, RobotAction, action_name, self.action_callback)
+
+        self.get_logger().info("Listening for action calls over: " + action_name)
+    def _receive_launch_parameters(self):
         
-        self.declare_parameter('ip', '146.137.240.38')       # Declaring parameter 
-        self.IP = self.get_parameter('ip').get_parameter_value().string_value     
+        self.node_name = self.get_name()
+        self.declare_parameter('ip', "None")       # Declaring parameter 
+        self.IP = self.get_parameter('ip').get_parameter_value().string_value   
     
-    def connect_robot(self):
+    def _connect_robot(self):
         """Creates a connection with the robot over URx. This fuction utilizes the ur_driver package"""    
         try:
             self.ur = UR(self.IP)

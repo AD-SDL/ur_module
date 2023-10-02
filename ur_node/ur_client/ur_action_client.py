@@ -9,7 +9,7 @@ from ur_interfaces.action import RobotAction
 
 class UrActionClient(Node): # ACTION CLIENT
 
-    def __init__(self, TEMP_NODE_NAME = "Ur_Node"):
+    def __init__(self, TEMP_NODE_NAME = "ur_action_client"):
 
         super().__init__(TEMP_NODE_NAME)
         self.node_name = self.get_name()
