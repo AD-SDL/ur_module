@@ -1,5 +1,5 @@
-string robot_goal
+string robot_goal # Goal
 ---
-string robot_response 
+string robot_response # Result 
 ---
-string robot_feedback
+string robot_feedback #Feedback
