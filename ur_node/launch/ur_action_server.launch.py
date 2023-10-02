@@ -28,7 +28,7 @@ def generate_launch_description():
         )
    
     ur_client = Node(
-            package = 'ur_client',
+            package = 'ur_node',
             namespace = 'std_ns',
             executable = 'ur_action_server',
             output = "screen",

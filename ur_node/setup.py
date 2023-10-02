@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 from glob import glob
 
-package_name = 'ur_client'
+package_name = 'ur_node'
 
 setup(
     name = package_name,
@@ -25,8 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ur_client = ur_client.ur_client:main',
-            'test = ur_client.test'
+            'ur_node = ur_node.ur_action_server:main',
+            'test = ur_node.test'
 
         ],
     },
