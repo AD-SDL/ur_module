@@ -69,7 +69,7 @@ class UrActionServer(Node): #ACTION SERVER
 
         #     goal_handle.publish_feedback(feedback)
         #     sleep(1)
-        
+
         result = RobotAction.Result()
         result.robot_response = response
         return result
@@ -111,6 +111,7 @@ class UrActionServer(Node): #ACTION SERVER
             goal.succeed()
         finally:
             response = json.dumps(msg)
+            self.ur.ur.disconnect_ur()
             return response   
         
     def _ros_driver_handle(self, goal):
