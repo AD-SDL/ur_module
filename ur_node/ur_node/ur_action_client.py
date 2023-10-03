@@ -6,10 +6,11 @@ from rclpy.node import Node
 
 from ur_interfaces.action import RobotAction
 
+import json
 
 class UrActionClient(Node): # ACTION CLIENT
 
-    def __init__(self, TEMP_NODE_NAME = "ur_action_client"):
+    def __init__(self, TEMP_NODE_NAME = "ur_node"):
 
         super().__init__(TEMP_NODE_NAME)
         self.node_name = self.get_name()
@@ -20,10 +21,10 @@ class UrActionClient(Node): # ACTION CLIENT
         self._action_client = ActionClient(self, RobotAction, self.node_name + '/robot_action')
 
     def send_goal(self, robot_goal):
-        self.goal = robot_goal
+        self.goal = json.dumps(robot_goal)
         
         goal_msg = RobotAction.Goal()
-        goal_msg.robot_goal = robot_goal
+        goal_msg.robot_goal = self.goal
         
         self._action_client.wait_for_server()
     
@@ -56,8 +57,10 @@ def main(args=None):
     rclpy.init(args=args)
 
     action_client = UrActionClient()
+    # goal = {"transfer":{"source":[1,1,1],"target":[1,1,1]}}
+    goal = {"pick_tool":{"home":[1,1,1],"tool_loc":[1,1,1]}}
 
-    action_client.send_goal("Transfer")
+    action_client.send_goal(goal)
 
     rclpy.spin(action_client)
 
