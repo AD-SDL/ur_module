@@ -15,7 +15,6 @@ except ImportError:
     print("UR driver package cannot be used!")
 
 class UrActionServer(Node): #ACTION SERVER
-
     '''
     This is a stakeholder for the UR action server class. 
     '''
@@ -29,11 +28,7 @@ class UrActionServer(Node): #ACTION SERVER
         self.node_name = None
 
         self._receive_launch_parameters()  
-
-        self.state = "UNKNOWN"
-        self.robot_status = None
-        self.action_flag = "READY"
-
+        
         action_name = self.node_name + '/robot_action'
         self._action_server = ActionServer(self, RobotAction, action_name, self.action_callback)
 
@@ -56,7 +51,7 @@ class UrActionServer(Node): #ACTION SERVER
             self.get_logger().info("ur connected")
 
     def action_callback(self, goal_handle) -> RobotAction.Result:
-        # self.get_logger().info('Executing goal...')
+        self.get_logger().info('Executing goal...')
         self.get_logger().info(str(goal_handle.request.robot_goal))
 
         if self.IP != "None":  
