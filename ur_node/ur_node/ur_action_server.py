@@ -77,6 +77,8 @@ class UrActionServer(Node): #ACTION SERVER
     def _action_handle(self, goal) -> str:
         
         robot_command = json.loads(goal.request.robot_goal)
+        #TODO: Execute a robot state check and accept the action if robot is in ready state
+        
         try:
             if "transfer" in robot_command:
                 vars = robot_command.get("transfer")
