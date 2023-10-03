@@ -28,7 +28,7 @@ class UrActionServer(Node): #ACTION SERVER
         self.node_name = None
 
         self._receive_launch_parameters()  
-        
+
         action_name = self.node_name + '/robot_action'
         self._action_server = ActionServer(self, RobotAction, action_name, self.action_callback)
 
@@ -55,11 +55,11 @@ class UrActionServer(Node): #ACTION SERVER
         self.get_logger().info(str(goal_handle.request.robot_goal))
 
         if self.IP != "None":  
-            # self._connect_robot()
+            self._connect_robot()
             response = self._action_handle(goal = goal_handle)
         else:
-            #Use MoveIt
-            self._ros_driver_handle(goal_handle)
+            self._ros_driver_handle(goal_handle) #Use MoveIt
+
 
         # feedback = RobotAction.Feedback()
 
@@ -69,6 +69,7 @@ class UrActionServer(Node): #ACTION SERVER
 
         #     goal_handle.publish_feedback(feedback)
         #     sleep(1)
+        
         result = RobotAction.Result()
         result.robot_response = response
         return result
