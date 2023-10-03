@@ -48,7 +48,6 @@ class Connection():
 
 class UR(UR_DASHBOARD):
     
-
     def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
         
         # if not connection:
