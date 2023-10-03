@@ -20,7 +20,7 @@ class UrActionServer(Node): #ACTION SERVER
     This is a stakeholder for the UR action server class. 
     '''
    
-    def __init__(self, TEMP_NODE_NAME = "ur_node"):
+    def __init__(self, TEMP_NODE_NAME = "ur_node") -> None:
 
         super().__init__(TEMP_NODE_NAME)
         
@@ -39,13 +39,13 @@ class UrActionServer(Node): #ACTION SERVER
 
         self.get_logger().info("Listening for action calls over: " + action_name)
     
-    def _receive_launch_parameters(self):
+    def _receive_launch_parameters(self) -> None:
         
         self.node_name = self.get_name()
         self.declare_parameter('ip', "164.54.116.129")       # Declaring parameter 
         self.IP = self.get_parameter('ip').get_parameter_value().string_value   
     
-    def _connect_robot(self):
+    def _connect_robot(self) -> None:
         """Creates a connection with the robot over URx. This fuction utilizes the ur_driver package"""    
         try:
             self.ur = UR(self.IP)
@@ -78,8 +78,7 @@ class UrActionServer(Node): #ACTION SERVER
         result.robot_response = response
         return result
 
-    
-    def _action_handle(self, goal)-> str:
+    def _action_handle(self, goal) -> str:
         
         robot_command = json.loads(goal.request.robot_goal)
         try:
@@ -121,7 +120,7 @@ class UrActionServer(Node): #ACTION SERVER
     def _ros_driver_handle(self, goal):
         pass
 
-def main(args=None):
+def main(args=None) -> None:
     rclpy.init(args=args)
 
     ur_node = UrActionServer()
