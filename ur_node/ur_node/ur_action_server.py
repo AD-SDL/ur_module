@@ -35,9 +35,10 @@ class UrActionServer(Node): #ACTION SERVER
         self.get_logger().info("Listening for action calls over: " + action_name)
     
     def _receive_launch_parameters(self) -> None:
-        
+        """Receives launch parameters from the launch execution"""
+
         self.node_name = self.get_name()
-        self.declare_parameter('ip', "164.54.116.129")       # Declaring parameter 
+        self.declare_parameter('ip', "164.54.116.129") # Declaring parameter 
         self.IP = self.get_parameter('ip').get_parameter_value().string_value   
     
     def _connect_robot(self) -> None:
@@ -55,11 +56,9 @@ class UrActionServer(Node): #ACTION SERVER
         self.get_logger().info(str(goal_handle.request.robot_goal))
 
         if self.IP != "None":  
-            self._connect_robot()
             response = self._action_handle(goal = goal_handle)
         else:
             self._ros_driver_handle(goal_handle) #Use MoveIt
-
 
         # feedback = RobotAction.Feedback()
 
@@ -77,9 +76,12 @@ class UrActionServer(Node): #ACTION SERVER
     def _action_handle(self, goal) -> str:
         
         robot_command = json.loads(goal.request.robot_goal)
+        msg = None
         #TODO: Execute a robot state check and accept the action if robot is in ready state
         
         try:
+            self._connect_robot()
+
             if "transfer" in robot_command:
                 vars = robot_command.get("transfer")
                 source_loc = vars.get("source")
@@ -105,6 +107,8 @@ class UrActionServer(Node): #ACTION SERVER
                 tool_loc = vars.get('tool_loc', None)
                 self.ur.place_tool(home_loc, tool_loc)            
 
+            self.ur.ur.disconnect_ur()
+
         except Exception as er:
             msg = {-1:"Failed " + er}
             goal.abort()
@@ -113,7 +117,6 @@ class UrActionServer(Node): #ACTION SERVER
             goal.succeed()
         finally:
             response = json.dumps(msg)
-            self.ur.ur.disconnect_ur()
             return response   
         
     def _ros_driver_handle(self, goal):
