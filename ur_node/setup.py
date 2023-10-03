@@ -5,9 +5,8 @@ from glob import glob
 package_name = 'ur_node'
 
 setup(
-    name = package_name,
     version='0.0.0',
-    packages=[package_name],
+    packages= find_packages(),
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -25,8 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ur_node = ur_node.ur_action_server:main',
-            'test = ur_node.test'
+            'ur_action_server = ur_node.ur_action_server:main',
 
         ],
     },
