@@ -1,5 +1,6 @@
 from pymodbus.client.sync import ModbusTcpClient
 
+#All the hypothetical parts are based on .script file for the robotiq screwdriver
 class RobotiqScrewdriver:
     def __init__(self, ip_address, port=502):
         self.client = ModbusTcpClient(ip_address, port)
