@@ -1,0 +1,52 @@
+ Program
+   Variables Setup
+   BeforeStart
+     MoveJ
+       Waypoint_1
+   Robot Program
+     rq_screw_vacuum_on()
+     Popup: Add insert
+     MoveJ
+       above_hole
+       on_hole
+       Drive Screw
+         If success
+           'Insert If Success Instructions'
+           MoveL
+             Direction: Tool Z-
+               Until (distance)
+         If fail
+           No screw detected
+             Popup: No screw detected
+           Timeout reached
+             Popup: Timeout reached
+           Screwdriver not activated
+             Popup: Screwdriver Not Activated
+           Unhandled errors
+             Popup: Unhandled Screwdriving Error: Open Log tab for information on application warnings, and refer to the Screwdriver instruction manual to manage faults.
+     MoveJ
+       above_hole
+       Waypoint_1
+       rq_screw_vacuum_on()
+     Popup: Flip part and add new insert.
+     MoveJ
+       above_hole
+       on_hole_2
+     Drive Screw
+       If success
+         'Insert If Success Instructions'
+         MoveL
+           Direction: Tool Z-
+             Until (distance)
+       If fail
+         No screw detected
+           Popup: No screw detected
+         Timeout reached
+           Popup: Timeout reached
+         Screwdriver not activated
+           Popup: Screwdriver Not Activated
+         Unhandled errors
+           Popup: Unhandled Screwdriving Error: Open Log tab for information on application warnings, and refer to the Screwdriver instruction manual to manage faults.
+     MoveJ
+       above_hole
+     Halt
