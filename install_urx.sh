@@ -1,4 +1,4 @@
-git clone https://github.com/jkur/python-urx.git
+git clone https://github.com/Byeongdulee/python-urx.git
 cd python-urx
 touch COLCON_IGNORE
 pip install .

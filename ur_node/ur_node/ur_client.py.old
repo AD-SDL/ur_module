@@ -106,7 +106,6 @@ class URClient(Node):
             if self.action_flag == "READY": #Only refresh the state manualy if robot is not running a job.
                 self.ur.get_overall_robot_status()
 
-
         except UnboundLocalError as local_var_err:
             err = local_var_err
 
@@ -325,7 +324,7 @@ class URClient(Node):
             finally:
                 return response 
             
-        elif request.action_handle == 'create_sample':
+        elif request.action_handle == 'run_droplet':
 
             vars = json.loads(request.vars)
             self.get_logger().info(str(vars))

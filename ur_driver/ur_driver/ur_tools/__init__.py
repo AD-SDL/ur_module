@@ -9,6 +9,7 @@ from .screwdriver_controller import ScrewdriverController
 from .camera_controller import CameraController
 from .urp_generator import URPGenerator
 from .robotiq_gripper_driver import RobotiqGripper
+from .pipette_driver import PipetteDriver
 
 
 

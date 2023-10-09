@@ -13,7 +13,7 @@ def generate_launch_description():
     launch_d = LaunchDescription()
 
     ip = LaunchConfiguration("ip")
-    name = LaunchConfiguration("name")
+    robot_name = LaunchConfiguration("name")
     
     declare_use_ur_ip_cmd = DeclareLaunchArgument(
         name = "ip",
@@ -32,7 +32,7 @@ def generate_launch_description():
             namespace = 'std_ns',
             executable = 'ur_action_server',
             output = "screen",
-            name=name,
+            name=robot_name,
             parameters = [{"ip":ip}],
             emulate_tty=True
     )
