@@ -100,10 +100,35 @@ class RobotiqScrewdriver:
         slave_id = 9 # Only slave ID 9 is supported by the Screwdriver.
         
         self.connection.execute_command("rq_screw_turn({},{},{},{},{},{})".format(mode, torque, angle, rpm, direction, slave_id))
+    
+    def auto_unscrew(self, rpm: int = 100):
+        """
+        With the screwdriving bit in or just above the screw drive, performs a full unscrew action until the screw threads are disengaged
+        from the hole.
+
+        rpm:    (unit: RPM)
+                Desired rotation speed of the screwdriver. Must be between 1 and 500 RPM
+        """
+        direction = False # FALSE = RQ_DIRECTION_CCW (default) for a counter-clockwise rotation of the Screwdriver
+        self.connection.execute_command("rq_auto_unscrew({}, {})".format(direction, rpm))
+
+    
+    def auto_screw(self, rpm: int = 100):
+        """
+        With the screwdriving bit in or just above the screw drive, performs a full screw action until the screw threads are disengaged
+        from the hole.
+
+        rpm:    (unit: RPM)
+                Desired rotation speed of the screwdriver. Must be between 1 and 500 RPM
+        """
+        direction = True # TRUE = RQ_DIRECTION_CW for a clockwise rotation of the Screwdriver
+        self.connection.execute_command("rq_auto_unscrew({}, {})".format(direction, rpm))
+
 
 if __name__ == "__main__":
     tool = RobotiqScrewdriver("164.54.116.129")  # replace with your device's IP
     tool.connect()
-    tool.drive_clockwise()
-    sleep(10)
-    tool.drive_counter_clockwise()
+    # tool.auto_unscrew()
+    # tool.drive_clockwise()
+    # sleep(10)
+    # tool.drive_counter_clockwise()
