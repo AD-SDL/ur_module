@@ -9,7 +9,7 @@ class FingerGripperController():
     def __init__(self, IP:str = "146.137.240.38", ur_connection = None):
         self.IP = IP
         self.PORT = 63352
-
+        
         if not ur_connection:
             raise Exception("UR connection is not established")
         else:
