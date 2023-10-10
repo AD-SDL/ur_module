@@ -19,14 +19,37 @@ class RobotiqScrewdriver:
         self.connection.close()
    
     def activate_screwdriver(self):
-        pass
+        """
+        Description 
+            Activates the Screwdriver once it is powered on.
+            To ensure the consistent activation of the Screwdriver at the start of the program, it is recommended to insert a 
+            rq_screw_activate() script function in the BeforeStart sequence of the program.        
+        Return 
+            No value is returned.
+        """
+
+        self.connection.execute_command("rq_screw_activate()")
 
     def activate_vacuum(self):
-        # assuming that activating vacuum is setting a coil to True, and coil address is hypothetical
-        self.connection.execute_command(0x01, True)    
+        """
+        Description 
+            Starts the vacuum action on the Screwdriver. 
+            This is required for the system to be able to detect a screw.        
+        Return 
+            No value is returned.
+        """
+        
+        self.connection.execute_command("rq_screw_vacuum_on()")
 
     def deactivate_vacuum(self):
-        self.connection.execute_command(0x01, False)
+        """
+        Description 
+            Stops the vacuum action on the Screwdriver.
+        Return 
+            No value is returned.
+        """
+
+        self.connection.execute_command("rq_screw_vacuum_off()")
 
     def drive_clockwise(self, mode:int = 1, torque: int = 1, angle: int = 360, rpm: int = 100):
         """
