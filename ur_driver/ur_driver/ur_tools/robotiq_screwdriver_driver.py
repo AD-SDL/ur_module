@@ -1,4 +1,4 @@
-from interpreter_socket import InterpreterSocket
+from .interpreter_socket import InterpreterSocket
 from time import sleep
 #All the hypothetical parts are based on .script file for the robotiq screwdriver
 class RobotiqScrewdriver:

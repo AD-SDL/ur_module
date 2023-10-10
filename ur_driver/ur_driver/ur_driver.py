@@ -217,7 +217,9 @@ if __name__ == "__main__":
     handE_loc = [0.3131286590368134, 0.15480163498252172, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    cell_screw = [0.13706241916908557, -0.30370504891850064, 0.42276888385334144, 3.1379053085986106, -0.009141006324292, -0.0011011480536616022]
+    cell_screw = None
+    cell_holde_deck_joint_loc = None
+    screw_cap_above_joints = [-0.2830088774310511, -2.032938142816061, -0.24721765518188477, -2.4305912456908167, 1.5672067403793335, -0.7787321249591272]
 
     # robot.home(home)
     # robot.pick_tool(home, pipette_loc,payload=1.2)
@@ -232,9 +234,9 @@ if __name__ == "__main__":
     # gripper_controller.gripper.move_and_wait_for_pos(255, 255, 255)
     # robot.place_tool(home,handE_loc)
     robot.pick_tool(home, screwdriver_loc,payload=3)
-    # robot.ur_connection.movel(target,1,1)
-    # sleep(1)
-    # robot.place_tool(home,screwdriver_loc)
+    robot.ur_connection.movej(screw_cap_above_joints,1,1)
+    sleep(1)
+    robot.place_tool(home,screwdriver_loc)
 
     # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
     # robot.place_tool(home,screwdriver_loc)
