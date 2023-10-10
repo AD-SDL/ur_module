@@ -228,10 +228,10 @@ if __name__ == "__main__":
     # gripper_controller = FingerGripperController(IP = robot.IP, ur_connection = robot)
     # gripper_controller.connect_gripper()
     # robot.place_tool(home,handE_loc)
-    robot.pick_tool(home, screwdriver_loc,payload=3)
+    # robot.pick_tool(home, screwdriver_loc,payload=3)
     # robot.ur_connection.movel(target,1,1)
     # sleep(1)
-    # robot.place_tool(home,screwdriver_loc)
+    robot.place_tool(home,screwdriver_loc)
 
     # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
     # robot.place_tool(home,screwdriver_loc)
