@@ -6,7 +6,7 @@ from time import sleep
 UR_INTERPRETER_SOCKET = 30020
 
 
-class InterpreterHelper:
+class InterpreterSocket:
     log = logging.getLogger("interpreter.InterpreterHelper")
     STATE_REPLY_PATTERN = re.compile(r"(\w+):\W+(\d+)?")
 
@@ -80,7 +80,7 @@ class InterpreterHelper:
         return self.execute_command("end_interpreter()")
 
 if __name__ == "__main__":
-    tool = InterpreterHelper(ip="164.54.116.129")
+    tool = InterpreterSocket(ip="164.54.116.129")
     tool.connect()
     tool.execute_command("rq_screw_turn(1,1,3600,100,False,9)")
     # sleep(10)
