@@ -14,9 +14,9 @@ from urx import Robot, RobotException
 
 class Connection():
     """Connection to the UR robot to be shared within UR driver """
-    def __init__(self,  IP:str = "146.137.240.38", PORT: int = 29999) -> None:
+    def __init__(self,  hostname:str = "146.137.240.38", PORT: int = 29999) -> None:
 
-        self.IP = IP
+        self.hostname = hostname
         self.PORT = PORT
         
         self.connection = None
@@ -29,7 +29,7 @@ class Connection():
 
         for i in range(10):
             try:
-                self.connection = Robot(self.IP)
+                self.connection = Robot(self.hostname)
 
             except socket.error:
                 print("Trying robot connection ...")
@@ -48,17 +48,17 @@ class Connection():
 
 class UR(UR_DASHBOARD):
     
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
+    def __init__(self, hostname:str = "146.137.240.38", PORT: int = 29999):
         
         # if not connection:
         #     raise Exception("Robot connection is not established")
         # else:
         #     self.ur = connection
-        super().__init__(IP=IP, PORT=PORT)
+        super().__init__(hostname=hostname, PORT=PORT)
 
-        self.IP = IP
+        self.hostname = hostname
         self.PORT = PORT
-        self.ur = Connection(IP = self.IP, PORT = self.PORT)
+        self.ur = Connection(hostname = self.hostname, PORT = self.PORT)
         self.ur_connection = self.ur.connection
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.acceleration = 0.5
@@ -112,7 +112,7 @@ class UR(UR_DASHBOARD):
         '''
         Make a transfer using the finger gripper
         ''' 
-        gripper_controller = FingerGripperController(IP = self.IP, ur_connection = self.ur_connection)
+        gripper_controller = FingerGripperController(hostname = self.hostname, ur_connection = self.ur_connection)
         gripper_controller.connect_gripper()
         # robot.ur_connection.set_payload(2, (0, 0, 0.1))
 
@@ -143,7 +143,7 @@ class UR(UR_DASHBOARD):
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
 
-        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
+        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.hostname)
         pipette.connect_pipette()
 
         self.home(home)
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot = UR(IP="164.54.116.129")
+    robot = UR(hostname="164.54.116.129")
     # print(robot.get_joint_angles())
     tool_loc = [0.32704628917562345, -0.1017379678362813, 0.3642503117806354, -2.1526354130031917, 2.2615882459741723, -0.04632031979240964]
     home = [0.5431541204452515, -1.693524023095602, -0.7301170229911804, -2.2898713550963343, 1.567720651626587, -1.0230830351458948]
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.ur_connection.movel(target,1,1)
     # sleep(1)
-    # gripper_controller = FingerGripperController(IP = robot.IP, ur_connection = robot)
+    # gripper_controller = FingerGripperController(hostname = robot.hostname, ur_connection = robot)
     # gripper_controller.connect_gripper()
     # gripper_controller.gripper.move_and_wait_for_pos(255, 255, 255)
     # robot.place_tool(home,handE_loc)
