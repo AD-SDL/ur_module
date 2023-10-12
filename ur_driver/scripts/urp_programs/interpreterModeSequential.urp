@@ -1,0 +1,100 @@
+<URProgram name="example1" installation="default" installationRelativePath="default" directory="/programs" createdIn="5.10.0.1051222" lastSavedIn="5.10.0.1051222" robotSerialNumber="20175300007" crcValue="937128547">
+  <children>
+    <MainProgram runOnlyOnce="true" InitVariablesNode="false">
+      <children>
+        <Script type="Line">
+          <expression>
+            <ExpressionChar character="g"/>
+            <ExpressionChar character="l"/>
+            <ExpressionChar character="o"/>
+            <ExpressionChar character="b"/>
+            <ExpressionChar character="a"/>
+            <ExpressionChar character="l"/>
+            <ExpressionChar character=" "/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="x"/>
+            <ExpressionChar character="i"/>
+            <ExpressionChar character="t"/>
+            <ExpressionChar character="_"/>
+            <ExpressionChar character="t"/>
+            <ExpressionChar character="h"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="a"/>
+            <ExpressionChar character="d"/>
+            <ExpressionChar character=" "/>
+            <ExpressionChar character="="/>
+            <ExpressionChar character=" "/>
+            <ExpressionChar character="F"/>
+            <ExpressionChar character="a"/>
+            <ExpressionChar character="l"/>
+            <ExpressionChar character="s"/>
+            <ExpressionChar character="e"/>
+          </expression>
+        </Script>
+        <Script type="Line">
+          <expression>
+            <ExpressionChar character="i"/>
+            <ExpressionChar character="n"/>
+            <ExpressionChar character="t"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="p"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="t"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="_"/>
+            <ExpressionChar character="m"/>
+            <ExpressionChar character="o"/>
+            <ExpressionChar character="d"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="("/>
+            <ExpressionChar character="c"/>
+            <ExpressionChar character="l"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="a"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="O"/>
+            <ExpressionChar character="n"/>
+            <ExpressionChar character="E"/>
+            <ExpressionChar character="n"/>
+            <ExpressionChar character="d"/>
+            <ExpressionChar character=" "/>
+            <ExpressionChar character="="/>
+            <ExpressionChar character=" "/>
+            <ExpressionChar character="F"/>
+            <ExpressionChar character="a"/>
+            <ExpressionChar character="l"/>
+            <ExpressionChar character="s"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character=")"/>
+          </expression>
+        </Script>
+        <Script type="Line">
+          <expression>
+            <ExpressionChar character="i"/>
+            <ExpressionChar character="n"/>
+            <ExpressionChar character="t"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="p"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="t"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="r"/>
+            <ExpressionChar character="_"/>
+            <ExpressionChar character="m"/>
+            <ExpressionChar character="o"/>
+            <ExpressionChar character="d"/>
+            <ExpressionChar character="e"/>
+            <ExpressionChar character="("/>
+            <ExpressionChar character=")"/>
+          </expression>
+        </Script>
+      </children>
+    </MainProgram>
+  </children>
+</URProgram>
