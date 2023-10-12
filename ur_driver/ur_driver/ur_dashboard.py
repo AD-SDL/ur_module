@@ -5,9 +5,9 @@ from paramiko import SSHClient, AutoAddPolicy, SSHException
 from scp import SCPClient, SCPException
 
 class UR_DASHBOARD():
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
+    def __init__(self, hostname:str = "146.137.240.38", PORT: int = 29999):
 
-        self.IP = IP
+        self.hostname = hostname
         self.port = PORT
         self.connection = None
         self.connection_error = False
@@ -25,7 +25,7 @@ class UR_DASHBOARD():
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.connection.settimeout(5) # Socket will wait 5 seconds till it recieves the response
-            self.connection.connect((self.IP,self.port))
+            self.connection.connect((self.hostname,self.port))
 
         except socket.error as err:
             print("UR dashboard could not establish connection")
