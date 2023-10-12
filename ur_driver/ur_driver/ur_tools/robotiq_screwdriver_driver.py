@@ -34,7 +34,56 @@ class RobotiqScrewdriver:
         Closes the Interpreter socket connection
         """
         self.connection.disconnect()
-   
+
+    def get_status(self) -> str:
+        """
+        Retrieves the current activation status of the Screwdriver.       
+        Return (int): Status 
+                        - 3 = Activated
+                        - 2 = Not used
+                        - 1 = Activation in progress
+                        - 0 = Else
+        """
+        self.connection.execute_command("rq_get_screw_status()")
+        return self.connection.response
+
+    def get_vacuum_pressure_kpa(self) -> int:
+        """
+        Retrieves the current vacuum level in the vacuum sleeve.
+        Return (int): Value = Current vacuum level in the vacuum sleeve in kPa.
+                              Without screw vacuum must be equal or superior to -16 kPa
+                              With screw vWacuum must be equal or inferior to -30 kPa
+        """
+        self.connection.execute_command("rq_get_vacuum_pressure_kpa()")
+        return self.connection.response
+    
+    def is_blocked_at_start(self):
+        pass
+
+    def is_communication_lost(self):
+        pass
+
+    def is_contact_not_found(self):
+        pass
+
+    def is_feeder_screw_ready(self):
+        pass
+
+    def is_feeder_status_ok(self):
+        pass
+
+    def is_restricted_before_angle(self):
+        pass
+
+    def is_screw_detected(self):
+        pass
+
+    def is_screwdriver_wrong_echo(self):
+        pass
+
+    def pick_screw_from_feeder(self):
+        pass
+
     def activate_screwdriver(self):
         """
         Activates the Screwdriver once it is powered on.
@@ -42,7 +91,10 @@ class RobotiqScrewdriver:
         """
 
         self.connection.execute_command("rq_screw_activate()")
-
+    
+    def stop_screwdriver(self):
+        pass
+    
     def activate_vacuum(self):
         """
         Starts the vacuum action on the Screwdriver. This is required for the system to be able to detect a screw.        
