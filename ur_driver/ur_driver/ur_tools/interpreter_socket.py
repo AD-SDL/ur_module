@@ -20,6 +20,7 @@ class InterpreterSocket:
         self.hostname = hostname
         self.port = port
         self.timeout = timeout
+        self.response = None
 
     def connect(self) -> None:
         """
@@ -36,7 +37,7 @@ class InterpreterSocket:
         """Closes the connection with the Interpreter socket."""
         self.socket.close()
 
-    def get_reply(self) -> str:
+    def get_reply(self):
         """
         read one line from the socket
         :return: text until new line
@@ -48,7 +49,7 @@ class InterpreterSocket:
                 collected += part
             elif part == b"\n":
                 break
-        return collected.decode("utf-8")
+        self.response = collected.decode("utf-8")
 
     def execute_command(self, command) -> int:
         """
@@ -61,12 +62,12 @@ class InterpreterSocket:
             command += "\n"
 
         self.socket.send(command.encode("utf-8"))
-        raw_reply = self.get_reply()
-        self.log.debug(f"Reply: '{raw_reply}'")
+        self.get_reply()
+        self.log.debug(f"Reply: '{self.response}'")
         # parse reply, raise exception if command is discarded
-        reply = self.STATE_REPLY_PATTERN.match(raw_reply)
+        reply = self.STATE_REPLY_PATTERN.match(self.response)
         if reply.group(1) == "discard":
-            raise Exception("Interpreter discarded message", raw_reply)
+            raise Exception("Interpreter discarded message", self.response)
         return int(reply.group(2))
 
     def clear(self):
