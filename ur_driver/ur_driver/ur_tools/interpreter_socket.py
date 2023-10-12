@@ -10,19 +10,33 @@ class InterpreterSocket:
     log = logging.getLogger("interpreter.InterpreterHelper")
     STATE_REPLY_PATTERN = re.compile(r"(\w+):\W+(\d+)?")
 
-    def __init__(self, ip, port=UR_INTERPRETER_SOCKET):
+    def __init__(self, hostname: str = None, port: int = UR_INTERPRETER_SOCKET, timeout: float = 2.0) -> None:
+        """Constructor for the InterpreterSocket class.
+        :param hostname: Hostname or ip.
+        :param port: Port.
+        :param socket_timeout: Timeout for blocking socket operations.
+        """
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.ip = ip
+        self.hostname = hostname
         self.port = port
+        self.timeout = timeout
 
-    def connect(self):
+    def connect(self) -> None:
+        """
+        Connects to a tool at the given address.
+        """
         try:
-            self.socket.connect((self.ip, self.port))
+            self.socket.connect((self.hostname, self.port))
+            self.socket.settimeout(self.timeout)
         except socket.error as exc:
-            self.log.error(f"socket error = {exc}")
+            self.log.error(f"Interpreter Socket Error = {exc}")
             raise exc
+        
+    def disconnect(self) -> None:
+        """Closes the connection with the Interpreter socket."""
+        self.socket.close()
 
-    def get_reply(self):
+    def get_reply(self) -> str:
         """
         read one line from the socket
         :return: text until new line
@@ -36,7 +50,7 @@ class InterpreterSocket:
                 break
         return collected.decode("utf-8")
 
-    def execute_command(self, command):
+    def execute_command(self, command) -> int:
         """
         Send single line command to interpreter mode, and wait for reply
         :param command:
