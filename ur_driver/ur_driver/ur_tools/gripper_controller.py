@@ -6,9 +6,16 @@ from .robotiq_gripper_driver import RobotiqGripper
 class FingerGripperController():
     
 
-    def __init__(self, IP:str = "146.137.240.38", ur_connection = None):
-        self.IP = IP
-        self.PORT = 63352
+    def __init__(self, hostname:str = "146.137.240.38", port: int = 63352, ur_connection = None):
+        """
+        Constructor for the FingerGripperController class.
+
+        Args:
+            hostname (str): The hostname of the robot.
+            port (int): Port number to connect to the robot over the Interpreter socket
+        """
+        self.host = hostname
+        self.PORT = port
         
         if not ur_connection:
             raise Exception("UR connection is not established")
@@ -35,7 +42,6 @@ class FingerGripperController():
         self.home_joint = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
         self.plate_exchange_1_above = [-0.18284724105645211, 0.7914820291585895, 0.41175512257988434, -0.014545475433050672, -3.1337759450718, -0.010278634391729295]
         self.plate_exchange_1 = [-0.1828537989205587, 0.7914917511283945, 0.390542100409092, -0.014571172649734884, -3.133719848650817, -0.010138239501312422]
-
         
     def connect_gripper(self):
         """
@@ -106,7 +112,6 @@ class FingerGripperController():
         # self.ur.movel(self.home, self.acceleration, self.velocity)
         self.ur.movej(self.home_joint, self.acceleration, self.velocity)
 
-
     def place(self, place_goal):
 
         '''Place down at second goal position'''
@@ -142,31 +147,6 @@ class FingerGripperController():
         # self.ur.movel(self.home, self.acceleration, self.velocity)
         self.ur.movej(self.home_joint, self.acceleration, self.velocity)
 
-class HandGripperController():
-    
-
-    def __init__(self, IP:str = "146.137.240.38", ur_connection = None):
-        self.IP = IP
-        self.PORT = 63352
-
-        if not ur_connection:
-            raise Exception("UR connection is not established")
-        else:
-            self.ur = ur_connection
-
-        self.gripper_close = 130 # 0-255 (255 is closed)
-        self.griper_open = 0
-        self.gripper_speed = 150 # 0-255
-        self.gripper_force = 0 # 0-255
-
-        self.acceleration = 0.5
-        self.velocity = 0.2
-        self.speed_ms    = 0.750
-        self.speed_rads  = 0.750
-        self.accel_mss   = 1.200
-        self.accel_radss = 1.200
-        self.blend_radius_m = 0.001
-        self.ref_frame = [0,0,0,0,0,0]
 
 class VacuumGripperController():
     
