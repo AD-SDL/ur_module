@@ -15,14 +15,14 @@ class RobotiqScrewdriver:
             port (int): Port number to connect to the robot over the Interpreter socket
         """
         self.connection = None
-        self.host = hostname
+        self.hostname = hostname
 
     def connect(self):
         """
         Creates an interpreter socket connection
         """
         try:
-            self.connection = InterpreterSocket(ip = self.host)
+            self.connection = InterpreterSocket(hostname = self.hostname)
             self.connection.connect()
         except Exception as err:
             print("Failed to connect to interpreter socket! " + err)
@@ -33,7 +33,7 @@ class RobotiqScrewdriver:
         """
         Closes the Interpreter socket connection
         """
-        self.connection.close()
+        self.connection.disconnect()
    
     def activate_screwdriver(self):
         """
