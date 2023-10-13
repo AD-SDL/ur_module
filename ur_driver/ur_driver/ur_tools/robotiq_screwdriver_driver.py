@@ -16,13 +16,14 @@ class RobotiqScrewdriver:
         """
         self.connection = None
         self.hostname = hostname
+        self.timeout = socket_timeout
 
     def connect(self) -> None:
         """
         Creates an interpreter socket connection
         """
         try:
-            self.connection = InterpreterSocket(hostname = self.hostname)
+            self.connection = InterpreterSocket(hostname = self.hostname, timeout = self.timeout)
             self.connection.connect()
         except Exception as err:
             print("Failed to connect to interpreter socket! " + err)
