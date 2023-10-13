@@ -170,7 +170,7 @@ class RobotiqScrewdriver:
                             
             slave_id (int): Only slave ID 9 is supported by the Screwdriver.
         """
-        self.connection.execute_command("rq_pick_screw({},{},{},{},{},{},{},{},{},{},{})".format(screw_pose, status_input, ready_input, str(test_in_action), approach_dist, rpm, pick_speed, timeout, retract_speed, str(direction), slave_id))
+        self.connection.execute_command("rq_pick_screw({},{},{},{},{},{},{},{},{},{},{})".format(screw_pose, status_input, ready_input, test_in_action, approach_dist, rpm, pick_speed, timeout, retract_speed, direction, slave_id))
     
     def activate_screwdriver(self) -> None:
         """
