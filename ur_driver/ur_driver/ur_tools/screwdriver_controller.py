@@ -6,10 +6,13 @@ class ScrewdriverController():
     def __init__(self ):
         """
         """
-        self.home_urp = "home_screwdriver.urp"
-        self.drive_forward_urp = "home_screwdriver.urp"
-        self.driver_backward_urp = "home_screwdriver.urp"
-
+        #TODO: Make sure interpreter urp program exsists on the polyscope then start the program using the UR Dashboard.
+        #TODO: Import screwdriver driver and handle all the motions as well as screwdriving jobs here
+            
+        self.interpreter_urp = "/path/to/iterpreter.urp"
+        self.hostanem = None
+        self.ur_connection = None
+        self.srewdriver = None
     def check_screwdriver_controls(self):
         pass  
     def get_urp_programs(self):
