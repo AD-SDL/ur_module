@@ -19,7 +19,6 @@ class UR_DASHBOARD():
         self.connect()
         self.initialize()
 
-
     def connect(self):
         """Create a socket"""
         try:
@@ -62,7 +61,7 @@ class UR_DASHBOARD():
             print(err)
 
     def get_overall_robot_status(self):
-
+        """Get robot status"""
         self.robot_mode = self.get_robot_mode().upper()
         self.operational_mode = self.get_operational_mode().upper()
         self.safety_status = self.get_safety_status()
@@ -228,7 +227,7 @@ class UR_DASHBOARD():
 
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD("146.137.240.36")
+    robot = UR_DASHBOARD("164.54.116.129")
     # robot.get_overall_robot_status()
     # robot.get_operational_mode()
     # robot.robot_mode()
