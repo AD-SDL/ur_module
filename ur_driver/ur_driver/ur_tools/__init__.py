@@ -1,6 +1,6 @@
 # __all__ = ["gripper_controller", "pipette_controller", "tool_changer_controller", "camera_controller"]
 
-from .gripper_controller import FingerGripperController, HandGripperController, VacuumGripperController
+from .gripper_controller import FingerGripperController, VacuumGripperController
 from .ot_pipette_controller import OTPipetteController
 from .aps_pipette_controller import ApsPipetteController
 from .wm_tool_changer_controller import WMToolChangerController
