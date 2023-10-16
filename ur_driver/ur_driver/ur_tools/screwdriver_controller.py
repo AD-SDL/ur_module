@@ -13,7 +13,7 @@ class ScrewdriverController():
             raise Exception("Failed to receive UR connection!")
         else:
             self.ur_connection == ur_connection    
-        self.interpreter_urp = "/path/to/iterpreter.urp"
+        self.interpreter_urp =  "../../scripts/urp_programs/interpreter_mode.urp"
         self.hostanem = None
         try:
             self.srewdriver = RobotiqScrewdriver(hostname=self.hostname, socket_timeout=5)
@@ -27,3 +27,6 @@ class ScrewdriverController():
         pass
     def update_urp_programs(self):
         pass
+    
+if __name__ == "__main__":
+    screwdrive = ScrewdriverController(hostname="164.54.116.129")
