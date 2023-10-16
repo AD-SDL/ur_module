@@ -78,39 +78,39 @@ class ScrewdriverController():
         """
         Attempts to screws down the screw into the target location
         """
-        target_approach = deepcopy(target)
-        target_approach[2] += 0.02
+
         target_above = deepcopy(target)
-        z_height = 0.15
+        z_height = 0.1
         target_above[2] += z_height
 
         print("Screwing down to the target...")
-        speed_ms = 0.100
+        speed_ms = 0.1
 
         self.ur_connection.movel(target_above,self.accel_radss,self.speed_rads)
         sleep(2)
-        speed_ms = 0.01
-        self.ur_connection.movel(target_approach,self.accel_radss,self.speed_rads)
-        sleep(2)   
 
-        for i in np.arange(0,z_height,0.01):
-            self.screwdriver.drive_clockwise(angle=10)
-            self.ur_connection.translate_tool([0,0,i],0.1,0.1)
+        self.screwdriver.auto_screw(50)
+        # self.ur_connection.movel(target_approach,self.accel_radss,self.speed_rads)
+        # sleep(2)   
+
+        # for i in np.arange(0,z_height,0.01):
+        #     self.screwdriver.drive_clockwise(angle=10)
+            # self.ur_connection.translate_tool([0,0,i],0.1,0.1)
         # TODO: OR try auto screw from the exact height from the surface of the object
 
         # self.ur_connection.movel(target,self.accel_mss,speed_ms)
         # sleep(3)
         
-        self.screwdriver.deactivate_vacuum()
-        self.ur_connection.movel(target_approach,self.accel_mss,speed_ms)
-        sleep(2)
         speed_ms = 0.1
         self.ur_connection.movel(target_above,self.accel_mss,speed_ms)
         sleep(2)
-        if self.screwdriver.is_screw_detected() == "True":
-            print("Screw successfully picked up")
+
+        if self.screwdriver.is_screw_detected() == "False":
+            print("Screw successfully placed")
+            self.screwdriver.deactivate_vacuum()
         else:
-            print("Failed to pick the screw")
+            print("Failed to place the screw")
+
 
 if __name__ == "__main__":
     screwdrive = ScrewdriverController(hostname="164.54.116.129")
