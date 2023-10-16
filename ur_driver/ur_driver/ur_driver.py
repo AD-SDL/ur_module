@@ -47,13 +47,20 @@ class Connection():
         print("Robot connection is closed.")
 
 class UR(UR_DASHBOARD):
-    
-    def __init__(self, hostname:str = "146.137.240.38", PORT: int = 29999):
+    """
+    This is the primary class for UR robots. 
+    It integrates various interfaces to achieve comprehensive control, encompassing robot initialization via the UR dashboard, 
+    robot motion using URx, and the management of robot end-effectors such as grippers, screwdrivers, electronic pipettes, and cameras."    
+    """    
+    def __init__(self, hostname:str = None, PORT: int = 29999):
+        """Constructor for the UR class.
+        :param hostname: Hostname or ip.
+        :param port: Port.
+        """
+
+        if not hostname:
+            raise TypeError("Hostname cannot be None Type!")
         
-        # if not connection:
-        #     raise Exception("Robot connection is not established")
-        # else:
-        #     self.ur = connection
         super().__init__(hostname=hostname, PORT=PORT)
 
         self.hostname = hostname
