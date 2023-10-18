@@ -79,14 +79,6 @@ class UR(UR_DASHBOARD):
         self.robot_current_joint_angles = None
         self.get_movement_state()
         #TODO: get the information of what is the current tool attached to UR. Maybe keep the UR unattached after the tools were used? Run a senity check at the beginning to findout if a tool is connected 
-
-    def get_joint_angles(self):
-        
-        return self.ur_connection.getj()
-    
-    def get_cartesian_coordinates(self):
-        
-        return self.ur_connection.getl()
     
     def get_movement_state(self):
         current_location = self.get_joint_angles()
