@@ -17,13 +17,14 @@ class ScrewdriverController():
         if not ur_connection:
             raise Exception("Failed to receive UR connection!")
         else:
-            self.ur_connection == ur_connection    
+            self.ur_connection = ur_connection
         
         try:
             self.screwdriver = RobotiqScrewdriver(hostname=self.hostname, socket_timeout=5)
         except Exception as err:
             print(err)
-            
+        self.load_interpreter_socket_program()
+
     def check_screwdriver_controls(self):
         pass  
     def get_urp_programs(self):
@@ -37,10 +38,10 @@ class ScrewdriverController():
         Makes sure that the interpreter socket is enabled on the robot PolyScope so that screwdriver commands can be sent over this socket.
         """
         iterpreter_program =  "/programs/interpreter_mode.urp"
-        response = self.ur_connection.load_program("iterpreter_program")
+        response = self.ur_connection.load_program(iterpreter_program)
         if "File not found" in response:
             self.ur_connection.transfer_program(local_path = self.interpreter_urp, ur_path = iterpreter_program)
-            response = self.ur_connection.load_program("iterpreter_program")
+            response = self.ur_connection.load_program(iterpreter_program)
         self.ur_connection.run_program()
 
     def pick_screw(self, screw_loc):
