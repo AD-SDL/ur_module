@@ -81,7 +81,7 @@ class UR(UR_DASHBOARD):
         #TODO: get the information of what is the current tool attached to UR. Maybe keep the UR unattached after the tools were used? Run a senity check at the beginning to findout if a tool is connected 
     
     def get_movement_state(self):
-        current_location = self.get_joint_angles()
+        current_location = self.ur_connection.getj()
         current_location = [ '%.2f' % value for value in current_location] #rounding to 3 digits
         # print(current_location)
         if self.robot_current_joint_angles == current_location:
@@ -233,12 +233,18 @@ if __name__ == "__main__":
     # gripper_controller.gripper.move_and_wait_for_pos(255, 255, 255)
     # robot.place_tool(home,handE_loc)
     # robot.pick_tool(home, screwdriver_loc,payload=3)
+    
     # robot.ur_connection.movej(screw_cap_above_joints,1,1)
     # sleep(1)
     # robot.place_tool(home,screwdriver_loc)
+    # print(robot)
+    # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    # sr.load_interpreter_socket_program()
+    # robot.load_program("")
+    
 
     # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
-    # robot.place_tool(home,screwdriver_loc)
+    robot.place_tool(home,screwdriver_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
