@@ -272,7 +272,11 @@ class RobotiqScrewdriver:
 if __name__ == "__main__":
     tool = RobotiqScrewdriver("164.54.116.129")  # replace with your device's IP
     tool.connect()
+    tool.activate_vacuum()
+    sleep(10)
+    tool.drive_clockwise(rpm=250, angle=3600)
+    sleep(8)
+    tool.deactivate_vacuum()
     # tool.auto_unscrew()
-    # tool.drive_clockwise()
-    # sleep(10)
+    # tool.drive_clockwise()    # sleep(10)
     # tool.drive_counter_clockwise()
