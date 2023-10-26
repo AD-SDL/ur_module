@@ -1,7 +1,11 @@
+import os
+
 from time import sleep
 from copy import deepcopy
 import numpy as np
+
 from .robotiq_screwdriver_driver import RobotiqScrewdriver
+
 class ScrewdriverController():
 
     def __init__(self, hostname:str = None, ur_connection = None):
@@ -12,17 +16,22 @@ class ScrewdriverController():
        
         self.hostname = hostname
         self.ur_connection = None
-        self.interpreter_urp =  "../../scripts/urp_programs/interpreter_mode.urp"
+        current_dir = os.getcwd()
+        index = current_dir.find("ur_module")
+        parent_dir = current_dir[:index+10]
+        self.interpreter_urp =  parent_dir + "/ur_driver/scripts/urp_programs/interpreter_mode.urp"
 
         if not ur_connection:
             raise Exception("Failed to receive UR connection!")
         else:
             self.ur_connection = ur_connection
+            self.ur_connection.ur_connection.set_payload(3)
         
         try:
             self.screwdriver = RobotiqScrewdriver(hostname=self.hostname, socket_timeout=5)
         except Exception as err:
             print(err)
+        
         self.load_interpreter_socket_program()
 
     def check_screwdriver_controls(self):
@@ -43,6 +52,7 @@ class ScrewdriverController():
             self.ur_connection.transfer_program(local_path = self.interpreter_urp, ur_path = iterpreter_program)
             response = self.ur_connection.load_program(iterpreter_program)
         self.ur_connection.run_program()
+        # Bug: Robot powers off after loading the program and needs a reboot. Check loaded program status and  make sure it works before moving to next steps
 
     def pick_screw(self, screw_loc):
         """
