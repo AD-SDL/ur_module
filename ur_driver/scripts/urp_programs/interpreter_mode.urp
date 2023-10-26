@@ -1,4 +1,4 @@
-<URProgram name="interpreter_mode" installation="default" installationRelativePath="default" directory="/programs/usbdisk" createdIn="5.10.0" lastSavedIn="5.13.1" robotSerialNumber="20215300223" createdInPolyscopeProgramVersion="0" lastSavedInPolycopeProgramVersion="2" crcValue="369305048">
+<URProgram name="interpreter_mode" installation="default" installationRelativePath="default" directory="/programs" createdIn="5.10.0" lastSavedIn="5.13.1" robotSerialNumber="20215300223" createdInPolyscopeProgramVersion="0" lastSavedInPolycopeProgramVersion="2" crcValue="369305048">
   <kinematics status="LINEARIZED" validChecksum="true">
     <deltaTheta value="-1.0785946129125701E-7, 0.2545934922421423, 7.15927767684806, -1.13068894858892, 9.917937141626365E-7, 2.895098873550994E-7"/>
     <a value="-1.6145394148543062E-4, -0.23590381854675926, -0.0909428855234324, 9.971523139988527E-5, -1.3195938948948248E-4, 0.0"/>
