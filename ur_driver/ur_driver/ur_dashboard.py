@@ -230,7 +230,7 @@ if __name__ == "__main__":
     robot = UR_DASHBOARD("164.54.116.129")
     robot.get_loaded_program()
     robot.get_program_state()
-    a = robot.load_program("/prt")
+    a = robot.load_program("/programs/interpreter_mode.urp")
     if "File not found" in a:
         print(a)
     # robot.get_overall_robot_status()
