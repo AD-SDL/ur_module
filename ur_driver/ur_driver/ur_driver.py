@@ -238,13 +238,13 @@ if __name__ == "__main__":
     # sleep(1)
     # robot.place_tool(home,screwdriver_loc)
     # print(robot)
-    # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
     # sr.load_interpreter_socket_program()
     # robot.load_program("")
     
 
     # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
-    robot.place_tool(home,screwdriver_loc)
+    # robot.place_tool(home,screwdriver_loc)
     # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
     # print(log)
     # robot.transfer
