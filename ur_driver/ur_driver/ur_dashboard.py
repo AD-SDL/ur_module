@@ -179,7 +179,7 @@ class UR_DASHBOARD():
     def close_popup(self):
         return self.send_command('close popup')
     
-    def transfer_program(self, local_path:str = None, ur_path:str = "/programs/"):
+    def transfer_program(self, local_path:str = None, ur_path:str = "/programs/", user_name:str = "root", user_password:str = "easybot"):
         if not local_path:
             print("Local file was not provided!")
             return
@@ -187,7 +187,7 @@ class UR_DASHBOARD():
             ssh_client = SSHClient()
             ssh_client.load_system_host_keys()
             ssh_client.set_missing_host_key_policy(AutoAddPolicy())
-            ssh_client.connect(hostname = self.IP, username = "root", password = "123", disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})         
+            ssh_client.connect(hostname = self.hostname, username = user_name, password = user_password, disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})         
             with SCPClient(ssh_client.get_transport()) as scp:
                 scp.put(local_path, ur_path)
 
