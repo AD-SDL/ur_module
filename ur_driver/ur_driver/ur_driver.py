@@ -239,6 +239,9 @@ if __name__ == "__main__":
     # robot.place_tool(home,screwdriver_loc)
     # print(robot)
     sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    sleep(2)
+    sr.screwdriver.connect()
+    sr.screwdriver.drive_counter_clockwise(rpm=250, angle=3600)
     # sr.load_interpreter_socket_program()
     # robot.load_program("")
     
