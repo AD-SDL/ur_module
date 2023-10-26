@@ -67,7 +67,7 @@ class RobotiqScrewdriver:
         
         Return (bool): TRUE = The cause of the “ Unhandled errors” is “ Blocked at start” .
         """
-        self.connection.execute_command(" rq_is_blocked_at_start_cause()")
+        self.connection.execute_command("rq_is_blocked_at_start_cause()")
         return self.connection.response
     
     def is_communication_lost(self) -> str:
