@@ -53,6 +53,7 @@ class ScrewdriverController():
             self.ur_connection.transfer_program(local_path = self.interpreter_urp, ur_path = iterpreter_program)
             response = self.ur_connection.load_program(iterpreter_program)
         self.ur_connection.run_program()
+        sleep(2)
         # Bug: Robot powers off after loading the program and needs a reboot. Check loaded program status and  make sure it works before moving to next steps
 
     def pick_screw(self, screw_loc):
@@ -61,18 +62,26 @@ class ScrewdriverController():
         """
 
         screw_above = deepcopy(screw_loc)
-        screw_above[2] += 0.02
+        screw_above[2] += 0.035
+        screw_approach = deepcopy(screw_loc)
+        screw_approach[2] += 0.01
 
         print("Picking up the screw...")
         
-        self.ur_connection.movel(screw_above,1,1)
+        self.ur_connection.ur_connection.movel(screw_above,1,1)
+        # sleep(2)
+        self.ur_connection.ur_connection.movel(screw_approach,0.5,0.5)
+        # sleep(1)
+        self.ur_connection.run_program() #Restart interpreter program
         sleep(2)
-        speed_ms = 0.5
         self.screwdriver.activate_vacuum()
-        sleep(2)    
-        self.ur_connection.movel(screw_loc,0.5,speed_ms)
-        sleep(3)
-        self.ur_connection.movel(screw_above,1,speed_ms)
+        self.screwdriver.auto_screw()
+        sleep(4)    
+        self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(screw_above,0.5,0.5,0,0))
+
+        # self.ur_connection.ur_connection.movel(screw_above,1,0.5)
+        sleep(2)
+        # self.ur_connection.run_program() #Restart interpreter program
         sleep(2)
         if self.screwdriver.is_screw_detected() == "True":
             print("Screw successfully picked up")
@@ -90,17 +99,26 @@ class ScrewdriverController():
 
         print("Screwing down to the target...")
         sleep(1)
-        self.ur_connection.movel(target_above,1,1)
+        # self.ur_connection.ur_connection.movel(target_above,1,1)
+        # self.ur_connection.run_program() #Restart interpreter program
+        self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(target_above,0.5,0.5,0,0))
+        sleep(2)
         self.screwdriver.activate_vacuum()
         self.screwdriver.auto_screw(150)
-        self.ur_connection.movel(target_above,0,5,0,5)
         sleep(2)
+        self.screwdriver.deactivate_vacuum()
+        sleep(1)
+        self.ur_connection.ur_connection.movel(target_above,0.5,0.5)
+        sleep(2)
+        # self.ur_connection.run_program() #Restart interpreter program
+        # sleep(2)
+        print("Screw successfully placed")
 
-        if self.screwdriver.is_screw_detected() == "False":
-            print("Screw successfully placed")
-            self.screwdriver.deactivate_vacuum()
-        else:
-            print("Failed to place the screw")
+        # if self.screwdriver.is_screw_detected() == "False":
+        #     print("Screw successfully placed")
+        #     # self.screwdriver.deactivate_vacuum()
+        # else:
+        #     print("Failed to place the screw")
 
 
 if __name__ == "__main__":
