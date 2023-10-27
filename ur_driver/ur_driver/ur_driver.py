@@ -216,9 +216,8 @@ if __name__ == "__main__":
     handE_loc = [0.3131286590368134, 0.15480163498252172, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    cell_screw = [0.2633927214953586, -0.23490287825490525, 0.4259709581293767, 2.9150802466955033, -1.161696494002206, 0.0011441976323407041]
-    cell_holde_deck_joint_loc = None
-    screw_cap_above_joints = [-0.2830088774310511, -2.032938142816061, -0.24721765518188477, -2.4305912456908167, 1.5672067403793335, -0.7787321249591272]
+    cell_screw = [0.2633927214953586, -0.23490287825490525, 0.4150709581293767, 2.9150802466955033, -1.161696494002206, 0.0011441976323407041]
+    cell_screw_above = [0.2633927214953586, -0.23490287825490525, 0.4250709581293767, 2.9150802466955033, -1.161696494002206, 0.0011441976323407041]
 
     # robot.home(home)
     # robot.pick_tool(home, pipette_loc,payload=1.2)
@@ -238,17 +237,22 @@ if __name__ == "__main__":
     # sleep(1)
     # robot.place_tool(home,screwdriver_loc)
     # print(robot)
-    # robot.home(home)
-    # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    robot.home(home)
+    
+    robot.ur_connection.movel(cell_screw_above,0.5,0.5)
+    sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    sr.screw_down(cell_screw)
     # sleep(2)
-    # print(robot.ur_connection.getl())
-    # robot.ur_connection.translate_tool([0,0,0.05],1,1)
     # sr.screwdriver.connect()
     # sr.screwdriver.activate_vacuum()
-    # sr.screwdriver.auto_screw(rpm=250)
+    # sr.screwdriver.auto_screw(rpm=150)
     # sleep(2)
     # sr.screwdriver.deactivate_vacuum()
-    print(robot.ur_connection.getl())
+    # print(robot.ur_connection.getl())
+    # robot.ur_connection.movel(cell_screw_above,0.5,0.5)
+    robot.home(home)
+
+    # print(robot.ur_connection.getl())
 
     # # sr.screwdriver.activate_vacuum()
     # sr.screwdriver.drive_counter_clockwise(rpm=250, angle=3600)
