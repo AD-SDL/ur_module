@@ -29,6 +29,7 @@ class ScrewdriverController():
         
         try:
             self.screwdriver = RobotiqScrewdriver(hostname=self.hostname, socket_timeout=5)
+            self.screwdriver.connect()
         except Exception as err:
             print(err)
         
@@ -59,26 +60,19 @@ class ScrewdriverController():
         Description: Picks up a new screw.
         """
 
-        screw_approach = deepcopy(screw_loc)
-        screw_approach[2] += 0.02
         screw_above = deepcopy(screw_loc)
-        screw_above[2] += 0.15
+        screw_above[2] += 0.02
 
         print("Picking up the screw...")
-        speed_ms = 0.100
-
-        self.ur_connection.movel(screw_above,self.accel_radss,self.speed_rads)
+        
+        self.ur_connection.movel(screw_above,1,1)
         sleep(2)
-        speed_ms = 0.01
+        speed_ms = 0.5
         self.screwdriver.activate_vacuum()
-        self.ur_connection.movel(screw_approach,self.accel_radss,self.speed_rads)
         sleep(2)    
-        self.ur_connection.movel(screw_loc,self.accel_mss,speed_ms)
+        self.ur_connection.movel(screw_loc,0.5,speed_ms)
         sleep(3)
-        self.ur_connection.movel(screw_approach,self.accel_mss,speed_ms)
-        sleep(2)
-        speed_ms = 0.1
-        self.ur_connection.movel(screw_above,self.accel_mss,speed_ms)
+        self.ur_connection.movel(screw_above,1,speed_ms)
         sleep(2)
         if self.screwdriver.is_screw_detected() == "True":
             print("Screw successfully picked up")
@@ -91,29 +85,15 @@ class ScrewdriverController():
         """
 
         target_above = deepcopy(target)
-        z_height = 0.1
+        z_height = 0.01
         target_above[2] += z_height
 
         print("Screwing down to the target...")
-        speed_ms = 0.1
-
-        self.ur_connection.movel(target_above,self.accel_radss,self.speed_rads)
-        sleep(2)
-
-        self.screwdriver.auto_screw(50)
-        # self.ur_connection.movel(target_approach,self.accel_radss,self.speed_rads)
-        # sleep(2)   
-
-        # for i in np.arange(0,z_height,0.01):
-        #     self.screwdriver.drive_clockwise(angle=10)
-            # self.ur_connection.translate_tool([0,0,i],0.1,0.1)
-        # TODO: OR try auto screw from the exact height from the surface of the object
-
-        # self.ur_connection.movel(target,self.accel_mss,speed_ms)
-        # sleep(3)
-        
-        speed_ms = 0.1
-        self.ur_connection.movel(target_above,self.accel_mss,speed_ms)
+        sleep(1)
+        self.ur_connection.movel(target_above,1,1)
+        self.screwdriver.activate_vacuum()
+        self.screwdriver.auto_screw(150)
+        self.ur_connection.movel(target_above,0,5,0,5)
         sleep(2)
 
         if self.screwdriver.is_screw_detected() == "False":
