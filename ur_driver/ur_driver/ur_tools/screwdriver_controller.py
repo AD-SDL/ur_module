@@ -16,6 +16,8 @@ class ScrewdriverController():
        
         self.hostname = hostname
         self.ur_connection = None
+        self.air_switch_digital_output = 0
+
         current_dir = os.getcwd()
         index = current_dir.find("ur_module")
         parent_dir = current_dir[:index+10]
@@ -74,14 +76,15 @@ class ScrewdriverController():
         # sleep(1)
         self.ur_connection.run_program() #Restart interpreter program
         sleep(2)
+        self.ur_connection.set_digital_out(self.air_switch_digital_output, True)
         self.screwdriver.activate_vacuum()
         self.screwdriver.auto_screw()
         sleep(4)    
-        self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(screw_above,0.5,0.5,0,0))
+        # self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(screw_above,0.5,0.5,0,0))
 
-        # self.ur_connection.ur_connection.movel(screw_above,1,0.5)
+        self.ur_connection.ur_connection.movel(screw_above,1,0.5)
         sleep(2)
-        # self.ur_connection.run_program() #Restart interpreter program
+        self.ur_connection.run_program() #Restart interpreter program
         sleep(2)
         if self.screwdriver.is_screw_detected() == "True":
             print("Screw successfully picked up")
@@ -99,9 +102,9 @@ class ScrewdriverController():
 
         print("Screwing down to the target...")
         sleep(1)
-        # self.ur_connection.ur_connection.movel(target_above,1,1)
-        # self.ur_connection.run_program() #Restart interpreter program
-        self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(target_above,0.5,0.5,0,0))
+        self.ur_connection.ur_connection.movel(target_above,1,1)
+        self.ur_connection.run_program() #Restart interpreter program
+        # self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(target_above,0.5,0.5,0,0))
         sleep(2)
         self.screwdriver.activate_vacuum()
         self.screwdriver.auto_screw(150)
