@@ -216,7 +216,7 @@ if __name__ == "__main__":
     handE_loc = [0.3131286590368134, 0.15480163498252172, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    cell_screw = [0.2633927214953586, -0.23490287825490525, 0.4100709581293767, 2.9150802466955033, -1.161696494002206, 0.0011441976323407041]
+    cell_screw = [0.24928760003017156, -0.24818823185086306, 0.4241303121256892, 3.0389866393855676, -0.7400819447823564, 0.016702468888830247]
     screw_holder = [0.20689856249907082, -0.30748395554908325, 0.39225140260522395, 3.1256340911820044, -0.009252195445917084, 0.026416395536066287]
     # robot.home(home)
     # robot.pick_tool(home, pipette_loc,payload=1.2)
@@ -239,41 +239,18 @@ if __name__ == "__main__":
     # robot.home(home)
     # robot.ur_connection.movel(screw_holder,0.5,0.5)
     # robot.ur_connection.movel(cell_screw_above,0.5,0.5)
-    # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    sr.screwdriver.activate_screwdriver()
+    # sr.screwdriver.connection.execute_command("get_tool_digital_in(0)")
+    # print(sr.screwdriver.connection.response)
     # sr.screwdriver.activate_vacuum()
+
+    sr.pick_screw(screw_holder)
+    sr.screw_down(cell_screw)
     # sleep(2)
-    # sr.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(cell_screw,0.5,0.5,0,0))
 
-    # sr.pick_screw(screw_holder)
-    # sr.screw_down(cell_screw)
-    # sleep(2)
-    # sr.screwdriver.connect()
-    # sr.screwdriver.activate_vacuum()
-    # sr.screwdriver.auto_screw(rpm=150)
-    # sleep(2)
-    # sr.screwdriver.deactivate_vacuum()
-    # print(robot.ur_connection.getl())
-    # robot.ur_connection.movel(cell_screw_above,0.5,0.5)
-    # robot.home(home)
-
-    # print(robot.ur_connection.getl())
-
-    # # sr.screwdriver.activate_vacuum()
-    # sr.screwdriver.drive_counter_clockwise(rpm=250, angle=3600)
-    # sr.load_interpreter_socket_program()
-    # robot.load_program("")
-    
-
-    # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
-    robot.place_tool(home,screwdriver_loc)
-    # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
-    # print(log)
-    # robot.transfer
-    # (robot.plate_exchange_1,robot.plate_exchange_1)
-    # for i in range(1000):
-    #     print(robot.get_movement_state())
-    #     robot.get_overall_robot_status()
-    #     sleep(0.5)
+    # robot.place_tool(home,screwdriver_loc)
+  
     
     robot.ur.disconnect_ur()
 
