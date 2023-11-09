@@ -106,10 +106,12 @@ class ScrewdriverController():
         self.ur_connection.run_program() #Restart interpreter program
         # self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(target_above,0.5,0.5,0,0))
         sleep(2)
+        self.ur_connection.set_digital_out(self.air_switch_digital_output, True)
         self.screwdriver.activate_vacuum()
         self.screwdriver.auto_screw(150)
         sleep(2)
         self.screwdriver.deactivate_vacuum()
+        self.ur_connection.set_digital_out(self.air_switch_digital_output, False)
         sleep(1)
         self.ur_connection.ur_connection.movel(target_above,0.5,0.5)
         sleep(2)
