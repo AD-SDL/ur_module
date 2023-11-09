@@ -51,7 +51,7 @@ class FingerGripperController():
             # GRIPPER SETUP:
             self.gripper = RobotiqGripper()
             print('Connecting to gripper...')
-            self.gripper.connect(self.IP, self.PORT)
+            self.gripper.connect(self.host, self.PORT)
 
         except Exception as err:
             print("Gripper error: ", err)
