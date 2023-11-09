@@ -64,7 +64,7 @@ class ScrewdriverController():
         """
 
         screw_above = deepcopy(screw_loc)
-        screw_above[2] += 0.035
+        screw_above[2] += 0.04
         screw_approach = deepcopy(screw_loc)
         screw_approach[2] += 0.01
 
@@ -81,12 +81,7 @@ class ScrewdriverController():
 
         self.ur_connection.ur_connection.movel(screw_above,1,0.5)
         sleep(2)
-        self.ur_connection.run_program() #Restart interpreter program
-        sleep(2)
-        if self.screwdriver.is_screw_detected() == "True":
-            print("Screw successfully picked up")
-        else:
-            print("Failed to pick the screw")
+
 
     def screw_down(self, target):
         """
@@ -102,7 +97,7 @@ class ScrewdriverController():
         self.ur_connection.ur_connection.movel(target_above,1,1)
         self.ur_connection.ur_connection.set_digital_out(self.air_switch_digital_output, True)
         self.ur_connection.ur_connection.movel(target,1,1)
-
+        sleep(1)
         self.ur_connection.run_program() #Restart interpreter program
         sleep(2)
         self.screwdriver.activate_vacuum()
