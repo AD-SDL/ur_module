@@ -216,13 +216,13 @@ if __name__ == "__main__":
     handE_loc = [0.3131286590368134, 0.15480163498252172, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    cell_screw = [0.24928760003017156, -0.24818823185086306, 0.4241303121256892, 3.0389866393855676, -0.7400819447823564, 0.016702468888830247]
+    cell_screw = [0.24930985075448253, -0.24776717616652696, 0.4201221227946348, 3.039003299245514, -0.7400526434644932, 0.016640327870615954]
     screw_holder = [0.20689856249907082, -0.30748395554908325, 0.39225140260522395, 3.1256340911820044, -0.009252195445917084, 0.026416395536066287]
     # robot.home(home)
     # robot.pick_tool(home, pipette_loc,payload=1.2)
     # robot.ur_connection.movel(target,1,1)
     # sleep(1)
-    # robot.place_tool(home,pipette_loc)
+    # robot.ur_driver/ur_driver/ur_driver.py(home,pipette_loc)
     # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.ur_connection.movel(target,1,1)
     # sleep(1)
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     # sleep(1)
     # robot.place_tool(home,screwdriver_loc)
     # print(robot)
-    # robot.home(home)
+    robot.home(home)
     # robot.ur_connection.movel(screw_holder,0.5,0.5)
     # robot.ur_connection.movel(cell_screw_above,0.5,0.5)
     sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
@@ -247,6 +247,8 @@ if __name__ == "__main__":
 
     sr.pick_screw(screw_holder)
     sr.screw_down(cell_screw)
+    robot.home(home)
+
     # sleep(2)
 
     # robot.place_tool(home,screwdriver_loc)
