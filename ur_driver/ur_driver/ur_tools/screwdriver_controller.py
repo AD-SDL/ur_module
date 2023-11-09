@@ -71,16 +71,13 @@ class ScrewdriverController():
         print("Picking up the screw...")
         
         self.ur_connection.ur_connection.movel(screw_above,1,1)
-        # sleep(2)
         self.ur_connection.ur_connection.movel(screw_approach,0.5,0.5)
-        # sleep(1)
+        self.ur_connection.ur_connection.set_digital_out(self.air_switch_digital_output, True)
         self.ur_connection.run_program() #Restart interpreter program
         sleep(2)
-        self.ur_connection.set_digital_out(self.air_switch_digital_output, True)
         self.screwdriver.activate_vacuum()
         self.screwdriver.auto_screw()
         sleep(4)    
-        # self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(screw_above,0.5,0.5,0,0))
 
         self.ur_connection.ur_connection.movel(screw_above,1,0.5)
         sleep(2)
@@ -97,21 +94,22 @@ class ScrewdriverController():
         """
 
         target_above = deepcopy(target)
-        z_height = 0.01
+        z_height = 0.02
         target_above[2] += z_height
 
         print("Screwing down to the target...")
         sleep(1)
         self.ur_connection.ur_connection.movel(target_above,1,1)
+        self.ur_connection.ur_connection.set_digital_out(self.air_switch_digital_output, True)
+        self.ur_connection.ur_connection.movel(target,1,1)
+
         self.ur_connection.run_program() #Restart interpreter program
-        # self.screwdriver.connection.execute_command("movel(p{},a={},v={},r={})".format(target_above,0.5,0.5,0,0))
         sleep(2)
-        self.ur_connection.set_digital_out(self.air_switch_digital_output, True)
         self.screwdriver.activate_vacuum()
         self.screwdriver.auto_screw(150)
         sleep(2)
         self.screwdriver.deactivate_vacuum()
-        self.ur_connection.set_digital_out(self.air_switch_digital_output, False)
+        self.ur_connection.ur_connection.set_digital_out(self.air_switch_digital_output, False)
         sleep(1)
         self.ur_connection.ur_connection.movel(target_above,0.5,0.5)
         sleep(2)
