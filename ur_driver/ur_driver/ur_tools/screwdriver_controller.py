@@ -104,7 +104,7 @@ class ScrewdriverController():
         self.screwdriver.activate_vacuum()
         self.screwdriver.auto_screw(250)
         sleep(2)
-        self.screwdriver.drive_clockwise(angle=360,rpm=200)
+        self.screwdriver.drive_clockwise(angle=200,rpm=100)
         sleep(2)
         self.screwdriver.deactivate_vacuum()
         self.ur_connection.ur_connection.set_digital_out(self.air_switch_digital_output, False)
