@@ -7,6 +7,7 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 import json
+from math import radians, degrees
 
 from ur_dashboard import UR_DASHBOARD
 from ur_tools import *
@@ -217,31 +218,64 @@ if __name__ == "__main__":
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
     cell_screw = [0.24930985075448253, -0.24776717616652696, 0.4181221227946348, 3.039003299245514, -0.7400526434644932, 0.016640327870615954]
-    screw_holder = [0.20689856249907082, -0.30748395554908325, 0.39225140260522395, 3.1256340911820044, -0.009252195445917084, 0.026416395536066287]
+    screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
+    cell_holder_gripper = [0.3174903285108201, -0.07985718004641483, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
+    gripper_close = 85
     # robot.home(home)
     # robot.pick_tool(home, pipette_loc,payload=1.2)
-    # robot.ur_connection.movel(target,1,1)
-    # sleep(1)
-    # robot.ur_driver/ur_driver/ur_driver.py(home,pipette_loc)
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.ur_connection.movel(target,1,1)
-    # sleep(1)
+
+    
+    # SCREWDRIVING ---------------------------
+    # robot.home(home)
+    robot.pick_tool(home, screwdriver_loc,payload=3)
+    sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    sr.screwdriver.activate_screwdriver()
+    sr.pick_screw(screw_holder)
+    sr.screw_down(cell_screw)
+    # robot.home(home)
+    robot.place_tool(home,screwdriver_loc)
+    #-----------------------------------------
+
+    # GRIPPER ROTATE ---------------------------------------
+    # robot.home(home)
+    robot.pick_tool(home, handE_loc,payload=1.2)
+
     gripper_controller = FingerGripperController(hostname = robot.hostname, ur_connection = robot)
     gripper_controller.connect_gripper()
-    gripper_controller.gripper.move_and_wait_for_pos(255, 255, 255)
-    # robot.place_tool(home,handE_loc)
 
+    #PICK CELL FROM HOLDER
+    gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
+    cell_approach = deepcopy(cell_holder_gripper)
+    cell_approach[1] += 0.05
+    robot.ur_connection.movel(cell_approach,0.6,0.6)
+    robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
+    gripper_controller.gripper.move_and_wait_for_pos(240, 255, 255)
+    robot.ur_connection.movel(cell_approach,0.6,0.6)
+
+    #Rotate cell 360
+    cur_j = robot.ur_connection.getj()
+    rotate_j = cur_j 
+    rotate_j[5] += radians(180) 
+    robot.ur_connection.movej(rotate_j,0.6,0.6)
+
+    cur_l = robot.ur_connection.getl()
+    cell_holder_gripper[3] = cur_l[3]
+    cell_holder_gripper[4] = cur_l[4]
+    cell_holder_gripper[5] = cur_l[5]
+
+    #PLACE CELL INTO HOLDER
+    gripper_controller.gripper.move_and_wait_for_pos(230, 255, 255)
+    cell_approach = deepcopy(cell_holder_gripper)
+    cell_approach[1] += 0.05
+    robot.ur_connection.movel(cell_approach,0.6,0.6)
+    robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
+    gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
+    robot.ur_connection.movel(cell_approach,0.6,0.6)
 
     # robot.home(home)
-    # robot.pick_tool(home, screwdriver_loc,payload=3)
-    # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
-    # sr.screwdriver.activate_screwdriver()
-    # sr.pick_screw(screw_holder)
-    # sr.screw_down(cell_screw)
-    # robot.home(home)
-    # robot.place_tool(home,screwdriver_loc)
-  
-    
+    robot.place_tool(home,handE_loc)
+    # ----------------------------------------
+
     robot.ur.disconnect_ur()
 
 
