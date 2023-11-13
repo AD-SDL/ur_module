@@ -6,7 +6,7 @@ from .robotiq_gripper_driver import RobotiqGripper
 class FingerGripperController():
     
 
-    def __init__(self, hostname:str = "146.137.240.38", port: int = 63352, ur_connection = None):
+    def __init__(self, hostname:str = "146.137.240.38", port: int = 63352, ur = None):
         """
         Constructor for the FingerGripperController class.
 
@@ -17,10 +17,12 @@ class FingerGripperController():
         self.host = hostname
         self.PORT = port
         
-        if not ur_connection:
+        if not ur:
             raise Exception("UR connection is not established")
         else:
-            self.ur = ur_connection
+            self.ur = ur
+            self.robot = self.ur.ur_connection
+            # self.robot.set_payload(1.2)# TODO: Check the actual payload
 
         self.gripper_close = 130 # 0-255 (255 is closed)
         self.griper_open = 0
@@ -80,73 +82,92 @@ class FingerGripperController():
 
         '''Pick up from first goal position'''
 
+        if not pick_goal:
+            raise Exception("Please provide the source loaction")
+        
+        axis = None
+
+        if not approach_axis or approach_axis.lower() == "z":
+            axis = 2
+        elif approach_axis.lower() == "y":
+            axis = 1
+        elif approach_axis.lower() == "-y":
+            axis = 1
+            approach_distance = -approach_distance
+        elif approach_axis.lower() == "x":
+            axis = 0
+        elif approach_axis.lower() == "-x":
+            axis = 0
+            approach_distance = -approach_distance
+
         above_goal = deepcopy(pick_goal)
         above_goal[2] += 0.05
 
         print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
+        # self.robot.movel(self.home, self.acceleration, self.velocity)
+        self.robot.movej(self.home_joint, self.acceleration, self.velocity)
 
         print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
+        # self.robot.movel(self.module_entry, self.acceleration, self.velocity)
+        self.robot.movej(self.module_entry_joint, self.acceleration, self.velocity)
 
         print('Moving to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+        self.robot.movel(above_goal, self.acceleration, self.velocity)
 
         print('Moving to goal position')
-        self.ur.movel(pick_goal, self.acceleration, self.velocity)
+        self.robot.movel(pick_goal, self.acceleration, self.velocity)
 
         print('Closing gripper')
         self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
 
         print('Moving back to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+        self.robot.movel(above_goal, self.acceleration, self.velocity)
 
         print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
+        # self.robot.movel(self.module_entry, self.acceleration, self.velocity)
+        self.robot.movej(self.module_entry_joint, self.acceleration, self.velocity)
 
         print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
+        # self.robot.movel(self.home, self.acceleration, self.velocity)
+        self.robot.movej(self.home_joint, self.acceleration, self.velocity)
 
-    def place(self, place_goal):
+    def place(self, place_goal:list = None, approach_axis:str = "z", approach_distance:float = 0.05):
 
         '''Place down at second goal position'''
+        if not place_goal:
+            raise Exception("Please provide the target loaction")
+        
+        axis = None
+
+        if not approach_axis or approach_axis.lower() == "z":
+            axis = 2
+        elif approach_axis.lower() == "y":
+            axis = 1
+        elif approach_axis.lower() == "-y":
+            axis = 1
+            approach_distance = -approach_distance
+        elif approach_axis.lower() == "x":
+            axis = 0
+        elif approach_axis.lower() == "-x":
+            axis = 0
+            approach_distance = -approach_distance
 
         above_goal = deepcopy(place_goal)
-        above_goal[2] += 0.05
-
-        print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
-
-        print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
+        above_goal[axis] += 0.05
 
         print('Moving to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+        self.robot.movel(above_goal, self.acceleration, self.velocity)
 
         print('Moving to goal position')
-        self.ur.movel(place_goal, self.acceleration, self.velocity)
+        self.robot.movel(place_goal, self.acceleration, self.velocity)
 
         print('Opennig gripper')
         self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
         print('Moving back to above goal position')
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+        self.robot.movel(above_goal, self.acceleration, self.velocity)
 
-        print("Moving to the module entry location")
-        # self.ur.movel(self.module_entry, self.acceleration, self.velocity)
-        self.ur.movej(self.module_entry_joint, self.acceleration, self.velocity)
-
-        print('Moving to home position')
-        # self.ur.movel(self.home, self.acceleration, self.velocity)
-        self.ur.movej(self.home_joint, self.acceleration, self.velocity)
-
-
+ 
 class VacuumGripperController():
     
 
