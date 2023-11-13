@@ -76,7 +76,7 @@ class FingerGripperController():
         else:
             print("Gripper conenction is closed")
             
-    def pick(self, pick_goal):
+    def pick(self, pick_goal:list = None, approach_axis:str = "z", approach_distance:float = 0.05):
 
         '''Pick up from first goal position'''
 
