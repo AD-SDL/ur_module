@@ -129,12 +129,12 @@ class UR(UR_DASHBOARD):
 
     def gripper_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
         '''
-        Make a screw transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
+        Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
         ''' 
         if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
         
-        gripper_controller = FingerGripperController(hostname = self.hostname, ur_connection = self.ur_connection)
+        gripper_controller = FingerGripperController(hostname = self.hostname, ur_connection = self)
         gripper_controller.connect_gripper()
         gripper_controller.pick(source)
         gripper_controller.place(target)
@@ -143,11 +143,17 @@ class UR(UR_DASHBOARD):
 
     def screwdriver_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
         '''
-        Make a transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
+        Make a screw transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
         ''' 
         if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
-
+        robot.pick_tool(home, screwdriver_loc,payload=3)
+        sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+        sr.screwdriver.activate_screwdriver()
+        sr.pick_screw(screw_holder)
+        sr.screw_down(cell_screw)
+        # robot.home(home)
+        robot.place_tool(home,screwdriver_loc)
     def pipette_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
         '''
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
