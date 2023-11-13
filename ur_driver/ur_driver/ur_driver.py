@@ -107,20 +107,7 @@ class UR(UR_DASHBOARD):
         sleep(3.5)
 
         print("Robot homed")
-
-    def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
-        '''
-        Make a transfer using the finger gripper
-        ''' 
-        gripper_controller = FingerGripperController(hostname = self.hostname, ur_connection = self.ur_connection)
-        gripper_controller.connect_gripper()
-        # robot.ur_connection.set_payload(2, (0, 0, 0.1))
-
-        gripper_controller.pick(pos1)
-        gripper_controller.place(pos2)
-        print('Finished transfer')
-        gripper_controller.disconnect_gripper()
-
+  
     def pick_tool(self, home, tool_loc, docking_axis = "y", payload = 0.12):
         """
             Picks up a tool using the given tool location
@@ -138,12 +125,40 @@ class UR(UR_DASHBOARD):
         wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
         self.home(home)
         wingman_tool.place_tool()
-        self.home(home)    
-    
+        self.home(home)  
+
+    def gripper_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
+        '''
+        Make a screw transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
+        ''' 
+        if not source or not target:
+            raise Exception("Please provide both the source and target loactions to make a transfer")
+        
+        gripper_controller = FingerGripperController(hostname = self.hostname, ur_connection = self.ur_connection)
+        gripper_controller.connect_gripper()
+        gripper_controller.pick(source)
+        gripper_controller.place(target)
+        print('Finished transfer')
+        gripper_controller.disconnect_gripper()
+
+    def screwdriver_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
+        '''
+        Make a transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
+        ''' 
+        if not source or not target:
+            raise Exception("Please provide both the source and target loactions to make a transfer")
+
+    def pipette_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
+        '''
+        Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
+        ''' 
+        if not source or not target:
+            raise Exception("Please provide both the source and target loactions to make a transfer")
+   
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
 
-        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.hostname)
+        pipette = OTPipetteController(ur_connection = self.ur_connection, IP = self.hostname)
         pipette.connect_pipette()
 
         self.home(home)
@@ -159,7 +174,7 @@ class UR(UR_DASHBOARD):
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
 
-        """"""
+        """Transfers the urp programs onto the polyscope and initiates them"""
         if not program_name:
             raise ValueError("Provide program name!")
         
