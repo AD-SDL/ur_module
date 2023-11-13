@@ -6,25 +6,21 @@ import epics
 class WMToolChangerController():
     """Initilizes the WMToolChangerController to pick and place tools with the Wingman tool changers"""    
     
-    def __init__(self, tool_location:list = None, docking_axis:str = "-x", ur_connection = None):
+    def __init__(self, tool_location:list = None, docking_axis:str = "-x", ur = None):
         """
         """
-        if not ur_connection:
+        if not ur:
             raise AttributeError("Ur connection is not provided")
         
-        self.robot = ur_connection
+        self.robot = ur.ur_connection
         self.current_tool = None
         self.axis = docking_axis
-
-        self.tool_dock_l = [-0.30533163571362804, 0.293042569973924, 0.234306520730365, -3.1414391023029085, 0.014564845435757333, 0.0040377171549781125]
-        self.tool_dock_j = [2.692000389099121, -2.031496664086813, -1.3187065124511719, -1.3587687772563477, -4.709893051777975, 1.129366159439087]
-        # self.tool_above_j = [2.691868543624878, -2.01027836422109, -1.1145529747009277, -1.584151407281393, -4.710240427647726, 1.1290664672851562]
-        # self.tool_above_l = [-0.30521326850056485, 0.29304507597600077, 0.2842680699923231, -3.141487582034991, 0.014625666717814146, 0.0039104466707534005]
-
-        if tool_location:
-            self.location = tool_location
+  
+        if not tool_location:
+            raise Exception("Please provide a target location for the tool")
         else:
-            self.location = self.tool_dock_l
+            self.location = tool_location
+
 
         self.tool_above = deepcopy(self.location)
         self.tool_above[2] += 0.05
