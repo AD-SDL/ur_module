@@ -134,12 +134,16 @@ class UR(UR_DASHBOARD):
         if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
         
+        # robot.pick_tool(home, gripper_loc,payload=1.2)
+        self.home(home)
         gripper_controller = FingerGripperController(hostname = self.hostname, ur_connection = self)
         gripper_controller.connect_gripper()
         gripper_controller.pick(source)
         gripper_controller.place(target)
         print('Finished transfer')
         gripper_controller.disconnect_gripper()
+        self.home(home)
+        # robot.place_tool(home, gripper_loc,payload=1.2)
 
     def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         '''
@@ -147,9 +151,11 @@ class UR(UR_DASHBOARD):
         ''' 
 
         # robot.pick_tool(home, screwdriver_loc,payload=3)
+        self.home(home)
         sr = ScrewdriverController(hostname=self.hostname, ur=self)
         sr.screwdriver.activate_screwdriver()
-        sr.transfer(source=source,target=target,source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
+        sr.transfer(source=source, target=target, source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
+        self.home(home)
         # robot.place_tool(home,screwdriver_loc)
 
     def pipette_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
