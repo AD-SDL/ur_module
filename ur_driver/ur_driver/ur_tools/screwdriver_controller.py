@@ -146,12 +146,12 @@ class ScrewdriverController():
         # else:
         #     print("Failed to place the screw")
 
-    def transfer(self, source:list = None, target:list = None, approach_axis:str = None, source_approach_dist:float = None, target_approach_dist:float = None) -> None:
+    def transfer(self, source:list = None, target:list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_dist:float = None, target_approach_dist:float = None) -> None:
         """Handles a screw transfer"""
-        
-        self.pick_screw(screw_loc = source, approach_distance = source_approach_dist)
+
+        self.pick_screw(screw_loc = source, approach_axis = source_approach_axis, approach_distance = source_approach_dist)
         print("Pick screw completed")
-        self.screw_down(target=target, approach_distance = target_approach_dist)
+        self.screw_down(target=target, approach_axis = target_approach_axis, approach_distance = target_approach_dist)
         print("Place screw completed")
 
 if __name__ == "__main__":

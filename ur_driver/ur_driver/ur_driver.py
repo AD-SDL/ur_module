@@ -127,7 +127,7 @@ class UR(UR_DASHBOARD):
         wingman_tool.place_tool()
         self.home(home)  
 
-    def gripper_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
+    def gripper_transfer(self, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, approach_distance: int = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         '''
         Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
         ''' 
@@ -141,16 +141,16 @@ class UR(UR_DASHBOARD):
         print('Finished transfer')
         gripper_controller.disconnect_gripper()
 
-    def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
+    def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         '''
         Make a screw transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
         ''' 
 
-        robot.pick_tool(home, screwdriver_loc,payload=3)
-        sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+        # robot.pick_tool(home, screwdriver_loc,payload=3)
+        sr = ScrewdriverController(hostname=self.hostname, ur=self)
         sr.screwdriver.activate_screwdriver()
-        sr.transfer(source=source,target=target,approach_axis=approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
-        robot.place_tool(home,screwdriver_loc)
+        sr.transfer(source=source,target=target,source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
+        # robot.place_tool(home,screwdriver_loc)
 
     def pipette_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
         '''
@@ -246,13 +246,13 @@ if __name__ == "__main__":
     
     # SCREWDRIVING ---------------------------
     # robot.home(home)
-    robot.pick_tool(home, screwdriver_loc,payload=3)
-    sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
-    sr.screwdriver.activate_screwdriver()
-    sr.pick_screw(screw_holder)
-    sr.screw_down(cell_screw)
+    # robot.pick_tool(home, screwdriver_loc,payload=3)
+    # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
+    # sr.screwdriver.activate_screwdriver()
+    # sr.pick_screw(screw_holder)
+    # sr.screw_down(cell_screw)
     # robot.home(home)
-    robot.place_tool(home,screwdriver_loc)
+    # robot.place_tool(home,screwdriver_loc)
     #-----------------------------------------
 
     # GRIPPER ROTATE ---------------------------------------
