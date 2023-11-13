@@ -51,15 +51,26 @@ class ScrewdriverController():
         sleep(2)
         # Bug: Robot powers off after loading the program and needs a reboot. Check loaded program status and  make sure it works before moving to next steps
 
-    def pick_screw(self, screw_loc:list = None, approach_height:float = 0.04):
+    def pick_screw(self, screw_loc:list = None, approach_axis:str = "z", approach_distance:float = 0.04):
         """
         Description: Picks up a new screw.
         """
+        axis = None
+
+        if not screw_loc:
+            raise Exception("Please provide the source and target loaction")
+        
+        if not approach_axis or approach_axis.lower() == "z":
+            axis = 2
+        elif approach_axis.lower() == "y":
+            axis = 1
+        elif approach_axis.lower() == "x":
+            axis = 0
 
         screw_above = deepcopy(screw_loc)
-        screw_above[2] += approach_height
+        screw_above[axis] += approach_distance
         screw_approach = deepcopy(screw_loc)
-        screw_approach[2] += 0.01
+        screw_approach[axis] += 0.01
 
         print("Picking up the screw...")
         
@@ -74,13 +85,15 @@ class ScrewdriverController():
         self.robot.movel(screw_above,1,0.5)
         sleep(2)
 
-    def screw_down(self, target:list = None, approach_height:float = 0.02):
+    def screw_down(self, target:list = None, approach_axis:str = "z", approach_distance:float = 0.02):
         """
         Attempts to screws down the screw into the target location
         """
+        if not target:
+            raise Exception("Please provide the target loaction")
 
         target_above = deepcopy(target)
-        z_height = approach_height
+        z_height = approach_distance
         target_above[2] += z_height
 
         print("Screwing down to the target...")
@@ -112,6 +125,10 @@ class ScrewdriverController():
         # else:
         #     print("Failed to place the screw")
 
-    def transfer(self, source, target, )
+    def transfer(self, source:list = None, target:list = None, approach_axis:str = None, source_approach_dist:float = None, target_approach_dist:float = None) -> None:
+
+        self.pick_screw(screw_loc = source, approach_distance = source_approach_dist)
+        self.screw_down(target=target, approach_distance = target_approach_dist)
+
 if __name__ == "__main__":
     screwdrive = ScrewdriverController(hostname="164.54.116.129")
