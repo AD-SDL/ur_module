@@ -56,7 +56,7 @@ class ScrewdriverController():
         Description: Picks up a new screw.
         """
         if not screw_loc:
-            raise Exception("Please provide the source and target loaction")
+            raise Exception("Please provide the source loaction")
         
         axis = None
 
