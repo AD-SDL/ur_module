@@ -50,13 +50,16 @@ class ScrewdriverController():
         self.ur_dashboard.run_program()
         sleep(2)
 
-    def pick_screw(self, screw_loc:list = None, approach_axis:str = "z", approach_distance:float = 0.02):
+    def pick_screw(self, screw_loc:list = None, approach_axis:str = None, approach_distance:float = None):
         """
         Description: Picks up a new screw.
         """
         if not screw_loc:
             raise Exception("Please provide the source loaction")
         
+        if not approach_distance:
+            approach_distance = 0.02
+
         axis = None
 
         if not approach_axis or approach_axis.lower() == "z":
@@ -90,13 +93,16 @@ class ScrewdriverController():
         self.ur.movel(screw_above,1,0.5)
         sleep(2)
 
-    def screw_down(self, target:list = None, approach_axis:str = "z", approach_distance:float = 0.02):
+    def place_screw(self, target:list = None, approach_axis:str = None, approach_distance:float = None):
         """
         Attempts to screws down the screw into the target location
         """
         if not target:
             raise Exception("Please provide the target loaction")
         
+        if not approach_distance:
+            approach_distance = 0.02
+
         axis = None
 
         if not approach_axis or approach_axis.lower() == "z":
@@ -113,9 +119,10 @@ class ScrewdriverController():
             approach_distance = -approach_distance
 
         target_above = deepcopy(target)
-        target_above[axis] += approach_distance
 
-        print("Screwing down to the target...")
+        target_above[axis] += approach_distance
+ 
+        print("Placing the screw to the target...")
         sleep(1)
         self.ur.movel(target_above,1,1)
         self.ur.set_digital_out(self.air_switch_digital_output, True)
@@ -149,7 +156,7 @@ class ScrewdriverController():
 
         self.pick_screw(screw_loc = source, approach_axis = source_approach_axis, approach_distance = source_approach_dist)
         print("Pick screw completed")
-        self.screw_down(target=target, approach_axis = target_approach_axis, approach_distance = target_approach_dist)
+        self.place_screw(target=target, approach_axis = target_approach_axis, approach_distance = target_approach_dist)
         print("Place screw completed")
 
 if __name__ == "__main__":
