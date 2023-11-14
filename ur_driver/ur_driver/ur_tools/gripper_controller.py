@@ -101,15 +101,7 @@ class FingerGripperController():
             approach_distance = -approach_distance
 
         above_goal = deepcopy(pick_goal)
-        above_goal[2] += 0.05
-
-        print('Moving to home position')
-        # self.robot.movel(self.home, self.acceleration, self.velocity)
-        self.robot.movej(self.home_joint, self.acceleration, self.velocity)
-
-        print("Moving to the module entry location")
-        # self.robot.movel(self.module_entry, self.acceleration, self.velocity)
-        self.robot.movej(self.module_entry_joint, self.acceleration, self.velocity)
+        above_goal[axis] += approach_distance
 
         print('Moving to above goal position')
         self.robot.movel(above_goal, self.acceleration, self.velocity)
@@ -123,13 +115,6 @@ class FingerGripperController():
         print('Moving back to above goal position')
         self.robot.movel(above_goal, self.acceleration, self.velocity)
 
-        print("Moving to the module entry location")
-        # self.robot.movel(self.module_entry, self.acceleration, self.velocity)
-        self.robot.movej(self.module_entry_joint, self.acceleration, self.velocity)
-
-        print('Moving to home position')
-        # self.robot.movel(self.home, self.acceleration, self.velocity)
-        self.robot.movej(self.home_joint, self.acceleration, self.velocity)
 
     def place(self, place_goal:list = None, approach_axis:str = "z", approach_distance:float = 0.05):
 
@@ -153,7 +138,7 @@ class FingerGripperController():
             approach_distance = -approach_distance
 
         above_goal = deepcopy(place_goal)
-        above_goal[axis] += 0.05
+        above_goal[axis] += approach_distance
 
         print('Moving to above goal position')
         self.robot.movel(above_goal, self.acceleration, self.velocity)
@@ -169,10 +154,10 @@ class FingerGripperController():
 
     def transfer(self, source:list = None, target:list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         """Handles the transfer request"""
-        
-        self.pick(pick_goal=source, approach_axis= source_approach_axis, approach_distance=source_approach_distance)
+
+        self.pick(pick_goal = source, approach_axis = source_approach_axis, approach_distance = source_approach_distance)
         print("Pick up completed")
-        self.place(place_goal=target, approach_axis=target_approach_axis, approach_distance= target_approach_distance)
+        self.place(place_goal = target, approach_axis = target_approach_axis, approach_distance = target_approach_distance)
         print("Place completed")
 
 class VacuumGripperController():
