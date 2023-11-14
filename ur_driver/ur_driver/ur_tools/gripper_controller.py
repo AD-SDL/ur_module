@@ -26,7 +26,7 @@ class FingerGripperController():
         self.gripper_close = 130 # 0-255 (255 is closed)
         self.gripper_open = 0
         self.gripper_speed = 150 # 0-255
-        self.gripper_force = 0 # 0-255
+        self.gripper_force = 50 # 0-255
 
         self.acceleration = 0.7
         self.velocity = 0.7
@@ -83,6 +83,7 @@ class FingerGripperController():
             self.gripper_speed = speed
 
         self.gripper.move_and_wait_for_pos(self.gripper_open, self.gripper_speed, self.gripper_force)
+        sleep(0.5)
   
     def close_gripper(self, pose:float = None, speed:float = None, force:float = None) -> None:
         """Closes the gripper using pose, speed and force variables"""
@@ -94,7 +95,8 @@ class FingerGripperController():
             self.gripper_speed = speed
 
         self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
-
+        sleep(0.5)
+        
     def pick(self, pick_goal:list = None, approach_axis:str = None, approach_distance:float = None):
 
         '''Pick up from first goal position'''

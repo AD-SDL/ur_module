@@ -262,7 +262,7 @@ if __name__ == "__main__":
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
     cell_screw = [0.24930985075448253, -0.24776717616652696, 0.4181221227946348, 3.039003299245514, -0.7400526434644932, 0.016640327870615954]
     screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
-    cell_holder_gripper = [0.3174903285108201, -0.07985718004641483, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
+    cell_holder_gripper = [0.3174903285108201, -0.0865718004641483, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
     
     gripper_close = 85
 
@@ -277,9 +277,9 @@ if __name__ == "__main__":
     #-----------------------------------------
 
     # GRIPPER ROTATE ---------------------------------------
-    robot.pick_tool(home, handE_loc,payload=1.2)
+    # robot.pick_tool(home, handE_loc,payload=1.2)
     robot.gripper_transfer(source = cell_holder_gripper, target = cell_holder_gripper, source_approach_axis="y", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.place_tool(home, handE_loc)
+    # robot.place_tool(home, handE_loc)
     #PICK CELL FROM HOLDER
     # gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
     # cell_approach = deepcopy(cell_holder_gripper)
