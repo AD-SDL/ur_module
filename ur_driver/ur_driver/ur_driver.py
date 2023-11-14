@@ -184,6 +184,7 @@ class UR(UR_DASHBOARD):
             raise Exception("Please provide both the source and target loactions to make a transfer")
         self.home(home)
         
+        # TODO: Need to handle the errors in either her or within the controller classes
         try:
             pipette = TricontinentPipetteController(hostname=self.hostname, ur=self)
         except Exception as activation_err:

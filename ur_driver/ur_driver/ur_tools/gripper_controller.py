@@ -38,6 +38,8 @@ class FingerGripperController():
         self.blend_radius_m = 0.001
         self.ref_frame = [0,0,0,0,0,0]
 
+        self.connect_gripper()
+
     def connect_gripper(self):
         """
         Connect to the gripper
@@ -49,6 +51,7 @@ class FingerGripperController():
             self.gripper.connect(hostname = self.host, port = self.PORT)
         except Exception as err:
             print("Gripper error: ", err)
+            
 
         else:
             if self.gripper.is_active():

@@ -37,7 +37,7 @@ class ScrewdriverController():
             print(err)
         
         self.load_interpreter_socket_program()
-
+        
     def load_interpreter_socket_program(self):
         """
         Makes sure that the interpreter socket is enabled on the robot PolyScope so that screwdriver commands can be sent over this socket.
