@@ -127,7 +127,7 @@ class UR(UR_DASHBOARD):
         wingman_tool.place_tool()
         self.home(home)  
 
-    def gripper_transfer(self, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, approach_distance: int = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
+    def gripper_transfer(self, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
         '''
         Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
         ''' 
@@ -136,13 +136,19 @@ class UR(UR_DASHBOARD):
         
         # robot.pick_tool(home, gripper_loc,payload=1.2)
         self.home(home)
-        gripper_controller = FingerGripperController(hostname = self.hostname, ur_connection = self)
+        gripper_controller = FingerGripperController(hostname = self.hostname, ur = self)
         gripper_controller.connect_gripper()
-        gripper_controller.pick(source)
-        gripper_controller.place(target)
+
+        if gripper_open:
+            gripper_controller.griper_open = gripper_open
+        if gripper_close:
+            gripper_controller.gripper_close = gripper_close
+
+        gripper_controller.transfer(source = source, target = target,source_approach_axis = source_approach_axis, target_approach_axis = target_approach_axis, source_approach_distance = source_approach_distance, target_approach_distance = target_approach_distance)
         print('Finished transfer')
-        gripper_controller.disconnect_gripper()
         self.home(home)
+        gripper_controller.disconnect_gripper()
+
         # robot.place_tool(home, gripper_loc,payload=1.2)
 
     def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
@@ -156,6 +162,7 @@ class UR(UR_DASHBOARD):
         sr.screwdriver.activate_screwdriver()
         sr.transfer(source=source, target=target, source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
         self.home(home)
+        sr.screwdriver.disconnect()
         # robot.place_tool(home,screwdriver_loc)
 
     def pipette_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
@@ -214,18 +221,10 @@ class UR(UR_DASHBOARD):
                 ready_status_count = 0
             sleep(3)
 
-        #TODO: FIX the output loggings 
-
-        # if "STOPPED" in program_state:       
         program_log = {"output_code":"0", "output_msg": "Successfully finished " + program_name, "output_log": "seconds_elapsed:" + str(time_elapsed)}
-        # elif "PAUSED" in program_state:
-            # program_log = {"output_code":"-1", "output_msg": "Failed running: " + program_name, "output_log": program_err}
-        # else:
-            # program_log = {"output_code":"-1", "output_msg": "Unkown program state:  " + program_name, "output_log": program_state}
 
         return program_log
-
-
+    
 if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
@@ -245,7 +244,9 @@ if __name__ == "__main__":
     cell_screw = [0.24930985075448253, -0.24776717616652696, 0.4181221227946348, 3.039003299245514, -0.7400526434644932, 0.016640327870615954]
     screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
     cell_holder_gripper = [0.3174903285108201, -0.07985718004641483, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
+    
     gripper_close = 85
+
     # robot.home(home)
     # robot.pick_tool(home, pipette_loc,payload=1.2)
 
@@ -263,42 +264,42 @@ if __name__ == "__main__":
 
     # GRIPPER ROTATE ---------------------------------------
     # robot.home(home)
-    robot.pick_tool(home, handE_loc,payload=1.2)
+    # robot.pick_tool(home, handE_loc,payload=1.2)
 
-    gripper_controller = FingerGripperController(hostname = robot.hostname, ur_connection = robot)
-    gripper_controller.connect_gripper()
+    # gripper_controller = FingerGripperController(hostname = robot.hostname, ur_connection = robot)
+    # gripper_controller.connect_gripper()
 
     #PICK CELL FROM HOLDER
-    gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
-    cell_approach = deepcopy(cell_holder_gripper)
-    cell_approach[1] += 0.05
-    robot.ur_connection.movel(cell_approach,0.6,0.6)
-    robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
-    gripper_controller.gripper.move_and_wait_for_pos(240, 255, 255)
-    robot.ur_connection.movel(cell_approach,0.6,0.6)
+    # gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
+    # cell_approach = deepcopy(cell_holder_gripper)
+    # cell_approach[1] += 0.05
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
+    # robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
+    # gripper_controller.gripper.move_and_wait_for_pos(240, 255, 255)
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
 
     #Rotate cell 360
-    cur_j = robot.ur_connection.getj()
-    rotate_j = cur_j 
-    rotate_j[5] += radians(180) 
-    robot.ur_connection.movej(rotate_j,0.6,0.6)
+    # cur_j = robot.ur_connection.getj()
+    # rotate_j = cur_j 
+    # rotate_j[5] += radians(180) 
+    # robot.ur_connection.movej(rotate_j,0.6,0.6)
 
-    cur_l = robot.ur_connection.getl()
-    cell_holder_gripper[3] = cur_l[3]
-    cell_holder_gripper[4] = cur_l[4]
-    cell_holder_gripper[5] = cur_l[5]
+    # cur_l = robot.ur_connection.getl()
+    # cell_holder_gripper[3] = cur_l[3]
+    # cell_holder_gripper[4] = cur_l[4]
+    # cell_holder_gripper[5] = cur_l[5]
 
     #PLACE CELL INTO HOLDER
-    gripper_controller.gripper.move_and_wait_for_pos(230, 255, 255)
-    cell_approach = deepcopy(cell_holder_gripper)
-    cell_approach[1] += 0.05
-    robot.ur_connection.movel(cell_approach,0.6,0.6)
-    robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
-    gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
-    robot.ur_connection.movel(cell_approach,0.6,0.6)
+    # gripper_controller.gripper.move_and_wait_for_pos(230, 255, 255)
+    # cell_approach = deepcopy(cell_holder_gripper)
+    # cell_approach[1] += 0.05
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
+    # robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
+    # gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
 
     # robot.home(home)
-    robot.place_tool(home,handE_loc)
+    # robot.place_tool(home,handE_loc)
     # ----------------------------------------
 
     robot.ur.disconnect_ur()
