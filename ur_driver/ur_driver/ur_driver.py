@@ -271,25 +271,15 @@ if __name__ == "__main__":
 
     
     # SCREWDRIVING ---------------------------
-    # robot.home(home)
     # robot.pick_tool(home, screwdriver_loc,payload=3)
-    robot.screwdriver_transfer(home=home,source=screw_holder,target=cell_screw, source_approach_distance=0.04)
-
-    # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
-    # sr.screwdriver.activate_screwdriver()
-    # sr.pick_screw(screw_holder)
-    # sr.screw_down(cell_screw)
-    # robot.home(home)
-    robot.place_tool(home,screwdriver_loc)
+    # robot.screwdriver_transfer(home=home,source=screw_holder,target=cell_screw, source_approach_distance=0.04)
+    # robot.place_tool(home,screwdriver_loc)
     #-----------------------------------------
 
     # GRIPPER ROTATE ---------------------------------------
-    # robot.home(home)
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-
-    # gripper_controller = FingerGripperController(hostname = robot.hostname, ur_connection = robot)
-    # gripper_controller.connect_gripper()
-
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.gripper_transfer(source = cell_holder_gripper, target = cell_holder_gripper, gripper_open = 190, gripper_close = 240)
+    robot.place_tool(home, handE_loc)
     #PICK CELL FROM HOLDER
     # gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
     # cell_approach = deepcopy(cell_holder_gripper)

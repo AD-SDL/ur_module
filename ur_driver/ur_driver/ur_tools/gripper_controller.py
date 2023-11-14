@@ -72,14 +72,39 @@ class FingerGripperController():
 
         else:
             print("Gripper conenction is closed")
-            
-    def pick(self, pick_goal:list = None, approach_axis:str = "z", approach_distance:float = 0.05):
+
+    def open_gripper(self, pose:float = None, speed:float = None, force:float = None) -> None:
+        """Opens the gripper using pose, speed and force variables"""
+        if pose:
+            self.griper_open = pose
+        if force:
+            self.gripper_force = force
+        if speed:
+            self.gripper_speed = speed
+
+        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
+  
+    def close_gripper(self, pose:float = None, speed:float = None, force:float = None) -> None:
+        """Closes the gripper using pose, speed and force variables"""
+        if pose:
+            self.gripper_close = pose
+        if force:
+            self.gripper_force = force
+        if speed:
+            self.gripper_speed = speed
+
+        self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
+
+    def pick(self, pick_goal:list = None, approach_axis:str = None, approach_distance:float = None):
 
         '''Pick up from first goal position'''
 
         if not pick_goal:
             raise Exception("Please provide the source loaction")
         
+        if not approach_distance:
+            approach_distance = 0.05
+
         axis = None
 
         if not approach_axis or approach_axis.lower() == "z":
@@ -111,11 +136,14 @@ class FingerGripperController():
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
 
-    def place(self, place_goal:list = None, approach_axis:str = "z", approach_distance:float = 0.05):
+    def place(self, place_goal:list = None, approach_axis:str = None, approach_distance:float = None):
 
         '''Place down at second goal position'''
         if not place_goal:
             raise Exception("Please provide the target loaction")
+        
+        if not approach_distance:
+            approach_distance = 0.05
         
         axis = None
 
