@@ -113,8 +113,7 @@ class ScrewdriverController():
             approach_distance = -approach_distance
 
         target_above = deepcopy(target)
-        z_height = approach_distance
-        target_above[axis] += z_height
+        target_above[axis] += approach_distance
 
         print("Screwing down to the target...")
         sleep(1)
