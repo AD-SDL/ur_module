@@ -5,7 +5,7 @@ from .pipette_driver import PipetteDriver
 
 class TricontinentPipetteController():
 
-    def __init__(self, ur_connection = None, IP = None):
+    def __init__(self, hostname = None, ur = None):
         """
         Initializes the PipetteController class.
         
@@ -14,12 +14,13 @@ class TricontinentPipetteController():
         - ur_connection: The connection object for the Universal Robot (UR) robot.
         """
 
-        self.IP = IP
+        self.hostname = hostname
 
-        if not ur_connection:
+        if not ur:
             raise Exception("UR connection is not established")
         else:
-            self.ur = ur_connection
+            self.ur = ur
+            self.robot = self.ur.ur_connection
 
         self.acceleration = 0.5
         self.velocity = 0.5
@@ -44,7 +45,7 @@ class TricontinentPipetteController():
             # Establishing a connection with the pipette on RS485 comminication
             self.pipette = PipetteDriver()
             comm_setting = self.pipette._comm_setting
-            self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
+            self.robot.set_tool_communication(baud_rate=comm_setting["baud_rate"],
                                           parity=comm_setting["parity"],
                                           stop_bits=comm_setting["stop_bits"],
                                           rx_idle_chars=comm_setting["rx_idle_chars"],
@@ -86,17 +87,17 @@ class TricontinentPipetteController():
         print("Picking up the first pipette tip...")
         speed_ms = 0.100
 
-        self.ur.movel(tip_above,self.accel_radss,self.speed_rads,0,0)
+        self.robot.movel(tip_above,self.accel_radss,self.speed_rads,0,0)
         sleep(2)
         speed_ms = 0.01
-        self.ur.movel(tip_approach,self.accel_radss,self.speed_rads,0,0)
+        self.robot.movel(tip_approach,self.accel_radss,self.speed_rads,0,0)
         sleep(2)    
-        self.ur.movel(tip_loc,self.accel_mss,speed_ms,0,0)
+        self.robot.movel(tip_loc,self.accel_mss,speed_ms,0,0)
         sleep(3)
-        self.ur.movel(tip_approach,self.accel_mss,speed_ms,0,0)
+        self.robot.movel(tip_approach,self.accel_mss,speed_ms,0,0)
         sleep(2)
         speed_ms = 0.1
-        self.ur.movel(tip_above,self.accel_mss,speed_ms,0,0)
+        self.robot.movel(tip_above,self.accel_mss,speed_ms,0,0)
         sleep(2)
         print("Pipette tip successfully picked up")
 
@@ -116,13 +117,13 @@ class TricontinentPipetteController():
         sample_above = deepcopy(sample_loc)
         sample_above[2] += 0.1
 
-        self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
-        self.ur.movel(sample_loc,self.accel_mss,speed_ms)
+        self.robot.movel(sample_above,self.accel_mss,self.speed_ms)
+        self.robot.movel(sample_loc,self.accel_mss,speed_ms)
 
         # ASPIRATE FIRST SAMPLE
         self.pipette.aspirate(vol=25)
         sleep(2)
-        self.ur.movel(sample_above,self.accel_mss,speed_ms)
+        self.robot.movel(sample_above,self.accel_mss,speed_ms)
 
     def create_droplet(self, droplet_loc):
         """
@@ -134,14 +135,14 @@ class TricontinentPipetteController():
         print("Creating a droplet...")
         droplet_front = deepcopy(droplet_loc)
         droplet_front[1] += 0.1
-        self.ur.movel(droplet_front,self.accel_mss,self.speed_ms)
-        self.ur.movel(droplet_loc,self.accel_mss,self.speed_ms)
+        self.robot.movel(droplet_front,self.accel_mss,self.speed_ms)
+        self.robot.movel(droplet_loc,self.accel_mss,self.speed_ms)
         sleep(1)
         self.pipette.dispense(vol=3)
         sleep(5)
         self.pipette.aspirate(vol=3)
         sleep(1)
-        self.ur.movel(droplet_front,self.accel_mss,self.speed_ms)
+        self.robot.movel(droplet_front,self.accel_mss,self.speed_ms)
 
     def empty_tip(self, sample_loc):
         """
@@ -156,11 +157,11 @@ class TricontinentPipetteController():
         sample_above = deepcopy(sample_loc)
         sample_above[2] += 0.1
 
-        self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
-        self.ur.movel(sample_loc,self.accel_mss,speed_ms)
+        self.robot.movel(sample_above,self.accel_mss,self.speed_ms)
+        self.robot.movel(sample_loc,self.accel_mss,speed_ms)
         self.pipette.dispense(vol=25)
         sleep(2)
-        self.ur.movel(sample_above,self.accel_mss,speed_ms)
+        self.robot.movel(sample_above,self.accel_mss,speed_ms)
 
     def eject_tip(self, eject_tip_loc):        
         """
@@ -175,13 +176,13 @@ class TricontinentPipetteController():
 
         print("Droping tip to the trash bin...")
         # Move to the trash bin location
-        self.ur.movel(trash_front_above, self.accel_mss, self.speed_ms)
-        self.ur.movel(trash_front, self.accel_mss, self.speed_ms)
-        self.ur.movel(eject_tip_loc, self.accel_mss, self.speed_ms)
-        self.ur.movel(trash_above, self.accel_mss, self.speed_ms)
+        self.robot.movel(trash_front_above, self.accel_mss, self.speed_ms)
+        self.robot.movel(trash_front, self.accel_mss, self.speed_ms)
+        self.robot.movel(eject_tip_loc, self.accel_mss, self.speed_ms)
+        self.robot.movel(trash_above, self.accel_mss, self.speed_ms)
 
 
 if __name__ == "__main__":
-    a = ApsPipetteController()
+    a = TricontinentPipetteController(hostname="164.54.116.129")
 
-    a.connect_pipette(hostname="164.54.116.129")
+
