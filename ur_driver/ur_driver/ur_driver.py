@@ -168,13 +168,13 @@ class UR(UR_DASHBOARD):
         try:
             sr = ScrewdriverController(hostname=self.hostname, ur=self)
             sr.screwdriver.activate_screwdriver()
-        except Exception as activation_err:
-            print(activation_err)
-            return
+            sr.transfer(source=source, target=target, source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
+            sr.screwdriver.disconnect()
+        except Exception as err:
+            print(err)
         
-        sr.transfer(source=source, target=target, source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
         self.home(home)
-        sr.screwdriver.disconnect()
+
         # robot.place_tool(home,screwdriver_loc)
 
     def pipette_transfer(self, home:list = None,  source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: int = None, target_approach_distance: int = None) -> None:
@@ -188,12 +188,13 @@ class UR(UR_DASHBOARD):
         # TODO: Need to handle the errors in either her or within the controller classes
         try:
             pipette = TricontinentPipetteController(hostname=self.hostname, ur=self)
-        except Exception as activation_err:
-            print(activation_err)
-            return
+            pipette.pick_tip()
+            pipette.transfer_sample()
+        except Exception as err:
+            print(err)
         
-        pipette.pick_tip()
-        pipette.transfer_sample()
+        self.home(home)
+
         # TODO: Handle these steps better. Tread each action as another transfer 
    
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
