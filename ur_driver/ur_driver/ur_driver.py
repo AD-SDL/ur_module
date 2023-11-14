@@ -142,7 +142,7 @@ class UR():
             gripper_controller.connect_gripper()
 
             if gripper_open:
-                gripper_controller.griper_open = gripper_open
+                gripper_controller.gripper_open = gripper_open
             if gripper_close:
                 gripper_controller.gripper_close = gripper_close
 

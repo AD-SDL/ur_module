@@ -24,7 +24,7 @@ class FingerGripperController():
             # self.ur.set_payload(1.2)# TODO: Check the actual payload
 
         self.gripper_close = 130 # 0-255 (255 is closed)
-        self.griper_open = 0
+        self.gripper_open = 0
         self.gripper_speed = 150 # 0-255
         self.gripper_force = 0 # 0-255
 
@@ -59,7 +59,7 @@ class FingerGripperController():
                 print('Activating gripper...')
                 self.gripper.activate()
                 print('Opening gripper...')
-                self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
+                self.open_gripper()
 
     def disconnect_gripper(self):
         """
@@ -76,13 +76,13 @@ class FingerGripperController():
     def open_gripper(self, pose:float = None, speed:float = None, force:float = None) -> None:
         """Opens the gripper using pose, speed and force variables"""
         if pose:
-            self.griper_open = pose
+            self.gripper_open = pose
         if force:
             self.gripper_force = force
         if speed:
             self.gripper_speed = speed
 
-        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
+        self.gripper.move_and_wait_for_pos(self.gripper_open, self.gripper_speed, self.gripper_force)
   
     def close_gripper(self, pose:float = None, speed:float = None, force:float = None) -> None:
         """Closes the gripper using pose, speed and force variables"""
@@ -130,7 +130,7 @@ class FingerGripperController():
         self.ur.movel(pick_goal, self.acceleration, self.velocity)
 
         print('Closing gripper')
-        self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
+        self.close_gripper()
 
         print('Moving back to above goal position')
         self.ur.movel(above_goal, self.acceleration, self.velocity)
@@ -170,14 +170,14 @@ class FingerGripperController():
         self.ur.movel(place_goal, self.acceleration, self.velocity)
 
         print('Opennig gripper')
-        self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
+        self.gripper.move_and_wait_for_pos(self.gripper_open, self.gripper_speed, self.gripper_force)
 
         print('Moving back to above goal position')
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
     def transfer(self, source:list = None, target:list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         """Handles the transfer request"""
-
+        self.open_gripper()
         self.pick(pick_goal = source, approach_axis = source_approach_axis, approach_distance = source_approach_distance)
         print("Pick up completed")
         self.place(place_goal = target, approach_axis = target_approach_axis, approach_distance = target_approach_distance)
