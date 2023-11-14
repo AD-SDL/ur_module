@@ -135,7 +135,6 @@ class UR():
         if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
         
-        # robot.pick_tool(home, gripper_loc,payload=1.2)
         self.home(home)
         
         try:
@@ -156,14 +155,12 @@ class UR():
         
         self.home(home)
 
-        # robot.place_tool(home, gripper_loc,payload=1.2)
 
     def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         '''
         Make a screw transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
         ''' 
 
-        # robot.pick_tool(home, screwdriver_loc,payload=3)
         self.home(home)
 
         try:
@@ -176,8 +173,6 @@ class UR():
         
         self.home(home)
 
-        # robot.place_tool(home,screwdriver_loc)
-
     def pipette_transfer(self, home:list = None,  source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: int = None, target_approach_distance: int = None) -> None:
         '''
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
@@ -186,7 +181,6 @@ class UR():
             raise Exception("Please provide both the source and target loactions to make a transfer")
         self.home(home)
         
-        # TODO: Need to handle the errors in either her or within the controller classes
         try:
             pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection)
             pipette.pick_tip()
@@ -286,7 +280,7 @@ if __name__ == "__main__":
     # sr.pick_screw(screw_holder)
     # sr.screw_down(cell_screw)
     # robot.home(home)
-    # robot.place_tool(home,screwdriver_loc)
+    robot.place_tool(home,screwdriver_loc)
     #-----------------------------------------
 
     # GRIPPER ROTATE ---------------------------------------
