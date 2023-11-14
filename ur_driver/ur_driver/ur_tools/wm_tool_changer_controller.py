@@ -12,7 +12,7 @@ class WMToolChangerController():
         if not ur:
             raise AttributeError("Ur connection is not provided")
         
-        self.robot = ur.ur_connection
+        self.ur = ur
         self.current_tool = None
         self.axis = docking_axis
   
@@ -60,10 +60,10 @@ class WMToolChangerController():
         """
         try:
             print("Picking up the tool...")
-            self.robot.movel(self.tool_above, 1, 1)
-            self.robot.movel(self.location, 0.5, 0.5)
-            self.robot.movel(self.tool_front, 0.5, 0.5)
-            self.robot.movel(self.tool_front_above, 1, 1)
+            self.ur.movel(self.tool_above, 1, 1)
+            self.ur.movel(self.location, 0.5, 0.5)
+            self.ur.movel(self.tool_front, 0.5, 0.5)
+            self.ur.movel(self.tool_front_above, 1, 1)
 
         except Exception as err:
             print("Error accured while picking up the tool changer: ", err)
@@ -75,10 +75,10 @@ class WMToolChangerController():
         """
         try:
             print("Placing the tool ...")
-            self.robot.movel(self.tool_front_above, 1, 1)
-            self.robot.movel(self.tool_front, 1, 1)
-            self.robot.movel(self.location, 0.5, 0.5)
-            self.robot.movel(self.tool_above, 0.5, 0.5)
+            self.ur.movel(self.tool_front_above, 1, 1)
+            self.ur.movel(self.tool_front, 1, 1)
+            self.ur.movel(self.location, 0.5, 0.5)
+            self.ur.movel(self.tool_above, 0.5, 0.5)
         except Exception as err:
             print("Error accured while placing the tool: ", err)
 
