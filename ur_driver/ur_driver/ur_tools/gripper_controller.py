@@ -167,7 +167,14 @@ class FingerGripperController():
         print('Moving back to above goal position')
         self.robot.movel(above_goal, self.acceleration, self.velocity)
 
- 
+    def transfer(self, source:list = None, target:list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
+        """Handles the transfer request"""
+        
+        self.pick(pick_goal=source, approach_axis= source_approach_axis, approach_distance=source_approach_distance)
+        print("Pick up completed")
+        self.place(place_goal=target, approach_axis=target_approach_axis, approach_distance= target_approach_distance)
+        print("Place completed")
+
 class VacuumGripperController():
     
 
