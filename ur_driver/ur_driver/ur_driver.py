@@ -47,7 +47,7 @@ class Connection():
         self.connection.close()
         print("Robot connection is closed.")
 
-class UR(UR_DASHBOARD):
+class UR():
     """
     This is the primary class for UR robots. 
     It integrates various interfaces to achieve comprehensive control, encompassing robot initialization via the UR dashboard, 
@@ -62,10 +62,11 @@ class UR(UR_DASHBOARD):
         if not hostname:
             raise TypeError("Hostname cannot be None Type!")
         
-        super().__init__(hostname=hostname, PORT=PORT)
+        # super().__init__(hostname=hostname, PORT=PORT)
 
         self.hostname = hostname
         self.PORT = PORT
+        self.ur_dashboard = UR_DASHBOARD(hostname = self.hostname, PORT = self.PORT)
         self.ur = Connection(hostname = self.hostname, PORT = self.PORT)
         self.ur_connection = self.ur.connection
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
@@ -138,7 +139,7 @@ class UR(UR_DASHBOARD):
         self.home(home)
         
         try:
-            gripper_controller = FingerGripperController(hostname = self.hostname, ur = self)
+            gripper_controller = FingerGripperController(hostname = self.hostname, ur = self.ur_connection)
             gripper_controller.connect_gripper()
 
             if gripper_open:
@@ -166,7 +167,7 @@ class UR(UR_DASHBOARD):
         self.home(home)
 
         try:
-            sr = ScrewdriverController(hostname=self.hostname, ur=self)
+            sr = ScrewdriverController(hostname = self.hostname, ur = self.ur_connection, ur_dashboard = self.ur_dashboard)
             sr.screwdriver.activate_screwdriver()
             sr.transfer(source=source, target=target, source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
             sr.screwdriver.disconnect()
@@ -187,7 +188,7 @@ class UR(UR_DASHBOARD):
         
         # TODO: Need to handle the errors in either her or within the controller classes
         try:
-            pipette = TricontinentPipetteController(hostname=self.hostname, ur=self)
+            pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection)
             pipette.pick_tip()
             pipette.transfer_sample()
         except Exception as err:
@@ -223,12 +224,12 @@ class UR(UR_DASHBOARD):
         ur_program_path = "/programs/" + program_name 
 
         if transfer_file_path:
-            self.transfer_program(local_path = transfer_file_path, ur_path = ur_program_path)
+            self.ur_dashboard.transfer_program(local_path = transfer_file_path, ur_path = ur_program_path)
             sleep(2)
 
-        self.load_program(program_path = ur_program_path)
+        self.ur_dashboard.load_program(program_path = ur_program_path)
         sleep(2)
-        self.run_program()
+        self.ur_dashboard.run_program()
         sleep(5)
         
         print("Running the URP program: ", program_name)
