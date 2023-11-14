@@ -50,7 +50,7 @@ class ScrewdriverController():
         self.ur_dashboard.run_program()
         sleep(2)
 
-    def pick_screw(self, screw_loc:list = None, approach_axis:str = "z", approach_distance:float = 0.04):
+    def pick_screw(self, screw_loc:list = None, approach_axis:str = "z", approach_distance:float = 0.02):
         """
         Description: Picks up a new screw.
         """
@@ -74,13 +74,13 @@ class ScrewdriverController():
 
         screw_above = deepcopy(screw_loc)
         screw_above[axis] += approach_distance
-        screw_approach = deepcopy(screw_loc)
-        screw_approach[axis] += 0.01
+        screw_start_loc = deepcopy(screw_loc)
+        screw_start_loc[axis] += 0.01
 
         print("Picking up the screw...")
         
         self.ur.movel(screw_above,1,1)
-        self.ur.movel(screw_approach,0.5,0.5)
+        self.ur.movel(screw_start_loc,0.5,0.5)
         self.ur.set_digital_out(self.air_switch_digital_output, True)
         self.ur_dashboard.run_program() #Restart interpreter program
         sleep(2)
