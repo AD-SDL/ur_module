@@ -140,19 +140,20 @@ class UR(UR_DASHBOARD):
         try:
             gripper_controller = FingerGripperController(hostname = self.hostname, ur = self)
             gripper_controller.connect_gripper()
-        except Exception as activation_err:
-            print(activation_err)
-            return
-        
-        if gripper_open:
-            gripper_controller.griper_open = gripper_open
-        if gripper_close:
-            gripper_controller.gripper_close = gripper_close
 
-        gripper_controller.transfer(source = source, target = target,source_approach_axis = source_approach_axis, target_approach_axis = target_approach_axis, source_approach_distance = source_approach_distance, target_approach_distance = target_approach_distance)
-        print('Finished transfer')
+            if gripper_open:
+                gripper_controller.griper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.transfer(source = source, target = target,source_approach_axis = source_approach_axis, target_approach_axis = target_approach_axis, source_approach_distance = source_approach_distance, target_approach_distance = target_approach_distance)
+            print('Finished transfer')
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            print(err)
+        
         self.home(home)
-        gripper_controller.disconnect_gripper()
 
         # robot.place_tool(home, gripper_loc,payload=1.2)
 
