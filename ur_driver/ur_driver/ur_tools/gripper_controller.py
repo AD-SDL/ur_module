@@ -1,7 +1,7 @@
 from time import sleep
 from copy import deepcopy
 
-from .robotiq_gripper_driver import RobotiqGripper
+from .uriq_gripper_driver import RobotiqGripper
 
 class FingerGripperController():
     
@@ -21,8 +21,7 @@ class FingerGripperController():
             raise Exception("UR connection is not established")
         else:
             self.ur = ur
-            self.robot = self.ur.ur_connection
-            # self.robot.set_payload(1.2)# TODO: Check the actual payload
+            # self.ur.set_payload(1.2)# TODO: Check the actual payload
 
         self.gripper_close = 130 # 0-255 (255 is closed)
         self.griper_open = 0
@@ -100,16 +99,16 @@ class FingerGripperController():
         above_goal[axis] += approach_distance
 
         print('Moving to above goal position')
-        self.robot.movel(above_goal, self.acceleration, self.velocity)
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
 
         print('Moving to goal position')
-        self.robot.movel(pick_goal, self.acceleration, self.velocity)
+        self.ur.movel(pick_goal, self.acceleration, self.velocity)
 
         print('Closing gripper')
         self.gripper.move_and_wait_for_pos(self.gripper_close, self.gripper_speed, self.gripper_force)
 
         print('Moving back to above goal position')
-        self.robot.movel(above_goal, self.acceleration, self.velocity)
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
 
 
     def place(self, place_goal:list = None, approach_axis:str = "z", approach_distance:float = 0.05):
@@ -137,16 +136,16 @@ class FingerGripperController():
         above_goal[axis] += approach_distance
 
         print('Moving to above goal position')
-        self.robot.movel(above_goal, self.acceleration, self.velocity)
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
 
         print('Moving to goal position')
-        self.robot.movel(place_goal, self.acceleration, self.velocity)
+        self.ur.movel(place_goal, self.acceleration, self.velocity)
 
         print('Opennig gripper')
         self.gripper.move_and_wait_for_pos(self.griper_open, self.gripper_speed, self.gripper_force)
 
         print('Moving back to above goal position')
-        self.robot.movel(above_goal, self.acceleration, self.velocity)
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
 
     def transfer(self, source:list = None, target:list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         """Handles the transfer request"""
