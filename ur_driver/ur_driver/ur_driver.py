@@ -114,7 +114,7 @@ class UR():
             Picks up a tool using the given tool location
         """
         self.ur_connection.set_payload(payload)
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection)
         self.home(home)
         wingman_tool.pick_tool()
         self.home(home)    
@@ -123,7 +123,7 @@ class UR():
         """
             Picks up a tool using the given tool location
         """
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection)
         self.home(home)
         wingman_tool.place_tool()
         self.home(home)  

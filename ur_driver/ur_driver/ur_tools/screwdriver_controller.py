@@ -27,7 +27,7 @@ class ScrewdriverController():
             raise Exception("Failed to receive UR connection!")
         else:
             self.ur_dashboard = ur_dashboard
-            self.ur = ur.ur_connection
+            self.ur = ur
             self.ur.set_payload(3)
         
         try:
