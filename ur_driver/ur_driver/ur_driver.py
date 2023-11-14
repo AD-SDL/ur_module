@@ -278,7 +278,7 @@ if __name__ == "__main__":
 
     # GRIPPER ROTATE ---------------------------------------
     robot.pick_tool(home, handE_loc,payload=1.2)
-    robot.gripper_transfer(source = cell_holder_gripper, target = cell_holder_gripper, gripper_open = 190, gripper_close = 240)
+    robot.gripper_transfer(source = cell_holder_gripper, target = cell_holder_gripper, source_approach_axis="y", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
     robot.place_tool(home, handE_loc)
     #PICK CELL FROM HOLDER
     # gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)

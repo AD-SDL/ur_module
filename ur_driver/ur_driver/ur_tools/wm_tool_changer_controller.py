@@ -29,6 +29,11 @@ class WMToolChangerController():
         self.tool_front_above = deepcopy(self.tool_front)
         self.tool_front_above[2] += 0.25
 
+        self.robot_fast_acceleration = 1.0
+        self.robot_fast_velocity = 1.0
+        self.robot_slow_acceleration = 1.0
+        self.robot_slow_velocity = 1.0
+
     def _get_tool_front(self):
         """
         """
@@ -60,10 +65,10 @@ class WMToolChangerController():
         """
         try:
             print("Picking up the tool...")
-            self.ur.movel(self.tool_above, 1, 1)
-            self.ur.movel(self.location, 0.5, 0.5)
-            self.ur.movel(self.tool_front, 0.5, 0.5)
-            self.ur.movel(self.tool_front_above, 1, 1)
+            self.ur.movel(self.tool_above, self.robot_fast_acceleration, self.robot_fast_velocity)
+            self.ur.movel(self.location, self.robot_slow_acceleration, self.robot_slow_velocity)
+            self.ur.movel(self.tool_front, self.robot_slow_acceleration, self.robot_slow_velocity)
+            self.ur.movel(self.tool_front_above, self.robot_fast_acceleration, self.robot_fast_velocity)
 
         except Exception as err:
             print("Error accured while picking up the tool changer: ", err)
@@ -75,10 +80,10 @@ class WMToolChangerController():
         """
         try:
             print("Placing the tool ...")
-            self.ur.movel(self.tool_front_above, 1, 1)
-            self.ur.movel(self.tool_front, 1, 1)
-            self.ur.movel(self.location, 0.5, 0.5)
-            self.ur.movel(self.tool_above, 0.5, 0.5)
+            self.ur.movel(self.tool_front_above, self.robot_fast_acceleration, self.robot_fast_velocity)
+            self.ur.movel(self.tool_front, self.robot_fast_acceleration, self.robot_fast_velocity)
+            self.ur.movel(self.location, self.robot_slow_acceleration, self.robot_slow_velocity)
+            self.ur.movel(self.tool_above, self.robot_slow_acceleration, self.robot_slow_velocity)
         except Exception as err:
             print("Error accured while placing the tool: ", err)
 

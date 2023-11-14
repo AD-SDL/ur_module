@@ -28,8 +28,8 @@ class FingerGripperController():
         self.gripper_speed = 150 # 0-255
         self.gripper_force = 0 # 0-255
 
-        self.acceleration = 0.5
-        self.velocity = 0.2
+        self.acceleration = 0.7
+        self.velocity = 0.7
         self.speed_ms    = 0.750
         self.speed_rads  = 0.750
         self.accel_mss   = 1.200
