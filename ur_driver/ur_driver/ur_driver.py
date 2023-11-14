@@ -136,9 +136,14 @@ class UR(UR_DASHBOARD):
         
         # robot.pick_tool(home, gripper_loc,payload=1.2)
         self.home(home)
-        gripper_controller = FingerGripperController(hostname = self.hostname, ur = self)
-        gripper_controller.connect_gripper()
-
+        
+        try:
+            gripper_controller = FingerGripperController(hostname = self.hostname, ur = self)
+            gripper_controller.connect_gripper()
+        except Exception as activation_err:
+            print(activation_err)
+            return
+        
         if gripper_open:
             gripper_controller.griper_open = gripper_open
         if gripper_close:
@@ -158,8 +163,14 @@ class UR(UR_DASHBOARD):
 
         # robot.pick_tool(home, screwdriver_loc,payload=3)
         self.home(home)
-        sr = ScrewdriverController(hostname=self.hostname, ur=self)
-        sr.screwdriver.activate_screwdriver()
+
+        try:
+            sr = ScrewdriverController(hostname=self.hostname, ur=self)
+            sr.screwdriver.activate_screwdriver()
+        except Exception as activation_err:
+            print(activation_err)
+            return
+        
         sr.transfer(source=source, target=target, source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
         self.home(home)
         sr.screwdriver.disconnect()
@@ -172,7 +183,13 @@ class UR(UR_DASHBOARD):
         if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
         self.home(home)
-        pipette = TricontinentPipetteController(hostname=self.hostname, ur=self)
+        
+        try:
+            pipette = TricontinentPipetteController(hostname=self.hostname, ur=self)
+        except Exception as activation_err:
+            print(activation_err)
+            return
+        
         pipette.pick_tip()
         pipette.transfer_sample()
         # TODO: Handle these steps better. Tread each action as another transfer 
