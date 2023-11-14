@@ -170,7 +170,7 @@ class FingerGripperController():
         self.ur.movel(place_goal, self.acceleration, self.velocity)
 
         print('Opennig gripper')
-        self.gripper.move_and_wait_for_pos(self.gripper_open, self.gripper_speed, self.gripper_force)
+        self.open_gripper()
 
         print('Moving back to above goal position')
         self.ur.movel(above_goal, self.acceleration, self.velocity)
