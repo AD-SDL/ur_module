@@ -4,7 +4,7 @@ from time import sleep
 from copy import deepcopy
 import numpy as np
 
-from .uriq_screwdriver_driver import RobotiqScrewdriver
+from .robotiq_screwdriver_driver import RobotiqScrewdriver
 
 class ScrewdriverController():
 
