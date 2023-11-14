@@ -165,12 +165,17 @@ class UR(UR_DASHBOARD):
         sr.screwdriver.disconnect()
         # robot.place_tool(home,screwdriver_loc)
 
-    def pipette_transfer(self, source: list = None, target: list = None, approach_axis:str = None, approach_distance: int = None) -> None:
+    def pipette_transfer(self, home:list = None,  source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: int = None, target_approach_distance: int = None) -> None:
         '''
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
         ''' 
         if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
+        self.home(home)
+        pipette = TricontinentPipetteController(hostname=self.hostname, ur=self)
+        pipette.pick_tip()
+        pipette.transfer_sample()
+        # TODO: Handle these steps better. Tread each action as another transfer 
    
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
