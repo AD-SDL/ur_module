@@ -278,13 +278,15 @@ if __name__ == "__main__":
     
     # SCREWDRIVING ---------------------------
     # robot.home(home)
-    # robot.pick_tool(home, screwdriver_loc,payload=3)
+    robot.pick_tool(home, screwdriver_loc,payload=3)
+    robot.screwdriver_transfer(home=home,source=screw_holder,target=cell_screw, source_approach_distance=0.04)
+
     # sr = ScrewdriverController(hostname=robot.hostname, ur_connection=robot)
     # sr.screwdriver.activate_screwdriver()
     # sr.pick_screw(screw_holder)
     # sr.screw_down(cell_screw)
     # robot.home(home)
-    # robot.place_tool(home,screwdriver_loc)
+    robot.place_tool(home,screwdriver_loc)
     #-----------------------------------------
 
     # GRIPPER ROTATE ---------------------------------------
