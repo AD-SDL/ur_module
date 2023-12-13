@@ -23,12 +23,12 @@ class CameraController:
     a robot trajectory to pick up the objects based on distance and object reference frame information obtained from the camera.
     """
 
-    def __init__(self, robot_ip: str, ur_connection: Optional[Robot], target_object: Optional[str]) -> None:
-        """
+    def __init__(self,  hostname: str = None, socket_timeout: float = 2.0, ur_connection: Optional[Robot] = None, target_object: Optional[str]= None) -> None:
+        """ß
         Constructor for the CameraController class.
 
         Args:
-            robot_IP (str): The IP address of the robot.
+            hostname (str): The IP address of the robot.
             ur_connection (Robot): The connection to the robot (urx.Robot instance), defaults to None.
             target_object (str): The target object for YOLO model, defaults to None.
 
@@ -54,7 +54,7 @@ class CameraController:
         self.CLASS_NAMES = ['deepwellplates', 'tipboxes', 'hammers', 'wellplates', 'wellplate_lids']
 
         self._validate_target_object()
-        self._connect_to_gripper(robot_ip)
+        self._connect_to_gripper(hostname)
 
     def _validate_target_object(self):
         if self.target_object not in self.CLASS_NAMES:
