@@ -60,8 +60,16 @@ The role of the ROS node in this repository is to establish communication betwee
 
 ## Installation
 
-To use the `ur_module` repository, follow the installation instructions provided in the [Installation Guide](/docs/installation.md).
+<!-- To use the `ur_module` repository, follow the installation instructions provided in the [Installation Guide](/docs/installation.md). -->
 
+```
+mkdir ~/wei_ws/src
+cd ~/wei_ws/src
+git clone https://github.com/AD-SDL/ur_module.git
+cd ~/wei_ws
+colcon build
+source install/setup.bash
+```
 ## Usage
 
 Detailed information on how to use the UR driver and ROS node is available in the [User Guide](/docs/user_guide.md).
@@ -75,5 +83,3 @@ Contributions are welcome! If you have ideas for improvements or find any issues
 This repository is licensed under the MIT License - see the [LICENSE](/LICENSE) file for details.
 
 ---
-
-Feel free to customize the sections further based on your specific requirements and details about the UR driver and ROS node.
