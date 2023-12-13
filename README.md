@@ -28,7 +28,7 @@ The UR driver package in this repository encompasses various remote interfaces t
 
 ### Dashboard Server Features
 
-The dashboard server facilitates the following operations:
+Seamless integration with the UR dashboard for easy initialization. The dashboard server facilitates the following operations:
 
 - Load and play URP programs.
 - Power on and off the robot.
@@ -41,9 +41,9 @@ URx features provide fine-grained control over robot motion.
 
 ### End-Tools Integration
 
-Support for a variety of end-tools, including communication protocols such as Modbus TCP/IP, RS485, Interpreter Socket, and PyEpics.
+Support for a variety of end-tools, including communication protocols such as TCP/IP, RS485, Interpreter Socket, and PyEpics.
 
-- **Robotiq Gripper:** Modbus TCP/IP
+- **Robotiq Gripper:** TCP/IP
 - **TriContenent Pipette:** RS485
 - **Robotiq Screwdriver:** Interpreter Socket
 - **Robotiq Vacuum Gripper:** Interpreter Socket
