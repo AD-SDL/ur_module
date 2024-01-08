@@ -5,9 +5,19 @@ from paramiko import SSHClient, AutoAddPolicy, SSHException
 from scp import SCPClient, SCPException
 
 class UR_DASHBOARD():
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
+    """
+    This is a python interface to communicate the UR Dashboard server. 
+    UR can be controlled from remote by sending simple commands to the GUI over a TCP/IP socket. 
+    The server is running on port 29999 on the robots IP address. 
+    Each command should be terminated by a `\n` also called a newline.
+    """
 
-        self.IP = IP
+    def __init__(self, hostname:str = "146.137.240.38", PORT: int = 29999) -> None:
+        """Constructor for the UR class.
+        :param hostname: Hostname or ip.
+        :param port: Port.
+        """
+        self.hostname = hostname
         self.port = PORT
         self.connection = None
         self.connection_error = False
@@ -19,13 +29,12 @@ class UR_DASHBOARD():
         self.connect()
         self.initialize()
 
-
-    def connect(self):
+    def connect(self) -> None:
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.connection.settimeout(5) # Socket will wait 5 seconds till it recieves the response
-            self.connection.connect((self.IP,self.port))
+            self.connection.connect((self.hostname,self.port))
 
         except socket.error as err:
             print("UR dashboard could not establish connection")
@@ -33,11 +42,11 @@ class UR_DASHBOARD():
             self.connection_error = True
             
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Close the socket"""
         self.connection.close()
 
-    def send_command(self, command, response_delay:float = 0.1):
+    def send_command(self, command, response_delay:float = 0.1) -> str:
 
         # print(">> " + command)
 
@@ -61,14 +70,14 @@ class UR_DASHBOARD():
         except Exception as err:
             print(err)
 
-    def get_overall_robot_status(self):
-
+    def get_overall_robot_status(self) -> None:
+        """Get robot status"""
         self.robot_mode = self.get_robot_mode().upper()
         self.operational_mode = self.get_operational_mode().upper()
         self.safety_status = self.get_safety_status()
         self.remote_control_status = self.is_in_remote_control()
 
-    def initialize(self):
+    def initialize(self) -> None:
         if self.connection_error:
             return
             
@@ -100,7 +109,7 @@ class UR_DASHBOARD():
 
         return self.initialize()
 
-    def get_robot_mode(self):
+    def get_robot_mode(self) -> str:
         """Return the robot mode"""
         output = self.send_command("robotmode")
         output = output.split(' ')
@@ -113,38 +122,38 @@ class UR_DASHBOARD():
             print("Depricated output!")
             return output
                 
-    def quit(self):
+    def quit(self) -> str:
         '''Closes connection to robot'''
         return self.send_command('quit')
 
-    def shutdown(self):
+    def shutdown(self) -> str:
         '''Shuts down and turns off robot and controller'''
         return self.send_command('shutdown')
 
-    def power_on(self):
+    def power_on(self) -> str:
         '''Powers on the robot arm'''
         return self.send_command('power on')
 
-    def power_off(self):
+    def power_off(self) -> str:
         '''Powers off the robot arm'''
         return self.send_command('power off')
 
-    def brake_release(self):
+    def brake_release(self) -> str:
         '''Releases the brakes'''
         output = self.send_command('brake release')
         sleep(20)
         return output
 
-    def unlock_protective_stop(self):
+    def unlock_protective_stop(self) -> str:
         return self.send_command('unlock protective stop')
 
-    def close_safety_popup(self):
+    def close_safety_popup(self) -> str:
         return self.send_command('close safety popup')
 
-    def is_in_remote_control(self):
+    def is_in_remote_control(self) -> str:
         return self.send_command('is in remote control')
 
-    def restart_safety(self):
+    def restart_safety(self) -> str:
         output = self.send_command('restart safety')
         sleep(10)
         self.disconnect()
@@ -152,7 +161,7 @@ class UR_DASHBOARD():
         output2 = self.brake_release()
         return output
         
-    def get_safety_status(self):
+    def get_safety_status(self) -> str:
         output = self.send_command('safetystatus')
         output = output.split(' ')
         # print(output)
@@ -165,22 +174,22 @@ class UR_DASHBOARD():
             print("Depricated output!")
             return output
                 
-    def get_operational_mode(self):
+    def get_operational_mode(self) -> str:
         return self.send_command('get operational mode')
 
-    def set_operational_mode(self, mode):
+    def set_operational_mode(self, mode) -> str:
         return self.send_command('set operational mode ' + mode)
 
-    def clear_operational_mode(self):
+    def clear_operational_mode(self) -> str:
         return self.send_command('clear operational mode')
 
-    def popup(self, message):
+    def popup(self, message) -> str:
         return self.send_command('popup ' + message)
 
-    def close_popup(self):
+    def close_popup(self) -> str:
         return self.send_command('close popup')
     
-    def transfer_program(self, local_path:str = None, ur_path:str = "/programs/"):
+    def transfer_program(self, local_path:str = None, ur_path:str = "/programs/", user_name:str = "root", user_password:str = "easybot") -> None:
         if not local_path:
             print("Local file was not provided!")
             return
@@ -188,7 +197,7 @@ class UR_DASHBOARD():
             ssh_client = SSHClient()
             ssh_client.load_system_host_keys()
             ssh_client.set_missing_host_key_policy(AutoAddPolicy())
-            ssh_client.connect(hostname = self.IP, username = "root", password = "123", disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})         
+            ssh_client.connect(hostname = self.hostname, username = user_name, password = user_password, disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})         
             with SCPClient(ssh_client.get_transport()) as scp:
                 scp.put(local_path, ur_path)
 
@@ -205,30 +214,35 @@ class UR_DASHBOARD():
             scp.close()
             ssh_client.close()
 
-    def load_program(self, program_path:str):
+    def load_program(self, program_path:str) -> str:
         return self.send_command("load " + program_path)
     
-    def get_program_state(self):
+    def get_program_state(self) -> str:
         return self.send_command('programState')
     
-    def get_loaded_program(self):
+    def get_loaded_program(self) -> str:
         return self.send_command('get loaded program')
     
-    def get_program_run_status(self):
+    def get_program_run_status(self) -> str:
         return self.send_command('running')
     
-    def run_program(self):
+    def run_program(self) -> str:
         return self.send_command('play')
     
-    def pause_program(self):
+    def pause_program(self) -> str:
         return self.send_command('pause')
     
-    def stop_program(self):
+    def stop_program(self) -> str:
         return self.send_command('stop')
 
 
 if __name__ == "__main__":
-    robot = UR_DASHBOARD("146.137.240.36")
+    robot = UR_DASHBOARD("164.54.116.129")
+    robot.get_loaded_program()
+    robot.get_program_state()
+    a = robot.load_program("/programs/interpreter_mode.urp")
+    if "File not found" in a:
+        print(a)
     # robot.get_overall_robot_status()
     # robot.get_operational_mode()
     # robot.robot_mode()

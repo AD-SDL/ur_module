@@ -7,6 +7,7 @@ from multiprocessing.connection import wait
 from time import sleep
 from copy import deepcopy
 import json
+from math import radians, degrees
 
 from ur_dashboard import UR_DASHBOARD
 from ur_tools import *
@@ -14,9 +15,9 @@ from urx import Robot, RobotException
 
 class Connection():
     """Connection to the UR robot to be shared within UR driver """
-    def __init__(self,  IP:str = "146.137.240.38", PORT: int = 29999) -> None:
+    def __init__(self,  hostname:str = "146.137.240.38", PORT: int = 29999) -> None:
 
-        self.IP = IP
+        self.hostname = hostname
         self.PORT = PORT
         
         self.connection = None
@@ -29,7 +30,7 @@ class Connection():
 
         for i in range(10):
             try:
-                self.connection = Robot(self.IP)
+                self.connection = Robot(self.hostname)
 
             except socket.error:
                 print("Trying robot connection ...")
@@ -46,20 +47,27 @@ class Connection():
         self.connection.close()
         print("Robot connection is closed.")
 
-class UR(UR_DASHBOARD):
-    
+class UR():
+    """
+    This is the primary class for UR robots. 
+    It integrates various interfaces to achieve comprehensive control, encompassing robot initialization via the UR dashboard, 
+    robot motion using URx, and the management of robot end-effectors such as grippers, screwdrivers, electronic pipettes, and cameras."    
+    """    
+    def __init__(self, hostname:str = None, PORT: int = 29999):
+        """Constructor for the UR class.
+        :param hostname: Hostname or ip.
+        :param port: Port.
+        """
 
-    def __init__(self, IP:str = "146.137.240.38", PORT: int = 29999):
+        if not hostname:
+            raise TypeError("Hostname cannot be None Type!")
         
-        # if not connection:
-        #     raise Exception("Robot connection is not established")
-        # else:
-        #     self.ur = connection
-        super().__init__(IP=IP, PORT=PORT)
+        # super().__init__(hostname=hostname, PORT=PORT)
 
-        self.IP = IP
+        self.hostname = hostname
         self.PORT = PORT
-        self.ur = Connection(IP = self.IP, PORT = self.PORT)
+        self.ur_dashboard = UR_DASHBOARD(hostname = self.hostname, PORT = self.PORT)
+        self.ur = Connection(hostname = self.hostname, PORT = self.PORT)
         self.ur_connection = self.ur.connection
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.acceleration = 0.5
@@ -73,17 +81,9 @@ class UR(UR_DASHBOARD):
         self.robot_current_joint_angles = None
         self.get_movement_state()
         #TODO: get the information of what is the current tool attached to UR. Maybe keep the UR unattached after the tools were used? Run a senity check at the beginning to findout if a tool is connected 
-
-    def get_joint_angles(self):
-        
-        return self.ur_connection.getj()
-    
-    def get_cartesian_coordinates(self):
-        
-        return self.ur_connection.getl()
     
     def get_movement_state(self):
-        current_location = self.get_joint_angles()
+        current_location = self.ur_connection.getj()
         current_location = [ '%.2f' % value for value in current_location] #rounding to 3 digits
         # print(current_location)
         if self.robot_current_joint_angles == current_location:
@@ -108,26 +108,13 @@ class UR(UR_DASHBOARD):
         sleep(3.5)
 
         print("Robot homed")
-
-    def gripper_transfer(self, pos1, pos2, gripper_rotation:str = None, safe_heigh: int = None):
-        '''
-        Make a transfer using the finger gripper
-        ''' 
-        gripper_controller = FingerGripperController(IP = self.IP, ur_connection = self.ur_connection)
-        gripper_controller.connect_gripper()
-        # robot.ur_connection.set_payload(2, (0, 0, 0.1))
-
-        gripper_controller.pick(pos1)
-        gripper_controller.place(pos2)
-        print('Finished transfer')
-        gripper_controller.disconnect_gripper()
-
+  
     def pick_tool(self, home, tool_loc, docking_axis = "y", payload = 0.12):
         """
             Picks up a tool using the given tool location
         """
         self.ur_connection.set_payload(payload)
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection)
         self.home(home)
         wingman_tool.pick_tool()
         self.home(home)    
@@ -136,15 +123,79 @@ class UR(UR_DASHBOARD):
         """
             Picks up a tool using the given tool location
         """
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur_connection = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection)
         self.home(home)
         wingman_tool.place_tool()
-        self.home(home)    
-    
+        self.home(home)  
+
+    def gripper_transfer(self, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
+        '''
+        Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
+        ''' 
+        if not source or not target:
+            raise Exception("Please provide both the source and target loactions to make a transfer")
+        
+        self.home(home)
+        
+        try:
+            gripper_controller = FingerGripperController(hostname = self.hostname, ur = self.ur_connection)
+            gripper_controller.connect_gripper()
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.transfer(source = source, target = target,source_approach_axis = source_approach_axis, target_approach_axis = target_approach_axis, source_approach_distance = source_approach_distance, target_approach_distance = target_approach_distance)
+            print('Finished transfer')
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            print(err)
+        
+        self.home(home)
+
+
+    def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
+        '''
+        Make a screw transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
+        ''' 
+
+        self.home(home)
+
+        try:
+            sr = ScrewdriverController(hostname = self.hostname, ur = self.ur_connection, ur_dashboard = self.ur_dashboard)
+            sr.screwdriver.activate_screwdriver()
+            sr.transfer(source=source, target=target, source_approach_axis=source_approach_axis, target_approach_axis = target_approach_axis, source_approach_dist=source_approach_distance, target_approach_dist=target_approach_distance)
+            sr.screwdriver.disconnect()
+        except Exception as err:
+            print(err)
+        
+        self.home(home)
+
+    def pipette_transfer(self, home:list = None,  source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: int = None, target_approach_distance: int = None) -> None:
+        '''
+        Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
+        ''' 
+        if not source or not target:
+            raise Exception("Please provide both the source and target loactions to make a transfer")
+        self.home(home)
+        
+        try:
+            pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection)
+            pipette.pick_tip()
+            pipette.transfer_sample()
+        except Exception as err:
+            print(err)
+        
+        self.home(home)
+
+        # TODO: Handle these steps better. Tread each action as another transfer 
+   
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
 
-        pipette = ApsPipetteController(ur_connection = self.ur_connection, IP = self.IP)
+        pipette = OTPipetteController(ur_connection = self.ur_connection, IP = self.hostname)
         pipette.connect_pipette()
 
         self.home(home)
@@ -160,20 +211,19 @@ class UR(UR_DASHBOARD):
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
 
-        """"""
+        """Transfers the urp programs onto the polyscope and initiates them"""
         if not program_name:
-            print("Provide program name!")
-            return
+            raise ValueError("Provide program name!")
         
         ur_program_path = "/programs/" + program_name 
 
         if transfer_file_path:
-            self.transfer_program(local_path = transfer_file_path, ur_path = ur_program_path)
+            self.ur_dashboard.transfer_program(local_path = transfer_file_path, ur_path = ur_program_path)
             sleep(2)
 
-        self.load_program(program_path = ur_program_path)
+        self.ur_dashboard.load_program(program_path = ur_program_path)
         sleep(2)
-        self.run_program()
+        self.ur_dashboard.run_program()
         sleep(5)
         
         print("Running the URP program: ", program_name)
@@ -191,24 +241,15 @@ class UR(UR_DASHBOARD):
                 ready_status_count = 0
             sleep(3)
 
-        #TODO: FIX the output loggings 
-
-        # if "STOPPED" in program_state:       
         program_log = {"output_code":"0", "output_msg": "Successfully finished " + program_name, "output_log": "seconds_elapsed:" + str(time_elapsed)}
-        # elif "PAUSED" in program_state:
-            # program_log = {"output_code":"-1", "output_msg": "Failed running: " + program_name, "output_log": program_err}
-        # else:
-            # program_log = {"output_code":"-1", "output_msg": "Unkown program state:  " + program_name, "output_log": program_state}
 
         return program_log
-
-
+    
 if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot = UR(IP="164.54.116.129")
-    # print(robot.get_joint_angles())
+    robot = UR(hostname="164.54.116.129")
     tool_loc = [0.32704628917562345, -0.1017379678362813, 0.3642503117806354, -2.1526354130031917, 2.2615882459741723, -0.04632031979240964]
     home = [0.5431541204452515, -1.693524023095602, -0.7301170229911804, -2.2898713550963343, 1.567720651626587, -1.0230830351458948]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
@@ -219,33 +260,62 @@ if __name__ == "__main__":
     handE_loc = [0.3131286590368134, 0.15480163498252172, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    # robot.home(home)
-    robot.pick_tool(home, pipette_loc,payload=1.2)
-    robot.ur_connection.movel(target,1,1)
-    sleep(1)
-    robot.place_tool(home,pipette_loc)
-    robot.pick_tool(home, handE_loc,payload=1.2)
-    robot.ur_connection.movel(target,1,1)
-    sleep(1)
-    # gripper_controller = FingerGripperController(IP = robot.IP, ur_connection = robot)
-    # gripper_controller.connect_gripper()
-    robot.place_tool(home,handE_loc)
-    robot.pick_tool(home, screwdriver_loc,payload=3)
-    robot.ur_connection.movel(target,1,1)
-    sleep(1)
-    robot.place_tool(home,screwdriver_loc)
-
-    # robot.run_droplet(home=home,tip_loc=tip1,sample_loc=sample,droplet_loc=tool_loc,tip_trash=tip_eject)
-    # robot.place_tool(home,screwdriver_loc)
-    # log = robot.run_urp_program(program_name="chemspeed2tecan.urp")
-    # print(log)
-    # robot.transfer
-    # (robot.plate_exchange_1,robot.plate_exchange_1)
-    # for i in range(1000):
-    #     print(robot.get_movement_state())
-    #     robot.get_overall_robot_status()
-    #     sleep(0.5)
+    cell_screw = [0.24930985075448253, -0.24776717616652696, 0.4181221227946348, 3.039003299245514, -0.7400526434644932, 0.016640327870615954]
+    screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
+    cell_holder_gripper = [0.3174903285108201, -0.0865718004641483, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
     
+    gripper_close = 85
+
+    # robot.home(home)
+    # robot.pick_tool(home, pipette_loc,payload=1.2)
+
+    
+    # SCREWDRIVING ---------------------------
+    # robot.pick_tool(home, screwdriver_loc,payload=3)
+    # robot.screwdriver_transfer(home=home,source=screw_holder,target=cell_screw, source_approach_distance=0.04)
+    # robot.place_tool(home,screwdriver_loc)
+    #-----------------------------------------
+     
+    # GRIPPER CELL PICK & PLACE 
+    # robot.pick_tool(home, handE_loc,payload=1.2)
+    # robot.gripper_transfer(source = cell_holder_gripper, target = cell_holder_gripper, source_approach_axis="y", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    # robot.place_tool(home, handE_loc)
+    #-----------------------------------------
+
+    
+    #PICK CELL FROM HOLDER
+    # gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
+    # cell_approach = deepcopy(cell_holder_gripper)
+    # cell_approach[1] += 0.05
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
+    # robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
+    # gripper_controller.gripper.move_and_wait_for_pos(240, 255, 255)
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
+
+    #Rotate cell 360
+    # cur_j = robot.ur_connection.getj()
+    # rotate_j = cur_j 
+    # rotate_j[5] += radians(180) 
+    # robot.ur_connection.movej(rotate_j,0.6,0.6)
+
+    # cur_l = robot.ur_connection.getl()
+    # cell_holder_gripper[3] = cur_l[3]
+    # cell_holder_gripper[4] = cur_l[4]
+    # cell_holder_gripper[5] = cur_l[5]
+
+    #PLACE CELL INTO HOLDER
+    # gripper_controller.gripper.move_and_wait_for_pos(230, 255, 255)
+    # cell_approach = deepcopy(cell_holder_gripper)
+    # cell_approach[1] += 0.05
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
+    # robot.ur_connection.movel(cell_holder_gripper,0.6,0.6)
+    # gripper_controller.gripper.move_and_wait_for_pos(190, 255, 255)
+    # robot.ur_connection.movel(cell_approach,0.6,0.6)
+
+    # robot.home(home)
+    # robot.place_tool(home,handE_loc)
+    # ----------------------------------------
+
     robot.ur.disconnect_ur()
 
 
