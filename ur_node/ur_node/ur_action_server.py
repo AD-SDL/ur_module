@@ -7,7 +7,7 @@ from time import sleep
 import socket
 import json
 
-from ur_interfaces.action import RobotAction
+from wei_interfaces.action import WeiAction
 
 try:
     from ur_driver.ur_driver import UR 
@@ -30,10 +30,9 @@ class UrActionServer(Node): #ACTION SERVER
         self._receive_launch_parameters()  
 
         action_name = self.node_name + '/wei_action'
-        self._action_server = ActionServer(self, RobotAction, action_name, self.action_callback)
-
+        self._action_server = ActionServer(self, WeiAction, action_name, self.action_callback)
         self.get_logger().info("Listening for action calls over: " + action_name)
-    
+        
     def _receive_launch_parameters(self) -> None:
         """Receives launch parameters from the launch execution"""
 
@@ -51,31 +50,32 @@ class UrActionServer(Node): #ACTION SERVER
         else:
             self.get_logger().info("ur connected")
 
-    def action_callback(self, goal_handle) -> RobotAction.Result:
+    def action_callback(self, goal_handle) -> WeiAction.Result:
+        print("AAAAA")
         self.get_logger().info('Executing goal...')
-        self.get_logger().info(str(goal_handle.request.robot_goal))
+        self.get_logger().info(str(goal_handle.request.wei_goal))
 
         if self.IP != "None":  
             response = self._action_handle(goal = goal_handle)
         else:
             self._ros_driver_handle(goal_handle) #Use MoveIt
 
-        # feedback = RobotAction.Feedback()
+        # feedback = WeiAction.Feedback()
 
         # for i in range(20):
-        #     feedback.robot_feedback = ' Busy ' + str(i) +' seconds'
-        #     self.get_logger().info('Feedback:'+ (feedback.robot_feedback))
+        #     feedback.wei_feedback = ' Busy ' + str(i) +' seconds'
+        #     self.get_logger().info('Feedback:'+ (feedback.wei_feedback))
 
         #     goal_handle.publish_feedback(feedback)
         #     sleep(1)
 
-        result = RobotAction.Result()
+        result = WeiAction.Result()
         result.robot_response = response
         return result
 
     def _action_handle(self, goal) -> str:
         
-        robot_command = json.loads(goal.request.robot_goal)
+        robot_command = json.loads(goal.request.wei_goal)
         msg = None
         #TODO: Execute a robot state check and accept the action if robot is in ready state
         
