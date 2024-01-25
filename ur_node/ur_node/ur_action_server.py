@@ -29,7 +29,7 @@ class UrActionServer(Node): #ACTION SERVER
 
         self._receive_launch_parameters()  
 
-        action_name = self.node_name + '/robot_action'
+        action_name = self.node_name + '/wei_action'
         self._action_server = ActionServer(self, RobotAction, action_name, self.action_callback)
 
         self.get_logger().info("Listening for action calls over: " + action_name)
