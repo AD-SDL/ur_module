@@ -51,14 +51,12 @@ class UrActionServer(Node): #ACTION SERVER
             self.get_logger().info("ur connected")
 
     def action_callback(self, goal_handle) -> WeiAction.Result:
-        print("AAAAA")
         self.get_logger().info('Executing goal...')
         self.get_logger().info(str(goal_handle.request.wei_goal))
 
-        if self.IP != "None":  
-            response = self._action_handle(goal = goal_handle)
-        else:
-            self._ros_driver_handle(goal_handle) #Use MoveIt
+      
+        response = self._action_handle(goal = goal_handle)
+    
 
         # feedback = WeiAction.Feedback()
 
