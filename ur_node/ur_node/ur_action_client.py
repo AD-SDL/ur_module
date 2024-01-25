@@ -4,8 +4,8 @@ import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
 
-from ur_interfaces.action import RobotAction
-
+# from ur_interfaces.action import RobotAction
+from wei_interfaces.action import WeiAction
 import json
 
 class UrActionClient(Node): # ACTION CLIENT
@@ -18,14 +18,16 @@ class UrActionClient(Node): # ACTION CLIENT
         self.ur = None
         self.IP = None
         self.goal = None
-        self._action_client = ActionClient(self, RobotAction, self.node_name + '/robot_action')
+        self._action_client = ActionClient(self, WeiAction, self.node_name + '/wei_action')
 
     def send_goal(self, robot_goal) -> None:
         self.goal = json.dumps(robot_goal)
         
-        goal_msg = RobotAction.Goal()
+        goal_msg = WeiAction.Goal()
+        print(goal_msg)
         goal_msg.robot_goal = self.goal
-        
+        print(goal_msg)
+
         self._action_client.wait_for_server()
         self._send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
         self._send_goal_future.add_done_callback(self.goal_response_callback)
