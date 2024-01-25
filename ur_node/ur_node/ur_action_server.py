@@ -56,7 +56,6 @@ class UrActionServer(Node): #ACTION SERVER
 
       
         response = self._action_handle(goal = goal_handle)
-    
 
         # feedback = WeiAction.Feedback()
 
@@ -68,7 +67,7 @@ class UrActionServer(Node): #ACTION SERVER
         #     sleep(1)
 
         result = WeiAction.Result()
-        result.robot_response = response
+        result.wei_response = response
         return result
 
     def _action_handle(self, goal) -> str:
@@ -78,7 +77,7 @@ class UrActionServer(Node): #ACTION SERVER
         #TODO: Execute a robot state check and accept the action if robot is in ready state
         
         try:
-            self._connect_robot()
+            # self._connect_robot()
 
             if "transfer" in robot_command:
                 vars = robot_command.get("transfer")
@@ -97,7 +96,8 @@ class UrActionServer(Node): #ACTION SERVER
                 vars = robot_command.get("pick_tool")
                 home_loc = vars.get('home', None)
                 tool_loc = vars.get('tool_loc', None)
-                self.ur.pick_tool(home_loc, tool_loc)            
+                # self.ur.pick_tool(home_loc, tool_loc)            
+                self.get_logger().warn(str(msg))
 
             elif "place_tool" in robot_command:
                 vars = robot_command.get("pick_tool")
@@ -109,12 +109,16 @@ class UrActionServer(Node): #ACTION SERVER
 
         except Exception as er:
             msg = {-1:"Failed " + er}
+            self.get_logger().warn(str(msg))
             goal.abort()
         else:
             msg = {0:"Completed"}
+            self.get_logger().warn(str(msg))
             goal.succeed()
         finally:
             response = json.dumps(msg)
+            self.get_logger().warn(str(msg))
+
             return response   
         
     def _ros_driver_handle(self, goal):
