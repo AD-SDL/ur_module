@@ -58,7 +58,7 @@ class WMToolChangerController():
         status = "STATUS"
         return status
 
-    def pick_tool(self ):
+    def pick_tool(self):
         """
         Description: 
             Picks a new tool using the tool location.
