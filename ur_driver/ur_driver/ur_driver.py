@@ -180,14 +180,16 @@ class UR():
             self.ur_connection.movej(curr_joint_ang,1,1)
             #move Target above
             self.ur_connection.movel(target, self.acceleration, self.velocity)
-            curr_joint_ang[-1] = 360
+            curr_joint_ang[-1] = 12.5
             self.ur_connection.movej(curr_joint_ang,1,1)
             #move Target above
             self.home(home)
             gripper_controller.place(place_goal=screw_loc)
+            self.home(home)
+
         except Exception as err:
             print(err)
-            
+
     def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         '''
         Make a screw transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
@@ -315,10 +317,10 @@ if __name__ == "__main__":
     # GRIPPER CELL PICK & PLACE 
     # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.gripper_transfer(source = assembly_deck, target = assembly_deck, source_approach_axis="y", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.gripper_transfer(home = home, source = hex_key, target = hex_key, source_approach_axis="z", target_approach_axis="z", gripper_open = 120, gripper_close = 200)
-    robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-
+    # robot.gripper_transfer(home = home, source = hex_key, target = hex_key, source_approach_axis="z", target_approach_axis="z", gripper_open = 120, gripper_close = 200)
+    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
+    robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=hex_key,target=hex_key,gripper_open=120,gripper_close=200)
     # robot.place_tool(home, handE_loc)
     #-----------------------------------------
 
