@@ -128,7 +128,7 @@ class UR():
         wingman_tool.place_tool()
         self.home(home)  
 
-    def gripper_transfer(self, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
+    def gripper_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
         '''
         Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
         ''' 
@@ -146,7 +146,7 @@ class UR():
             if gripper_close:
                 gripper_controller.gripper_close = gripper_close
 
-            gripper_controller.transfer(source = source, target = target,source_approach_axis = source_approach_axis, target_approach_axis = target_approach_axis, source_approach_distance = source_approach_distance, target_approach_distance = target_approach_distance)
+            gripper_controller.transfer(home = home, source = source, target = target,source_approach_axis = source_approach_axis, target_approach_axis = target_approach_axis, source_approach_distance = source_approach_distance, target_approach_distance = target_approach_distance)
             print('Finished transfer')
             gripper_controller.disconnect_gripper()
 
@@ -155,7 +155,39 @@ class UR():
         
         self.home(home)
 
+    def custom_screwdriver_transfer(self, home:list = None, screwdriver_loc: list = None, screw_loc: list = None, target: list = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
+        """
+        Using custom made screwdriving solution.
+        """
 
+        self.home(home)
+
+        try:
+            gripper_controller = FingerGripperController(hostname = self.hostname, ur = self.ur_connection)
+            gripper_controller.connect_gripper()
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.pick(pick_goal = screwdriver_loc)
+            self.home(home)
+            self.ur_connection.movel(screw_loc, self.acceleration, self.velocity)
+            self.home(home)
+            curr_joint_ang = self.ur_connection.getj()
+            curr_joint_ang[-1] = 0
+            self.ur_connection.movej(curr_joint_ang,1,1)
+            #move Target above
+            self.ur_connection.movel(target, self.acceleration, self.velocity)
+            curr_joint_ang[-1] = 360
+            self.ur_connection.movej(curr_joint_ang,1,1)
+            #move Target above
+            self.home(home)
+            gripper_controller.place(place_goal=screw_loc)
+        except Exception as err:
+            print(err)
+            
     def screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         '''
         Make a screw transfer using the screwdriver. This function uses linear motions to perform the pick and place movements.
@@ -283,9 +315,9 @@ if __name__ == "__main__":
     # GRIPPER CELL PICK & PLACE 
     # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.gripper_transfer(source = assembly_deck, target = assembly_deck, source_approach_axis="y", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    # robot.gripper_transfer(source = hex_key, target = hex_key, source_approach_axis="z", target_approach_axis="z", gripper_open = 120, gripper_close = 200)
-    robot.gripper_transfer(source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.gripper_transfer(source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
+    robot.gripper_transfer(home = home, source = hex_key, target = hex_key, source_approach_axis="z", target_approach_axis="z", gripper_open = 120, gripper_close = 200)
+    robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
 
     # robot.place_tool(home, handE_loc)
     #-----------------------------------------
