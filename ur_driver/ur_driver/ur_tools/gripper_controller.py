@@ -73,6 +73,15 @@ class FingerGripperController():
         else:
             print("Gripper conenction is closed")
 
+    def home_robot(self, home:list = None) -> None:
+        """
+        Home the robot
+        """
+        if not home:
+            return 
+        self.ur.movej(home, self.acceleration, self.velocity)
+
+        
     def open_gripper(self, pose:float = None, speed:float = None, force:float = None) -> None:
         """Opens the gripper using pose, speed and force variables"""
         if pose:
@@ -124,6 +133,8 @@ class FingerGripperController():
 
         above_goal = deepcopy(pick_goal)
         above_goal[axis] += approach_distance
+        
+        self.open_gripper()
 
         print('Moving to above goal position')
         self.ur.movel(above_goal, self.acceleration, self.velocity)
@@ -177,11 +188,11 @@ class FingerGripperController():
         print('Moving back to above goal position')
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
-    def transfer(self, source:list = None, target:list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
+    def transfer(self, home:list = None, source:list = None, target:list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         """Handles the transfer request"""
-        self.open_gripper()
         self.pick(pick_goal = source, approach_axis = source_approach_axis, approach_distance = source_approach_distance)
         print("Pick up completed")
+        self.home_robot(home=home)
         self.place(place_goal = target, approach_axis = target_approach_axis, approach_distance = target_approach_distance)
         print("Place completed")
 
