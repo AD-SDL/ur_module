@@ -104,7 +104,7 @@ class UR():
             home_loc = home_location
         else:
             home_loc = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
-        self.ur_connection.movej(home_loc, self.acceleration + 0.5, self.velocity + 0.5, 0, 0)
+        self.ur_connection.movej(home_loc, 2,2 , 0, 0)
         sleep(3.5)
 
         print("Robot homed")
@@ -155,7 +155,7 @@ class UR():
         
         self.home(home)
 
-    def custom_screwdriver_transfer(self, home:list = None, screwdriver_loc: list = None, screw_loc: list = None, target: list = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
+    def custom_screwdriver_transfer(self, home:list = None, screwdriver_loc: list = None, screw_loc: list = None, target_above:list = None, target: list = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
         """
         Using custom made screwdriving solution.
         """
@@ -172,19 +172,28 @@ class UR():
                 gripper_controller.gripper_close = gripper_close
 
             gripper_controller.pick(pick_goal = screwdriver_loc)
+
+            # Pick screw
             self.home(home)
+            above_goal = deepcopy(screw_loc)
+            above_goal[2] += 0.04
+            self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
             self.ur_connection.movel(screw_loc, self.acceleration, self.velocity)
+            self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
+
+            #move Target above            
+            # self.home(home)
+            self.ur_connection.movel(target_above, self.acceleration, self.velocity)
+            for i in range(4):
+                self.ur_connection.translate_tool([0,0,0.001],2,2)
+                cur = self.ur_connection.getj()
+                cur[-1]+=2
+                self.ur_connection.movej(cur, 2, 2)
+
+            self.ur_connection.translate_tool([0,0,-0.02],0.5,0.5)
             self.home(home)
-            curr_joint_ang = self.ur_connection.getj()
-            curr_joint_ang[-1] = 0
-            self.ur_connection.movej(curr_joint_ang,1,1)
-            #move Target above
-            self.ur_connection.movel(target, self.acceleration, self.velocity)
-            curr_joint_ang[-1] = 12.5
-            self.ur_connection.movej(curr_joint_ang,1,1)
-            #move Target above
-            self.home(home)
-            gripper_controller.place(place_goal=screw_loc)
+
+            gripper_controller.place(place_goal=hex_key)
             self.home(home)
 
         except Exception as err:
@@ -296,15 +305,26 @@ if __name__ == "__main__":
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    # cell_screw = [0.24930985075448253, -0.24776717616652696, 0.4181221227946348, 3.039003299245514, -0.7400526434644932, 0.016640327870615954]
+    cell_screw = [0.2873466663116257, -0.28581961313181153, 0.3189346533970346, 3.1380955690495846, -0.00939563269242134, -0.0008460193902824742]
     # screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
     hex_key = [0.400622055237794, -0.19786943209286473, 0.2187727915431838, 3.138040844182382, -0.009379821811183166, -0.00070627735828582]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
     assembly_deck = [0.3174903285108201, -0.08018211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
-    
+    assembly_above = [0.3184636928538083, -0.28543275588144745, 0.3495834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
     gripper_close = 85
+    robot.home(home)
 
-    # robot.home(home)
+    # cur_j = robot.ur_connection.getj()
+
+    # for i in range(0,12,1):
+    #     # cur_l = robot.ur_connection.getl()
+    #     # print(cur_l)
+    #     # print("Joints=", cur_j[-1])
+    #     # cur_l[2] -= 0.001
+    #     cur_j[-1] += 1
+    #     # robot.ur_connection.translate_tool([0,0,0.01], 1, 1)
+    #     robot.ur_connection.movej(cur_j, 2, 2)
+
     # robot.pick_tool(home, pipette_loc,payload=1.2)
 
     
@@ -320,7 +340,7 @@ if __name__ == "__main__":
     # robot.gripper_transfer(home = home, source = hex_key, target = hex_key, source_approach_axis="z", target_approach_axis="z", gripper_open = 120, gripper_close = 200)
     # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
     # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=hex_key,target=hex_key,gripper_open=120,gripper_close=200)
+    robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
     # robot.place_tool(home, handE_loc)
     #-----------------------------------------
 
