@@ -176,22 +176,29 @@ class UR():
             # Pick screw
             self.home(home)
             above_goal = deepcopy(screw_loc)
-            above_goal[2] += 0.04
+            above_goal[2] += 0.06
             self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
-            self.ur_connection.movel(screw_loc, self.acceleration, self.velocity)
+            self.ur_connection.movel(screw_loc, 0.2, 0.2)
             self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
 
             #move Target above            
             # self.home(home)
             self.ur_connection.movel(target_above, self.acceleration, self.velocity)
-            for i in range(4):
-                self.ur_connection.translate_tool([0,0,0.001],2,2)
+            for i in range(9):
+                self.ur_connection.translate_tool([0,0,0.0005],2,2)
                 cur = self.ur_connection.getj()
-                cur[-1]+=2
-                self.ur_connection.movej(cur, 2, 2)
+                if i == 8:
+                    cur[-1]+=2.7
+                    self.ur_connection.movej(cur, 2, 2)
+                    cur[-1]-=0.1
+                    self.ur_connection.movej(cur, 2, 2)
+                else:
+                    cur[-1]+=4
+                    self.ur_connection.movej(cur, 2, 2)
 
             self.ur_connection.translate_tool([0,0,-0.02],0.5,0.5)
             self.home(home)
+            sleep(15)
 
             gripper_controller.place(place_goal=hex_key)
             self.home(home)
@@ -305,12 +312,12 @@ if __name__ == "__main__":
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    cell_screw = [0.2873466663116257, -0.28581961313181153, 0.3189346533970346, 3.1380955690495846, -0.00939563269242134, -0.0008460193902824742]
+    cell_screw = [0.28783440601230226, -0.28678518269403513, 0.3176342990205253, 3.1381071683977293, -0.009392392291173335, -0.0008605239429651419]
     # screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
-    hex_key = [0.400622055237794, -0.19786943209286473, 0.2187727915431838, 3.138040844182382, -0.009379821811183166, -0.00070627735828582]
+    hex_key = [0.40061621427107863, -0.19851389684726614, 0.2195475541919895, 3.1374987322951102, -0.009368331063787221, -0.0007768712432287358]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
     assembly_deck = [0.3174903285108201, -0.08018211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
-    assembly_above = [0.3184636928538083, -0.28543275588144745, 0.3495834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
+    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3495834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
     gripper_close = 85
     robot.home(home)
 
