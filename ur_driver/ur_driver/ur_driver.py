@@ -184,21 +184,28 @@ class UR():
             #move Target above            
             # self.home(home)
             self.ur_connection.movel(target_above, self.acceleration, self.velocity)
+            from math3d import Transform
+
+            target_pose = [0,0,0.0010,0,0,3.14]
+            target_pose_matrix = Transform(target_pose)
             for i in range(9):
-                self.ur_connection.translate_tool([0,0,0.0005],2,2)
-                cur = self.ur_connection.getj()
-                if i == 8:
-                    cur[-1]+=2.7
-                    self.ur_connection.movej(cur, 2, 2)
-                    cur[-1]-=0.1
-                    self.ur_connection.movej(cur, 2, 2)
-                else:
-                    cur[-1]+=4
-                    self.ur_connection.movej(cur, 2, 2)
+                self.ur_connection.add_pose_tool(target_pose_matrix,1,1,wait=True)
+                # sleep(1.7) 
+            # for i in range(9):
+            #     self.ur_connection.translate_tool([0,0,0.0005],2,2)
+            #     cur = self.ur_connection.getj()
+            #     if i == 8:
+            #         cur[-1]+=2.7
+            #         self.ur_connection.movej(cur, 2, 2)
+            #         cur[-1]-=0.1
+            #         self.ur_connection.movej(cur, 2, 2)
+            #     else:
+            #         cur[-1]+=4
+            #         self.ur_connection.movej(cur, 2, 2)
 
             self.ur_connection.translate_tool([0,0,-0.02],0.5,0.5)
             self.home(home)
-            sleep(15)
+            sleep(10)
 
             gripper_controller.place(place_goal=hex_key)
             self.home(home)
@@ -317,9 +324,9 @@ if __name__ == "__main__":
     hex_key = [0.40061621427107863, -0.19851389684726614, 0.2195475541919895, 3.1374987322951102, -0.009368331063787221, -0.0007768712432287358]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
     assembly_deck = [0.3174903285108201, -0.08018211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
-    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3495834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
+    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3485834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
     gripper_close = 85
-    robot.home(home)
+    # robot.home(home)
 
     # cur_j = robot.ur_connection.getj()
 
