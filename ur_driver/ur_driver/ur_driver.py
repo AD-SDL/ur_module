@@ -104,7 +104,7 @@ class UR():
             home_loc = home_location
         else:
             home_loc = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
-        self.ur_connection.movej(home_loc, 2,2 , 0, 0)
+        self.ur_connection.movej(home_loc,2,2)
         sleep(3.5)
 
         print("Robot homed")
@@ -155,7 +155,7 @@ class UR():
         
         self.home(home)
 
-    def custom_screwdriver_transfer(self, home:list = None, screwdriver_loc: list = None, screw_loc: list = None, target_above:list = None, target: list = None, source_approach_distance: float = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
+    def custom_screwdriver_transfer(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 10, gripper_open:int = None, gripper_close:int = None) -> None:
         """
         Using custom made screwdriving solution.
         """
@@ -183,29 +183,16 @@ class UR():
 
             #move Target above            
             # self.home(home)
-            self.ur_connection.movel(target_above, self.acceleration, self.velocity)
-            from math3d import Transform
+            self.ur_connection.movel(target, self.acceleration, self.velocity)
+            # from math3d import Transform
 
-            target_pose = [0,0,0.0010,0,0,3.14]
-            target_pose_matrix = Transform(target_pose)
-            for i in range(9):
-                self.ur_connection.add_pose_tool(target_pose_matrix,1,1,wait=True)
-                # sleep(1.7) 
-            # for i in range(9):
-            #     self.ur_connection.translate_tool([0,0,0.0005],2,2)
-            #     cur = self.ur_connection.getj()
-            #     if i == 8:
-            #         cur[-1]+=2.7
-            #         self.ur_connection.movej(cur, 2, 2)
-            #         cur[-1]-=0.1
-            #         self.ur_connection.movej(cur, 2, 2)
-            #     else:
-            #         cur[-1]+=4
-            #         self.ur_connection.movej(cur, 2, 2)
+            target_pose = [0,0,0.001,0,0,3.14]
+            self.ur_connection.speedl_tool(target_pose,2, screw_time)
+            print("Screwing down")
+            sleep(screw_time+2)
 
-            self.ur_connection.translate_tool([0,0,-0.02],0.5,0.5)
+            self.ur_connection.translate_tool([0,0,-0.03],0.5,0.5)
             self.home(home)
-            sleep(10)
 
             gripper_controller.place(place_goal=hex_key)
             self.home(home)
@@ -359,7 +346,7 @@ if __name__ == "__main__":
     hex_key = [0.40061621427107863, -0.19851389684726614, 0.2195475541919895, 3.1374987322951102, -0.009368331063787221, -0.0007768712432287358]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
     assembly_deck = [0.3174903285108201, -0.08258211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
-    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3485834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
+    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3479834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
     gripper_close = 85
     # robot.home(home)
 
@@ -397,16 +384,15 @@ if __name__ == "__main__":
 
     # ----------------------------------------
     # CELL ASSEMBLY
-    robot.pick_tool(home, handE_loc,payload=1.2)
-    robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
-    robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
-    # ADD PIPETTE HERE  
-    robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
-    robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    robot.place_tool(home, handE_loc)
-
-
+    # robot.pick_tool(home, handE_loc,payload=1.2)
+    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
+    # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
+    # # ADD PIPETTE HERE  
+    # robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
+    # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
+    # robot.place_tool(home, handE_loc)
+    # robot.ur_connection.speedl_tool([0,0,0.001,0,0,3.14],2,15.3)
     robot.ur.disconnect_ur()
 
 
