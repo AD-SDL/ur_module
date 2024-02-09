@@ -275,7 +275,7 @@ class UR():
         self.home(home)
         
         try:
-            pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection)
+            pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection, pipette_ip=self.hostname)
             pipette.connect_pipette()
             pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
@@ -285,8 +285,6 @@ class UR():
         finally:
             pipette.disconnect_pipette()
             self.home(home)
-
-        # TODO: Handle these steps better. Tread each action as another transfer 
    
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
