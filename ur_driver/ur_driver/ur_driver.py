@@ -152,8 +152,10 @@ class UR():
 
         except Exception as err:
             print(err)
-        
-        self.home(home)
+
+        finally:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
 
     def gripper_screw_transfer(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 10, gripper_open:int = None, gripper_close:int = None) -> None:
         """
@@ -197,6 +199,10 @@ class UR():
 
         except Exception as err:
             print(err)
+
+        finally:
+            gripper_controller.disconnect_gripper()
+
     def gripper_unscrew(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 10, gripper_open:int = None, gripper_close:int = None) -> None:
         """Perform unscrewing"""
         pass
@@ -240,7 +246,8 @@ class UR():
 
         except Exception as er:
             print(er)
-
+        finally:
+            gripper_controller.disconnect_gripper()
 
     def robotiq_screwdriver_transfer(self, home:list = None, source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: float = None, target_approach_distance: float = None) -> None:
         '''
@@ -259,22 +266,25 @@ class UR():
         
         self.home(home)
 
-    def pipette_transfer(self, home:list = None,  source: list = None, target: list = None, source_approach_axis:str = None, target_approach_axis:str = None, source_approach_distance: int = None, target_approach_distance: int = None) -> None:
+    def pipette_transfer(self, home:list = None,  tip_loc: list = None, sample_loc:list = None, well_loc:list = None) -> None:
         '''
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
         ''' 
-        if not source or not target:
+        if not tip_loc or not sample_loc:
             raise Exception("Please provide both the source and target loactions to make a transfer")
         self.home(home)
         
         try:
             pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection)
-            pipette.pick_tip()
-            pipette.transfer_sample()
+            pipette.connect_pipette()
+            pipette.pick_tip(tip_loc=tip_loc)
+            self.home(home)
+            pipette.transfer_sample(sample_loc=sample_loc, well_loc=well_loc)
         except Exception as err:
             print(err)
-        
-        self.home(home)
+        finally:
+            pipette.disconnect_pipette()
+            self.home(home)
 
         # TODO: Handle these steps better. Tread each action as another transfer 
    
@@ -357,16 +367,6 @@ if __name__ == "__main__":
     gripper_close = 85
     # robot.home(home)
 
-    # cur_j = robot.ur_connection.getj()
-
-    # for i in range(0,12,1):
-    #     # cur_l = robot.ur_connection.getl()
-    #     # print(cur_l)
-    #     # print("Joints=", cur_j[-1])
-    #     # cur_l[2] -= 0.001
-    #     cur_j[-1] += 1
-    #     # robot.ur_connection.translate_tool([0,0,0.01], 1, 1)
-    #     robot.ur_connection.movej(cur_j, 2, 2)
 
     # robot.pick_tool(home, pipette_loc,payload=1.2)
 
@@ -393,9 +393,16 @@ if __name__ == "__main__":
     # CELL ASSEMBLY
     # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
+    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
     # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
+    # robot.place_tool(home,tool_loc=handE_loc)
+    test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
+
     # # ADD PIPETTE HERE  
+    # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    robot.pipette_transfer(home=home,tip_loc=test_loc,sample_loc=test_loc,well_loc=test_loc)
+    # robot.place_tool(home,tool_loc=pipette_loc)
+    # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
     # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
     # robot.place_tool(home, handE_loc)
