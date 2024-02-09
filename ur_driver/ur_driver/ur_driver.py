@@ -181,13 +181,11 @@ class UR():
             self.ur_connection.movel(screw_loc, 0.2, 0.2)
             self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
 
-            #move Target above            
-            # self.home(home)
+            # Move to the target location
             self.ur_connection.movel(target, self.acceleration, self.velocity)
-            # from math3d import Transform
 
-            target_pose = [0,0,0.001,0,0,3.14]
-            self.ur_connection.speedl_tool(target_pose,2, screw_time)
+            target_pose = [0,0,0.001,0,0,3.14] #Setting the screw drive motion
+            self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
             print("Screwing down")
             sleep(screw_time+2)
 
@@ -199,7 +197,16 @@ class UR():
 
         except Exception as err:
             print(err)
-
+    def gripper_unscrew(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 10, gripper_open:int = None, gripper_close:int = None) -> None:
+        """Perform unscrewing"""
+        pass
+    
+    def remove_cap(self, target):
+        pass
+    
+    def place_cap(self,target):
+        pass
+    
     def pick_and_flip_object(self, home:list = None, target: list = None, approach_axis:str = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
         '''
         Pick an object then flips it and puts it back to the same location
