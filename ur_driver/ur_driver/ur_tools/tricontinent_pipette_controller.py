@@ -50,11 +50,14 @@ class TricontinentPipetteController():
                                           stop_bits=comm_setting["stop_bits"],
                                           rx_idle_chars=comm_setting["rx_idle_chars"],
                                           tx_idle_chars=comm_setting["tx_idle_chars"])        
+            sleep(5)
+
             self.pipette.connect(hostname=self.IP)
+            sleep(5)
             self.pipette.initialize()
 
         except Exception as err:
-            print("Pipette error: ", err)
+            print("Pipette connection error: ", err)
 
         else:
             print("Pipette is connected")
@@ -65,11 +68,16 @@ class TricontinentPipetteController():
         """
 
         try:
-            # Closing the connection with the pipette on EPICS 
             self.pipette.disconnect()
-            
+            self.ur.set_tool_communication(baud_rate=115200,
+                                parity=0,
+                                stop_bits=1,
+                                rx_idle_chars=1.5,
+                                tx_idle_chars=3.5)   
+            sleep(5)
+     
         except Exception as err:
-            print("Pipette error: ", err)
+            print("Pipette disconnection error: ", err)
 
         else:
             print("Pipette is disconnected")
@@ -183,6 +191,13 @@ class TricontinentPipetteController():
 
 
 if __name__ == "__main__":
-    a = TricontinentPipetteController(hostname="164.54.116.129")
+    from urx import Robot
+    r = Robot("164.54.116.129")
+    a = TricontinentPipetteController(ur=r, pipette_ip="164.54.116.129")
+    a.connect_pipette()
+    a.pipette.aspirate(vol=25)
+    sleep(5)
+    a.disconnect_pipette()
+    r.close()
 
 
