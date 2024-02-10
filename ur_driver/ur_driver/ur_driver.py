@@ -277,13 +277,15 @@ class UR():
         try:
             pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection, pipette_ip=self.hostname)
             pipette.connect_pipette()
-            pipette.pick_tip(tip_loc=tip_loc)
-            self.home(home)
-            pipette.transfer_sample(sample_loc=sample_loc, well_loc=well_loc)
+            # pipette.pick_tip(tip_loc=tip_loc)
+            # self.home(home)
+            # pipette.transfer_sample(sample_loc=sample_loc, well_loc=well_loc)
+            pipette.disconnect_pipette()
+            print("Disconnecting from the pipette")
         except Exception as err:
             print(err)
         finally:
-            pipette.disconnect_pipette()
+
             self.home(home)
    
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
@@ -302,6 +304,7 @@ class UR():
         pipette.eject_tip(eject_tip_loc=tip_trash)
         self.home(home)
         pipette.disconnect_pipette()
+        self.ur_connection.set_tool_communication
 
     def run_urp_program(self, transfer_file_path:str = None, program_name: str = None):
 
@@ -348,8 +351,10 @@ if __name__ == "__main__":
     home = [0.5431541204452515, -1.693524023095602, -0.7301170229911804, -2.2898713550963343, 1.567720651626587, -1.0230830351458948]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
     sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
-    droplet = [-0.21435167102697, 0.31117471247776396, 0.273829131948966, 3.126800328499299, -0.017429873171790906, -0.007516422536326644]
-    # Tools
+    # droplet = [-0.21435167102697, 0.31117471247776396, 
+    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
+    # robot.pick_and_flip_object(home=home,target=ass96, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     tip_eject = [0.10270290312926324, 0.2862487614384484, 0.10155903555930355, 3.1268372121718597, -0.01760209112687455, -0.007607510036297549]
     pipette_loc = [0.21285670041158733, 0.1548897634390196, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     handE_loc = [0.3131286590368134, 0.15480163498252172, 0.005543999069077835, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
@@ -364,7 +369,6 @@ if __name__ == "__main__":
     assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3479834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
     gripper_close = 85
     # robot.home(home)
-
 
     # robot.pick_tool(home, pipette_loc,payload=1.2)
 
@@ -398,14 +402,24 @@ if __name__ == "__main__":
 
     # # ADD PIPETTE HERE  
     # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    robot.pipette_transfer(home=home,tip_loc=test_loc,sample_loc=test_loc,well_loc=test_loc)
+    # robot.pipette_transfer(home=home,tip_loc=test_loc,sample_loc=test_loc,well_loc=test_loc)
     # robot.place_tool(home,tool_loc=pipette_loc)
     # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
     # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
     # robot.place_tool(home, handE_loc)
     # robot.ur_connection.speedl_tool([0,0,0.001,0,0,3.14],2,15.3)
+    # robot.pick_tool(home, handE_loc,payload=1.2)
+    gripper_controller = FingerGripperController(hostname = robot.hostname, ur = robot.ur_connection)
+    gripper_controller.connect_gripper()
+    gripper_controller.disconnect_gripper()
+    robot.place_tool(home, handE_loc)
+    robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    robot.pipette_transfer(home=home,tip_loc=test_loc,sample_loc=test_loc,well_loc=test_loc)
+    robot.place_tool(home,tool_loc=pipette_loc)
+
     robot.ur.disconnect_ur()
+    
 
 
 
