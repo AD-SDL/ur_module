@@ -277,9 +277,10 @@ class UR():
         try:
             pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection, pipette_ip=self.hostname)
             pipette.connect_pipette()
-            # pipette.pick_tip(tip_loc=tip_loc)
-            # self.home(home)
-            # pipette.transfer_sample(sample_loc=sample_loc, well_loc=well_loc)
+            pipette.pick_tip(tip_loc=tip_loc)
+            self.home(home)
+            pipette.pipette.initialize()
+            pipette.transfer_sample(sample_loc=sample_loc, well_loc=well_loc)
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
         except Exception as err:
