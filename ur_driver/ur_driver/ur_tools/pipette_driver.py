@@ -449,8 +449,10 @@ if __name__ == "__main__":
     a = PipetteDriver()
     a.connect(hostname="164.54.116.129")
     a.initialize()
+    time.sleep(5)
     # print(a.get_speed_start(), a.get_speed_stop(),a.get_speed())
-    # a.aspirate(vol=20)
+    a.aspirate(vol=20)
+    print(a.get_step())
     a.dispense(vol=2)
     # cmd = '/1'
     # if len(sys.argv)<2:
