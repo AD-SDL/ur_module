@@ -35,32 +35,32 @@ class TricontinentPipetteController():
         self.pipette_aspirate_value = 2.0
         self.pipette_dispense_value = -2.0
         self.droplet_value = 0.3
-
+        
     def connect_pipette(self):
         """
         Connect pipette
         """
+        for i in range(5):
+            try:
+                # Establishing a connection with the pipette on RS485 comminication
+                self.pipette = PipetteDriver()
+                comm_setting = self.pipette._comm_setting
+                self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
+                                            parity=comm_setting["parity"],
+                                            stop_bits=comm_setting["stop_bits"],
+                                            rx_idle_chars=comm_setting["rx_idle_chars"],
+                                            tx_idle_chars=comm_setting["tx_idle_chars"])        
 
-        try:
-            # Establishing a connection with the pipette on RS485 comminication
-            self.pipette = PipetteDriver()
-            comm_setting = self.pipette._comm_setting
-            self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
-                                          parity=comm_setting["parity"],
-                                          stop_bits=comm_setting["stop_bits"],
-                                          rx_idle_chars=comm_setting["rx_idle_chars"],
-                                          tx_idle_chars=comm_setting["tx_idle_chars"])        
-            sleep(5)
+                self.pipette.connect(hostname=self.IP)
+                sleep(15)
+                # self.pipette.initialize()
 
-            self.pipette.connect(hostname=self.IP)
-            sleep(5)
-            self.pipette.initialize()
+            except Exception as err:
+                print("Pipette connection error: ", err)
 
-        except Exception as err:
-            print("Pipette connection error: ", err)
-
-        else:
-            print("Pipette is connected")
+            else:
+                print("Pipette is connected")
+                break
 
     def disconnect_pipette(self):
         """
@@ -69,12 +69,7 @@ class TricontinentPipetteController():
 
         try:
             self.pipette.disconnect()
-            self.ur.set_tool_communication(baud_rate=115200,
-                                parity=0,
-                                stop_bits=1,
-                                rx_idle_chars=1.5,
-                                tx_idle_chars=3.5)   
-            sleep(5)
+            self.ur.set_tool_communication(enabled=False)
      
         except Exception as err:
             print("Pipette disconnection error: ", err)
@@ -195,8 +190,10 @@ if __name__ == "__main__":
     r = Robot("164.54.116.129")
     a = TricontinentPipetteController(ur=r, pipette_ip="164.54.116.129")
     a.connect_pipette()
-    a.pipette.aspirate(vol=25)
-    sleep(5)
+    # sleep(5)
+    # a.pipette.initialize()
+    a.pipette.dispense(vol=35)
+    # sleep(5)
     a.disconnect_pipette()
     r.close()
 
