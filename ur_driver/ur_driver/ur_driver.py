@@ -409,15 +409,29 @@ if __name__ == "__main__":
     # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
     # robot.place_tool(home, handE_loc)
     # robot.ur_connection.speedl_tool([0,0,0.001,0,0,3.14],2,15.3)
-    # robot.pick_tool(home, handE_loc,payload=1.2)
+    
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.ur_connection.set_tool_communication(baud_rate=115200,
+                                          parity=0,
+                                          stop_bits=1,
+                                          rx_idle_chars=1.5,
+                                          tx_idle_chars=3.5)        
+    sleep(5)
     gripper_controller = FingerGripperController(hostname = robot.hostname, ur = robot.ur_connection)
     gripper_controller.connect_gripper()
     gripper_controller.disconnect_gripper()
     robot.place_tool(home, handE_loc)
+    robot.ur_connection.set_tool_communication(enabled=False)
+    robot.ur_connection.set_tool_communication(baud_rate=9600,
+                                          parity=0,
+                                          stop_bits=1,
+                                          rx_idle_chars=1.5,
+                                          tx_idle_chars=3.5)   
     robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    sleep(15)
     robot.pipette_transfer(home=home,tip_loc=test_loc,sample_loc=test_loc,well_loc=test_loc)
     robot.place_tool(home,tool_loc=pipette_loc)
-
+    
     robot.ur.disconnect_ur()
     
 
