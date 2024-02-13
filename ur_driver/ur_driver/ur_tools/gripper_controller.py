@@ -45,6 +45,12 @@ class FingerGripperController():
         """
         try:
             # GRIPPER SETUP:
+            self.ur.set_tool_communication(baud_rate=115200,
+                                        parity=0,
+                                        stop_bits=1,
+                                        rx_idle_chars=1.5,
+                                        tx_idle_chars=3.5)       
+            sleep(2)
             self.gripper = RobotiqGripper()
             print('Connecting to gripper...')
             self.gripper.connect(hostname = self.host, port = self.PORT)
