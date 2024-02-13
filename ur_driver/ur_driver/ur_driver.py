@@ -266,28 +266,28 @@ class UR():
         
         self.home(home)
 
-    def pipette_transfer(self, home:list = None,  tip_loc: list = None, sample_loc:list = None, well_loc:list = None) -> None:
-        '''
+    def pipette_transfer(self, home:list = None,  tip_loc: list = None, source:list = None, target:list = None, volume:int = 10) -> None:
+        '''a
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
         ''' 
-        if not tip_loc or not sample_loc:
+        if not tip_loc or not source:
             raise Exception("Please provide both the source and target loactions to make a transfer")
-        self.home(home)
         
         try:
             pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection, pipette_ip=self.hostname)
             pipette.connect_pipette()
-            pipette.pick_tip(tip_loc=tip_loc)
+            # pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
-            pipette.pipette.initialize()
-            pipette.transfer_sample(sample_loc=sample_loc, well_loc=well_loc)
+            # pipette.pipette.initialize()
+            pipette.transfer_sample(home = home, sample_aspirate=source, sample_dispense=target, vol = volume)
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
         except Exception as err:
             print(err)
         finally:
 
-            self.home(home)
+            # self.home(home)
+            pass
    
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
@@ -347,11 +347,14 @@ if __name__ == "__main__":
 
     pos1= [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     pos2= [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot = UR(hostname="164.54.116.129")
+    # robot = UR(hostname="164.54.116.129")
+    robot = UR(hostname="192.168.1.102")
+
     # tool_loc = [0.32704628917562345, -0.1017379678362813, 0.3642503117806354, -2.1526354130031917, 2.2615882459741723, -0.04632031979240964]
     home = [0.5431541204452515, -1.693524023095602, -0.7301170229911804, -2.2898713550963343, 1.567720651626587, -1.0230830351458948]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
-    sample = [0.07220331720579347, 0.21138438053671288, 0.11898933185468973, -3.141349185677643, 0.014592306794949944, 0.004077757329820521]
+    sample = [0.46245790243082585, -0.06118700788346317, 0.2455244923486396, 3.1381151254375497, -0.009423599263673563, -0.0006479074551272042]
+    sample_dispense = [0.31911569532126377, -0.2876900241298419, 0.3401125132555506, 3.1381450988048503, -0.009478214305779163, -0.0007377121919001644]
     # droplet = [-0.21435167102697, 0.31117471247776396, 
     # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
     # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
@@ -423,10 +426,10 @@ if __name__ == "__main__":
     # gripper_controller.disconnect_gripper()
     # robot.place_tool(home, handE_loc)
 
-    robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
     # sleep(15)
-    robot.pipette_transfer(home=home,tip_loc=test_loc,sample_loc=test_loc,well_loc=test_loc)
-    robot.place_tool(home,tool_loc=pipette_loc)
+    robot.pipette_transfer(home=home,tip_loc=test_loc,source=sample, target=sample_dispense)
+    # robot.place_tool(home,tool_loc=pipette_loc)
     
     robot.ur.disconnect_ur()
     
