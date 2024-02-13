@@ -354,7 +354,7 @@ if __name__ == "__main__":
     home = [0.5431541204452515, -1.693524023095602, -0.7301170229911804, -2.2898713550963343, 1.567720651626587, -1.0230830351458948]
     tip1 = [0.04639965460538513, 0.4292986855073111, 0.0924689410052111, -3.1413810571577048, 0.014647332926328135, 0.004028900798665303]
     sample = [0.46245790243082585, -0.06118700788346317, 0.2455244923486396, 3.1381151254375497, -0.009423599263673563, -0.0006479074551272042]
-    sample_dispense = [0.31911569532126377, -0.2876900241298419, 0.3401125132555506, 3.1381450988048503, -0.009478214305779163, -0.0007377121919001644]
+    sample_dispense = [0.31911569532126377, -0.2876900241298419, 0.3411125132555506, 3.1381450988048503, -0.009478214305779163, -0.0007377121919001644]
     # droplet = [-0.21435167102697, 0.31117471247776396, 
     # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
     # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
@@ -397,21 +397,25 @@ if __name__ == "__main__":
 
     # ----------------------------------------
     # CELL ASSEMBLY
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
-    # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
-    # robot.place_tool(home,tool_loc=handE_loc)
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
+    robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
+    robot.place_tool(home,tool_loc=handE_loc)
     test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
 
     # # ADD PIPETTE HERE  
-    # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    # robot.pipette_transfer(home=home,tip_loc=test_loc,sample_loc=test_loc,well_loc=test_loc)
-    # robot.place_tool(home,tool_loc=pipette_loc)
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
-    # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    # robot.place_tool(home, handE_loc)
+    robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    robot.pipette_transfer(home=home,tip_loc=test_loc,source=sample, target=sample_dispense)
+    robot.place_tool(home,tool_loc=pipette_loc)
+    
+    #Gripper
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
+    robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
+    robot.place_tool(home, handE_loc)
+
+
     # robot.ur_connection.speedl_tool([0,0,0.001,0,0,3.14],2,15.3)
     
     # robot.pick_tool(home, handE_loc,payload=1.2)
@@ -426,9 +430,8 @@ if __name__ == "__main__":
     # gripper_controller.disconnect_gripper()
     # robot.place_tool(home, handE_loc)
 
-    # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    # sleep(15)
-    robot.pipette_transfer(home=home,tip_loc=test_loc,source=sample, target=sample_dispense)
+
+    # robot.pipette_transfer(home=home,tip_loc=test_loc,source=sample, target=sample_dispense)
     # robot.place_tool(home,tool_loc=pipette_loc)
     
     robot.ur.disconnect_ur()
