@@ -14,7 +14,8 @@ import threading
 import time
 from typing import Union, OrderedDict
 import sys
-HOST = 'ur5-12idc.xray.aps.anl.gov'
+#HOST = 'ur5-12idc.xray.aps.anl.gov'
+HOST = "192.168.1.102"
 '''
 # set commands
 Initialization Commands
@@ -97,6 +98,14 @@ F Reports command buffer status. If the buffer is empty, the pump returns status
 class CommunicationException(Exception):
     pass
 
+class PipetError(Exception):
+    pass
+
+class PipetteTimeout(Exception):
+    pass
+
+class PipetSocketError(Exception):
+    pass
 
 class PipetteDriver():
     # host = 'robot_ip'
@@ -145,9 +154,30 @@ class PipetteDriver():
                       "stop_bits": 1,
                       "rx_idle_chars": 1.5,
                       "tx_idle_chars": 3.5}
+        self._step = 0
 
     def get_step(self):
-        pos = self._get_var('?0')
+        try:
+            pos = self._get_var('?0')
+            return pos
+        except PipetSocketError:
+            pos = -1
+        timeout = 10
+        cnt = 1
+        while (pos<0) and (cnt<timeout):
+            try:
+                pos = self._get_var('?0', trial=cnt)
+            except PipetSocketError:
+                pos = -1
+            time.sleep(0.1*cnt)
+            if cnt>1:
+                self.disconnect()
+#                print(f"Pipet: get_step tried {cnt} times.")
+            cnt = cnt+1
+            self.connect()
+        self._step = pos
+        if cnt==timeout:
+            raise CommunicationException("Pipet Communication Timeout.")
         return pos
     
     def get_step_percent(self):
@@ -173,6 +203,9 @@ class PipetteDriver():
     def get_speed_stop(self):
         return self._get_var('?3')
 
+    def get_max_homing_steps(self):
+        return self._get_var('?7')
+
     def get_speed_stop_percent(self):
         return self.get_speed_stop()/self._max_stop_speed*100
 
@@ -191,6 +224,9 @@ class PipetteDriver():
     def get_run_current(self):
         return self._get_var('?26')
 
+    def get_parameter(self, parameter):
+        return self._get_var(parameter, isfloat = False)
+
     def initialize(self):
         self.send_command("z1600A0A10z0", wait=True)
     
@@ -200,12 +236,20 @@ class PipetteDriver():
     def set_motorcurrent(self, value=50):
         self._set_var("m", value)
     
+    def set_step(self, value):
+        self.send_command(f"z{value}", wait=True)
+    
     def dispense(self, vol=0, percent=0, start=0, speed=0, stop=0):
+        cvol = self.get_volume()
+        cpos = self._convert_vol_to_step(cvol)
+#        print("got the volume.")
         if vol !=0:
             pos = self._convert_vol_to_step(vol)
         else:
             pos = self._convert_percent_to_step(percent)
         par = {"D": pos}
+        if cpos-pos<0:
+            raise PipetError("Cannot dispense to negative volume.")
         if start !=0:
             par.update({"v":start})
         if speed !=0:
@@ -213,12 +257,28 @@ class PipetteDriver():
         if stop !=0:
             par.update({"c":stop})
         self._set_vars(par)
+
+        newpos = self.get_step()
+        while (newpos > cpos-pos):
+            time.sleep(0.1)
+            _pos = self.get_step()
+            if newpos == _pos:
+                break
+            else:
+                newpos = _pos
+        vol = self.get_volume()
+        print(f"Pipet is at {vol} uL position.")
+
     
     def aspirate(self, vol=0, percent=0, start=0, speed=0, stop=0):
+        cvol = self.get_volume()
+        cpos = self._convert_vol_to_step(cvol)
         if vol !=0:
             pos = self._convert_vol_to_step(vol)
         else:
             pos = self._convert_percent_to_step(percent)
+        if cpos+pos > self._max_position:
+            raise PipetError("Cannot aspirate more than the max.")
         par = {"P": pos}
         if start !=0:
             par.update({"v":start})
@@ -227,6 +287,21 @@ class PipetteDriver():
         if stop !=0:
             par.update({"c":stop})
         self._set_vars(par)
+
+        newpos = self.get_step()
+        while (newpos < cpos+pos):
+            time.sleep(0.1)
+            _pos = self.get_step()
+            if newpos == _pos:
+                break
+            else:
+                newpos = _pos
+
+        # while (self.get_step() < cpos+pos):
+        #     time.sleep(0.1)
+
+        vol = self.get_volume()
+        print(f"Pipet is at {vol} uL position.")
 
     def _convert_vol_to_step(self, vol): #mL
         percent = vol/self.volume*100
@@ -253,17 +328,23 @@ class PipetteDriver():
             newpos = pos + newpos
         return self._set_var('A', newpos)
 
-    def connect(self, hostname: str=HOST, port: int = 54321, socket_timeout: float = 2.0) -> None:
-        """Connects to a pipette at the given address.
+    def connect(self, hostname: str=HOST, port: int = 54321, socket_timeout: float = 1) -> None:
+        """Connects to a pipet at the given address.
         """
         if hasattr(self, hostname):
             con = (self.hostname, self.port)
         else:
             con = (hostname, port)
+        self.address = con
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(con)
         self.socket.settimeout(socket_timeout)
 
+    def reconnect(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect(self.address)
+        self.socket.settimeout(1)
+        #self.socket.connect(self.address)
 
     def disconnect(self) -> None:
         """Closes the connection with the gripper."""
@@ -292,35 +373,44 @@ class PipetteDriver():
             cmd += f"{variable}{val}"
         cmd += 'R\r'  # R for execution and new line is required for the command to finish
         # atomic commands send/rcv
-        #timeout = 10
-        readdone = False
-        cnt = 1
-        timeout = 10
-        with self.command_lock:
-            while ((not readdone) and (cnt < timeout)):
-                self.socket.sendall(cmd.encode(self.ENCODING))
-                time.sleep(0.05)
-                try:
-                    data = self.socket.recv(1024)
-                    readdone = True
-                except:
-                    self.connect()
-                    cnt = cnt + 1
-                    # self.socket.sendall(cmd.encode(self.ENCODING))
-                    # time.sleep(0.1)
-                    # data = self.socket.recv(1024)
-                    print(f"pipette status checking has been iterated {cnt} times without success.")
-                ans = self._decode_answer(data)
-                if len(ans) == 0:
-                    readdone = False
-            t = time.time()
-            errcheck, notbusy = self._status_check(ans)
+        status, val, data = self.query(cmd)
+        errcheck, notbusy = self._status_check(status)
+#         with self.command_lock:
+#             self.socket.sendall(cmd.encode(self.ENCODING))
+#             time.sleep(0.1)
+#             ans = ""
+#             data = ""
+#             try:
+#                 data = self.socket.recv(1024)
+# #                print(data, "Normal")
+#             except CommunicationException:
+#                 data = ""
+#             except ConnectionAbortedError:
+#                 self.connect()
+#                 data = ""
+#             except socket.timeout:
+#                 print("socket timeout in set_var")
+#                 time.sleep(0.1)
+#                 data = ""
+#             try:
+#                 ans = self._get_answer(data)
+#             except:
+# #                print(data, "Decode error on line 347")
+#                 pass
+#             if len(ans)>0:
+#                 errcheck, notbusy = self._status_check(ans)
+#             else:
+#                 wait = False
+#                 errcheck = False
+
+        t = time.time()
+        timeout = 5
         if wait:
             while not notbusy:
                 time.sleep(0.1)
                 errcheck, notbusy = self.get_status()
                 if time.time()-t > timeout:
-                    print("Timeout")
+#                    print("get_status timeout in set_vars.")
                     break
         return errcheck
             # if noerror:
@@ -331,22 +421,75 @@ class PipetteDriver():
         readdone = False
         timeout = 10
         cnt = 1
-        with self.command_lock:
-            while ((not readdone) and (cnt < timeout)):
-                self.socket.sendall(cmd.encode(self.ENCODING))
-                time.sleep(0.05)
-                try:
-                    data = self.socket.recv(1024)
-                    ans = self._decode_answer(data)
-                    errcheck, busycheck = self._status_check(ans)
-                    readdone = True
-                except:
-                    self.connect()
-                    cnt = cnt + 1
-            if cnt==timeout:
-                raise CommunicationException
+        while ((not readdone) and (cnt < timeout)):
+            try:
+                status, _, _ = self.query(cmd)
+                errcheck, busycheck = self._status_check(status)
+                readdone = True
+            except CommunicationException:
+                time.sleep(0.1*cnt)
+            except socket.timeout:
+                time.sleep(0.1*cnt)
+            except ConnectionAbortedError:
+                self.connect()
+                time.sleep(0.1*cnt)
+            cnt = cnt + 1
+        if cnt==timeout:
+            raise CommunicationException("Time out.")
         return (errcheck, busycheck)
     
+    def query(self, cmd, trial = 10, timeofsleep = 0.1):
+        readdone = False
+        cnt = 1
+        data = ""
+        status = ""
+        with self.command_lock:
+            while (readdone==False) and (cnt<trial):
+                try:
+                    self.socket.sendall(cmd.encode(self.ENCODING))
+                    time.sleep(timeofsleep)
+                    data = self._recv()
+                    readdone = True
+                except CommunicationException:
+                    time.sleep(0.1*cnt)
+                except ConnectionAbortedError:
+                    self.reconnect()
+                except PipetteTimeout as err:
+                    print(err)
+                    return "", "", data
+                except BrokenPipeError as err2:
+                    print(err2)
+                    self.reconnect()
+                cnt = cnt+1
+            if cnt==trial:
+                raise PipetteTimeout
+        if len(data)>0:
+            status, val = self._get_answer(data)
+        else:
+            val = ""
+        return status, val, data
+
+    def _recv(self):
+        data = b''
+        k = b'/'
+        timeout = 5
+        t = time.time()
+        while True:
+            try:
+                k = self.socket.recv(1)
+                if len(k)>0:
+                    if isinstance(k, bytes):
+                        data += k
+                    if k[0] == 10:
+                        break
+                else:
+                    break
+                if (time.time()-t>timeout):
+                    raise PipetteTimeout
+            except socket.timeout:
+                raise PipetteTimeout
+        return data
+
     def send_command(self, command, value="", timeout=10, wait=True):
         return self._set_var(command, value=value, timeout=timeout, wait=wait)
     
@@ -359,52 +502,76 @@ class PipetteDriver():
         """
         return self._set_vars(OrderedDict([(variable, value)]), timeout = timeout, wait=wait)
 
-    def _get_var(self, variable: str):
-        """Retrieve the value of a variable from the pipette, blocking until the
+    def _get_var(self, variable: str, trial=3, isfloat=True):
+        """Retrieve the value of a variable from the pipet, blocking until the
         response is received or the socket times out.
         :param variable: Name of the variable to retrieve.
         :return: Value of the variable as integer.
         """
         # atomic commands send/rcv
         cmd = "/1"
-        readdone = False
-        timeout = 5
-        cnt = 1
-        with self.command_lock:
-            cmd += f"{variable}"
-            cmd += '\r'
-            while ((not readdone) and (cnt<timeout)):
-                self.socket.sendall(cmd.encode(self.ENCODING))
-                time.sleep(0.05)
-                try:
-                    data = self.socket.recv(1024)
-                    readdone = True
-                except:
-                    self.connect()
-                    cnt = cnt + 1
-        if len(data)>0:
-            ans = self._decode_answer(data[1:])
-            return float(ans)
-        else:
+        cmd += f"{variable}"
+        cmd += '\r'
+        #readdone = False
+        #cnt = 1
+        #data = ""
+        status, val, data = self.query(cmd)
+        resp, notbusy = self._status_check(status)
+        if resp == False:
+            raise PipetSocketError
+        if isfloat == False:
+            return val
+        try:
+            return float(val)
+        except ValueError:
+#            print(data, "Pipet: Return decode error. ans should be a number string.")
+            raise PipetSocketError
+
+    def _get_answer(self,data):
+        if len(data)==0:
             raise CommunicationException
+        dt = data.split(b'\n')
+        if len(dt)==1:
+            raise CommunicationException
+        # return should start from /x (id of the controller) and ends with \n
+        data = dt[len(dt)-2]
+        data, _ = data.split(b'\x03')
+        if data[0] != 47:
+            raise CommunicationException
+        status = data[2]
+        status = chr(status)
+        if len(data)>2:
+            value = data[3:]
+            value = value.decode(self.ENCODING)
+        else:
+            value = None
+        return status, value
 
     def _decode_answer(self, data):
         if len(data)==0:
             raise CommunicationException
+        dt = data.split(b'\n')
+        if len(dt)==1:
+            raise CommunicationException
+        # return should start from /x (id of the controller) and ends with \n
+        data = dt[len(dt)-2][1:]
         data, _ = data.split(b'\x03')
         data = data.decode(self.ENCODING)
         ans = data[2:]
         return ans
     
     def _status_check(self, data):
+        resp = ""
+        notbusy = False
         if len(data) == 0:
-            raise CommunicationException
+            return (False, notbusy)
+#            raise CommunicationException
         if data == "`":
 #            print('Not busy')
-            return (True, True)
+            return ("", True)
         if data == "@":
 #            print('Busy')
-            return (True, False)
+            return ("", False)
         if data.isupper():
             #isbusy = "Busy"
             notbusy = True
@@ -426,8 +593,12 @@ class PipetteDriver():
             resp = "Plunger Overload"
         if data == 'h':
             resp = "CAN Bus failure"
-        print(resp, notbusy)
-        return (False, notbusy)
+        raise PipetError(resp)
+#        try:
+#            print(resp, notbusy)
+#        except:
+#            print(data, "status_check")
+#        return (False, notbusy)
         # NoError_NotBusy = "`"
         # NoError_Busy = "@"
         # InitializationError_NotBusy = "a"
@@ -447,13 +618,16 @@ class PipetteDriver():
 
 if __name__ == "__main__":
     a = PipetteDriver()
-    a.connect(hostname="164.54.116.129")
-    a.initialize()
-    time.sleep(5)
+    # a.connect(hostname="164.54.116.129")
+    a.connect(hostname="192.168.1.102")
+    # time.sleep(5)
+    # a.initialize()
+    # time.sleep(5)
     # print(a.get_speed_start(), a.get_speed_stop(),a.get_speed())
-    a.aspirate(vol=20)
-    print(a.get_step())
-    a.dispense(vol=2)
+    a.dispense(vol=25)
+    # time.sleep(5)
+    # print(a.get_step())
+    # a.dispense(vol=2)
     # cmd = '/1'
     # if len(sys.argv)<2:
     #     cmd += 'z1600A0A10z0R'
