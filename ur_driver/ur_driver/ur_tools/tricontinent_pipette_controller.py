@@ -45,15 +45,13 @@ class TricontinentPipetteController():
                 # Establishing a connection with the pipette on RS485 comminication
                 self.pipette = PipetteDriver()
                 comm_setting = self.pipette._comm_setting
-                # self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
-                #                             parity=comm_setting["parity"],
-                #                             stop_bits=comm_setting["stop_bits"],
-                #                             rx_idle_chars=comm_setting["rx_idle_chars"],
-                #                             tx_idle_chars=comm_setting["tx_idle_chars"])        
-
+                self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
+                                            parity=comm_setting["parity"],
+                                            stop_bits=comm_setting["stop_bits"],
+                                            rx_idle_chars=comm_setting["rx_idle_chars"],
+                                            tx_idle_chars=comm_setting["tx_idle_chars"])        
                 self.pipette.connect(hostname=self.IP)
-                # sleep(15)
-                # self.pipette.initialize()
+                self.pipette.initialize()
 
             except Exception as err:
                 print("Pipette connection error: ", err)
@@ -69,7 +67,7 @@ class TricontinentPipetteController():
 
         try:
             self.pipette.disconnect()
-            self.ur.set_tool_communication(enabled=False)
+            # self.ur.set_tool_communication(enabled=False)
      
         except Exception as err:
             print("Pipette disconnection error: ", err)
@@ -104,7 +102,7 @@ class TricontinentPipetteController():
         sleep(2)
         print("Pipette tip successfully picked up")
 
-    def transfer_sample(self, sample_loc, well_loc = None):
+    def transfer_sample(self, home:list=None, sample_aspirate:list = None, sample_dispense:list = None ,vol:int = 10):
         
         """
         Description: 
@@ -117,16 +115,29 @@ class TricontinentPipetteController():
         # MOVE TO THE FIRT SAMPLE LOCATION
         speed_ms = 0.1
 
-        sample_above = deepcopy(sample_loc)
-        sample_above[2] += 0.1
+        sample_aspirate_above = deepcopy(sample_aspirate)
+        sample_aspirate_above[2] += 0.05
 
-        self.ur.movel(sample_above,self.accel_mss,self.speed_ms)
-        self.ur.movel(sample_loc,self.accel_mss,speed_ms)
+        self.ur.movel(sample_aspirate_above,self.accel_mss,self.speed_ms)
+        self.ur.movel(sample_aspirate,self.accel_mss,speed_ms)
 
         # ASPIRATE FIRST SAMPLE
-        self.pipette.aspirate(vol=25)
-        sleep(2)
-        self.ur.movel(sample_above,self.accel_mss,speed_ms)
+        self.pipette.aspirate(vol=vol)
+        sleep(5)
+
+        self.ur.movel(sample_aspirate_above,self.accel_mss,speed_ms)
+        self.ur.movel(home,1,1)
+
+        sample_dispense_above = deepcopy(sample_dispense)
+        sample_dispense_above[2] += 0.05
+        self.ur.movel(sample_aspirate_above,self.accel_mss,self.speed_ms)
+        self.ur.movel(sample_aspirate,self.accel_mss,speed_ms)
+
+        # DISPENSE FIRST SAMPLE
+        self.pipette.dispense(vol=vol)
+        sleep(5)
+        self.ur.movel(sample_aspirate_above,self.accel_mss,self.speed_ms)
+        self.ur.movel(home,1,1)
 
     def create_droplet(self, droplet_loc):
         """
@@ -187,13 +198,15 @@ class TricontinentPipetteController():
 
 if __name__ == "__main__":
     from urx import Robot
-    r = Robot("164.54.116.129")
-    a = TricontinentPipetteController(ur=r, pipette_ip="164.54.116.129")
+    # r = Robot("164.54.116.129")
+    ip="192.168.1.102"
+    r=Robot(ip)
+    a = TricontinentPipetteController(ur=r, pipette_ip=ip)
     a.connect_pipette()
-    # sleep(5)
-    # a.pipette.initialize()
-    a.pipette.dispense(vol=35)
-    # sleep(5)
+    sleep(5)
+    a.pipette.initialize()
+    a.pipette.aspirate(vol=5)
+    sleep(5)
     a.disconnect_pipette()
     r.close()
 
