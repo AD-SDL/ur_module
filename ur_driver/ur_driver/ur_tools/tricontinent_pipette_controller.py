@@ -49,9 +49,11 @@ class TricontinentPipetteController():
                                             parity=comm_setting["parity"],
                                             stop_bits=comm_setting["stop_bits"],
                                             rx_idle_chars=comm_setting["rx_idle_chars"],
-                                            tx_idle_chars=comm_setting["tx_idle_chars"])        
+                                            tx_idle_chars=comm_setting["tx_idle_chars"])    
+                sleep(2)    
                 self.pipette.connect(hostname=self.IP)
                 self.pipette.initialize()
+                sleep(2)
 
             except Exception as err:
                 print("Pipette connection error: ", err)
@@ -126,18 +128,18 @@ class TricontinentPipetteController():
         sleep(5)
 
         self.ur.movel(sample_aspirate_above,self.accel_mss,speed_ms)
-        self.ur.movel(home,1,1)
+        self.ur.movej(home,1,1)
 
         sample_dispense_above = deepcopy(sample_dispense)
-        sample_dispense_above[2] += 0.05
-        self.ur.movel(sample_aspirate_above,self.accel_mss,self.speed_ms)
-        self.ur.movel(sample_aspirate,self.accel_mss,speed_ms)
+        sample_dispense_above[2] += 0.02
+        self.ur.movel(sample_dispense_above,self.accel_mss,self.speed_ms)
+        self.ur.movel(sample_dispense,self.accel_mss,speed_ms)
 
         # DISPENSE FIRST SAMPLE
         self.pipette.dispense(vol=vol)
         sleep(5)
-        self.ur.movel(sample_aspirate_above,self.accel_mss,self.speed_ms)
-        self.ur.movel(home,1,1)
+        self.ur.movel(sample_dispense_above,self.accel_mss,self.speed_ms)
+        self.ur.movej(home,1,1)
 
     def create_droplet(self, droplet_loc):
         """
