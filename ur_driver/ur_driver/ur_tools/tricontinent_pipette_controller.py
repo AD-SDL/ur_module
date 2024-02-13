@@ -45,14 +45,14 @@ class TricontinentPipetteController():
                 # Establishing a connection with the pipette on RS485 comminication
                 self.pipette = PipetteDriver()
                 comm_setting = self.pipette._comm_setting
-                self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
-                                            parity=comm_setting["parity"],
-                                            stop_bits=comm_setting["stop_bits"],
-                                            rx_idle_chars=comm_setting["rx_idle_chars"],
-                                            tx_idle_chars=comm_setting["tx_idle_chars"])        
+                # self.ur.set_tool_communication(baud_rate=comm_setting["baud_rate"],
+                #                             parity=comm_setting["parity"],
+                #                             stop_bits=comm_setting["stop_bits"],
+                #                             rx_idle_chars=comm_setting["rx_idle_chars"],
+                #                             tx_idle_chars=comm_setting["tx_idle_chars"])        
 
                 self.pipette.connect(hostname=self.IP)
-                sleep(15)
+                # sleep(15)
                 # self.pipette.initialize()
 
             except Exception as err:
