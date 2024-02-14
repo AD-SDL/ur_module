@@ -15,7 +15,7 @@ import time
 from typing import Union, OrderedDict
 import sys
 #HOST = 'ur5-12idc.xray.aps.anl.gov'
-HOST = "192.168.1.102"
+HOST = "164.54.116.129"
 '''
 # set commands
 Initialization Commands
