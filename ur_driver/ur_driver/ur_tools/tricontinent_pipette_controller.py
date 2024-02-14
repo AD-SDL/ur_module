@@ -91,17 +91,17 @@ class TricontinentPipetteController():
         speed_ms = 0.100
 
         self.ur.movel(tip_above,self.accel_radss,self.speed_rads)
-        sleep(2)
+        # sleep(2)
         speed_ms = 0.01
         self.ur.movel(tip_approach,self.accel_radss,self.speed_rads)
-        sleep(2)    
+        # sleep(2)    
         self.ur.movel(tip_loc,self.accel_mss,speed_ms)
-        sleep(3)
+        # sleep(3)
         self.ur.movel(tip_approach,self.accel_mss,speed_ms)
-        sleep(2)
+        # sleep(2)
         speed_ms = 0.1
         self.ur.movel(tip_above,self.accel_mss,speed_ms)
-        sleep(2)
+        # sleep(2)
         print("Pipette tip successfully picked up")
 
     def transfer_sample(self, home:list=None, sample_aspirate:list = None, sample_dispense:list = None ,vol:int = 10):
