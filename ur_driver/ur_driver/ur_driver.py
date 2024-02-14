@@ -157,7 +157,7 @@ class UR():
             gripper_controller.disconnect_gripper()
             self.home(home)
 
-    def gripper_screw_transfer(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 10, gripper_open:int = None, gripper_close:int = None) -> None:
+    def gripper_screw_transfer(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 11, gripper_open:int = None, gripper_close:int = None) -> None:
         """
         Using custom made screwdriving solution.
         """
@@ -189,7 +189,7 @@ class UR():
             target_pose = [0,0,0.001,0,0,3.14] #Setting the screw drive motion
             self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
             print("Screwing down")
-            sleep(screw_time+2)
+            sleep(screw_time-0.5)
 
             self.ur_connection.translate_tool([0,0,-0.03],0.5,0.5)
             self.home(home)
@@ -372,7 +372,7 @@ if __name__ == "__main__":
     hex_key = [0.40061621427107863, -0.19851389684726614, 0.2195475541919895, 3.1374987322951102, -0.009368331063787221, -0.0007768712432287358]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
     assembly_deck = [0.3174903285108201, -0.08258211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
-    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3469834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
+    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3479834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
     test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
     # robot.home(home)
     # print(robot.ur_connection.getl())
@@ -397,7 +397,7 @@ if __name__ == "__main__":
 
     # Transfer sample using pipette  
     robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    robot.pipette_transfer(home=home,tip_loc=tip1,source=sample, target=sample_dispense)
+    robot.pipette_transfer(home=home,tip_loc=tip1,source=sample, target=sample_dispense, volume=8)
     robot.place_tool(home,tool_loc=pipette_loc)
     
     # Install cap on the other side of the cell
