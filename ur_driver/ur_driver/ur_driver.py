@@ -105,25 +105,25 @@ class UR():
         else:
             home_loc = [-1.355567757283346, -2.5413090191283167, 1.8447726408587855, -0.891581193809845, -1.5595606009112757, 3.3403327465057373]
         self.ur_connection.movej(home_loc,2,2)
-        sleep(3.5)
+        # sleep(3.5)
 
         print("Robot homed")
   
-    def pick_tool(self, home, tool_loc, docking_axis = "y", payload = 0.12):
+    def pick_tool(self, home, tool_loc, docking_axis = "y", payload = 0.12, tool_name:str = None):
         """
             Picks up a tool using the given tool location
         """
         self.ur_connection.set_payload(payload)
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection, tool = tool_name)
         self.home(home)
         wingman_tool.pick_tool()
         self.home(home)    
 
-    def place_tool(self, home, tool_loc, docking_axis = "y"):
+    def place_tool(self, home, tool_loc, docking_axis = "y", tool_name:str = None):
         """
             Picks up a tool using the given tool location
         """
-        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection)
+        wingman_tool = WMToolChangerController(tool_location = tool_loc, docking_axis = docking_axis, ur = self.ur_connection, tool = tool_name)
         self.home(home)
         wingman_tool.place_tool()
         self.home(home)  
@@ -276,9 +276,8 @@ class UR():
         try:
             pipette = TricontinentPipetteController(hostname = self.hostname, ur = self.ur_connection, pipette_ip=self.hostname)
             pipette.connect_pipette()
-            # pipette.pick_tip(tip_loc=tip_loc)
+            pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
-            # pipette.pipette.initialize()
             pipette.transfer_sample(home = home, sample_aspirate=source, sample_dispense=target, vol = volume)
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
@@ -352,7 +351,7 @@ if __name__ == "__main__":
 
     # tool_loc = [0.32704628917562345, -0.1017379678362813, 0.3642503117806354, -2.1526354130031917, 2.2615882459741723, -0.04632031979240964]
     home = [0.5431541204452515, -1.693524023095602, -0.7301170229911804, -2.2898713550963343, 1.567720651626587, -1.0230830351458948]
-    tip1 = [0.04314792894103472, -0.2860322742006418, 0.2290902599833372, 3.1380017093793624, -0.00934365687097245, -0.0006742913527073343]
+    tip1 = [0.04314792894103472, -0.2860322742006418, 0.2280902599833372, 3.1380017093793624, -0.00934365687097245, -0.0006742913527073343]
     sample = [0.46141141854542533, -0.060288367363232544, 0.25108778472947074, 3.1380721475655364, -0.009380578809401673, -0.0005480714914954698]
     sample_dispense = [0.3171082280819746, -0.2850972337811901, 0.3411125132555506, 3.1379895509880757, -0.009383853947478633, -0.0007087863735219047]
 
@@ -367,14 +366,16 @@ if __name__ == "__main__":
     
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
     cell_screw = [0.28783440601230226, -0.28678518269403513, 0.3176342990205253, 3.1381071683977293, -0.009392392291173335, -0.0008605239429651419]
+    cell_screw2 = [0.2879800118751197, -0.3112929344714056, 0.3176342990205253, 3.1381054902051275, -0.009339595242991501, -0.0008542758992506234]
+
     # screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
     hex_key = [0.40061621427107863, -0.19851389684726614, 0.2195475541919895, 3.1374987322951102, -0.009368331063787221, -0.0007768712432287358]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
     assembly_deck = [0.3174903285108201, -0.08258211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
-    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3479834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
-    gripper_close = 85
+    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3469834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
+    test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
     # robot.home(home)
-    print(robot.ur_connection.getl())
+    # print(robot.ur_connection.getl())
 
     # robot.pick_tool(home, pipette_loc,payload=1.2)
 
@@ -388,23 +389,22 @@ if __name__ == "__main__":
     # CELL ASSEMBLY
 
     # Put a cell into assamply and instal cap on one side
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
-    # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
-    # robot.place_tool(home,tool_loc=handE_loc)
-    # test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
+    robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
+    robot.place_tool(home,tool_loc=handE_loc)
 
-    #Transfer sample using pipette  
-    # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    # robot.pipette_transfer(home=home,tip_loc=test_loc,source=sample, target=sample_dispense)
-    # robot.place_tool(home,tool_loc=pipette_loc)
+    # Transfer sample using pipette  
+    robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    robot.pipette_transfer(home=home,tip_loc=tip1,source=sample, target=sample_dispense)
+    robot.place_tool(home,tool_loc=pipette_loc)
     
-    # # Install cap on the other side of the cell
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
-    # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    # robot.place_tool(home, handE_loc)
+    # Install cap on the other side of the cell
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200)
+    robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
+    robot.place_tool(home, handE_loc)
     
     robot.ur.disconnect_ur()
     
