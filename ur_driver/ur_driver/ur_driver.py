@@ -381,22 +381,11 @@ if __name__ == "__main__":
     # robot.pick_tool(home, screwdriver_loc,payload=3)
     # robot.screwdriver_transfer(home=home,source=hex_key,target=hex_key, source_approach_distance=0.04)
     # robot.place_tool(home,screwdriver_loc)
-    #-----------------------------------------
-     
-    # GRIPPER CELL PICK & PLACE 
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.gripper_transfer(source = assembly_deck, target = assembly_deck, source_approach_axis="y", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    # robot.gripper_transfer(home = home, source = hex_key, target = hex_key, source_approach_axis="z", target_approach_axis="z", gripper_open = 120, gripper_close = 200)
-    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    # robot.custom_screwdriver_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target_above=assembly_above,target=assembly_above,gripper_open=120,gripper_close=200)
-    # robot.place_tool(home, handE_loc)
-    #-----------------------------------------
-    # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
     
-
     # ----------------------------------------
     # CELL ASSEMBLY
+
+    # Put a cell into assamply and instal cap on one side
     robot.pick_tool(home, handE_loc,payload=1.2)
     robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
     robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
@@ -404,35 +393,16 @@ if __name__ == "__main__":
     robot.place_tool(home,tool_loc=handE_loc)
     test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
 
-    # # ADD PIPETTE HERE  
+    #Transfer sample using pipette  
     robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
     robot.pipette_transfer(home=home,tip_loc=test_loc,source=sample, target=sample_dispense)
     robot.place_tool(home,tool_loc=pipette_loc)
     
-    #Gripper
+    # Install cap on the other side of the cell
     robot.pick_tool(home, handE_loc,payload=1.2)
     robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
     robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
     robot.place_tool(home, handE_loc)
-
-
-    # robot.ur_connection.speedl_tool([0,0,0.001,0,0,3.14],2,15.3)
-    
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.ur_connection.set_tool_communication(baud_rate=115200,
-    #                                       parity=0,
-    #                                       stop_bits=1,
-    #                                       rx_idle_chars=1.5,
-    #                                       tx_idle_chars=3.5)        
-    # sleep(5)
-    # gripper_controller = FingerGripperController(hostname = robot.hostname, ur = robot.ur_connection)
-    # gripper_controller.connect_gripper()
-    # gripper_controller.disconnect_gripper()
-    # robot.place_tool(home, handE_loc)
-
-
-    # robot.pipette_transfer(home=home,tip_loc=test_loc,source=sample, target=sample_dispense)
-    # robot.place_tool(home,tool_loc=pipette_loc)
     
     robot.ur.disconnect_ur()
     
