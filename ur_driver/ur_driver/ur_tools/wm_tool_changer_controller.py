@@ -6,7 +6,7 @@ import epics
 class WMToolChangerController():
     """Initilizes the WMToolChangerController to pick and place tools with the Wingman tool changers"""    
     
-    def __init__(self, tool_location:list = None, docking_axis:str = "-x", ur = None):
+    def __init__(self, tool_location:list = None, docking_axis:str = "-x", ur = None, tool:str = None):
         """
         """
         if not ur:
@@ -33,6 +33,46 @@ class WMToolChangerController():
         self.robot_fast_velocity = 1.0
         self.robot_slow_acceleration = 1.0
         self.robot_slow_velocity = 1.0
+        
+        self.gripper_com = {"baud_rate": 115200, 
+                      "parity": 0,
+                      "stop_bits": 1,
+                      "rx_idle_chars": 1.5,
+                      "tx_idle_chars": 3.5}
+        
+        self.pipette_com = {"baud_rate": 9600, 
+                      "parity": 0,
+                      "stop_bits": 1,
+                      "rx_idle_chars": 1.5,
+                      "tx_idle_chars": 3.5}
+        
+    def _set_tool_params(self,tool):
+        if tool:
+            if tool.lower() == "gripper":
+                self._set_tool_communication(tool=self.gripper_com)
+                sleep(4)
+                if self.discover_tool():
+                    pass
+                else:
+                    pass
+
+            elif tool.lower() == "pipette":
+                self._set_tool_communication(tool=self.pipette_com)
+                sleep(4)
+                if self.discover_tool():
+                    pass
+                else:
+                    pass
+                
+    def _set_tool_communication(self, tool:dict = None):
+
+        if tool:
+            self.ur.set_tool_communication(baud_rate=tool["baud_rate"],
+                                            parity=tool["parity"],
+                                            stop_bits=tool["stop_bits"],
+                                            rx_idle_chars=tool["rx_idle_chars"],
+                                            tx_idle_chars=tool["tx_idle_chars"]
+            )
 
     def _get_tool_front(self):
         """
