@@ -57,6 +57,7 @@ class RobotiqGripper:
         :param port: Port.
         :param socket_timeout: Timeout for blocking socket operations.
         """
+        
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((hostname, port))
         self.socket.settimeout(socket_timeout)
