@@ -157,7 +157,7 @@ class UR():
             gripper_controller.disconnect_gripper()
             self.home(home)
 
-    def gripper_screw_transfer(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 11, gripper_open:int = None, gripper_close:int = None) -> None:
+    def gripper_screw_transfer(self, home:list = None, target:list = None, screwdriver_loc: list = None, screw_loc: list = None, screw_time:float = 9, gripper_open:int = None, gripper_close:int = None) -> None:
         """
         Using custom made screwdriving solution.
         """
@@ -175,7 +175,7 @@ class UR():
 
             gripper_controller.pick(pick_goal = screwdriver_loc)
 
-            # Pick screw
+            # # Pick screw
             self.home(home)
             above_goal = deepcopy(screw_loc)
             above_goal[2] += 0.06
@@ -184,12 +184,21 @@ class UR():
             self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
 
             # Move to the target location
-            self.ur_connection.movel(target, self.acceleration, self.velocity)
+            above_target = deepcopy(target)
+            above_target[2] += 0.03
+            self.ur_connection.movel(above_target, self.acceleration, self.velocity)
+            self.ur_connection.movel(target, 0.2, 0.2)
 
             target_pose = [0,0,0.001,0,0,3.14] #Setting the screw drive motion
-            self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
             print("Screwing down")
-            sleep(screw_time-0.5)
+
+            self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
+            sleep(screw_time+0.5)
+
+            target_pose = [0,0,0,0,0,0.2] #Setting the screw drive motion
+            wait_time = 0
+            self.ur_connection.speedl_tool(target_pose,acc=0.1,min_time=wait_time) # This will perform screw driving motion for defined number of seconds
+            sleep(wait_time)
 
             self.ur_connection.translate_tool([0,0,-0.03],0.5,0.5)
             self.home(home)
@@ -365,14 +374,14 @@ if __name__ == "__main__":
     screwdriver_loc = [0.43804370307762014, 0.15513117190281586, 0.006677533813616729, 3.137978068966478, -0.009313836267512065, -0.0008972976992386885]
     
     target = [0.24769823122656057, -0.3389885625301465, 0.368077779916273, 2.1730827596713733, -2.264911265531878, 0.0035892213555669857]
-    cell_screw = [0.28783440601230226, -0.28678518269403513, 0.3176342990205253, 3.1381071683977293, -0.009392392291173335, -0.0008605239429651419]
-    cell_screw2 = [0.2879800118751197, -0.3112929344714056, 0.3176342990205253, 3.1381054902051275, -0.009339595242991501, -0.0008542758992506234]
+    cell_screw = [0.28783440601230226, -0.28678518269403513, 0.3170342990205253, 3.1381071683977293, -0.009392392291173335, -0.0008605239429651419]
+    cell_screw2 = [0.2879800118751197, -0.3112929344714056, 0.3170342990205253, 3.1381054902051275, -0.009339595242991501, -0.0008542758992506234]
 
     # screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
     hex_key = [0.40061621427107863, -0.19851389684726614, 0.2195475541919895, 3.1374987322951102, -0.009368331063787221, -0.0007768712432287358]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
     assembly_deck = [0.3174903285108201, -0.08258211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
-    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3479834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
+    assembly_above = [0.3184636928538083, -0.28653275588144745, 0.3460834847161999, 3.138072684284994, -0.009498947342442873, -0.0007708886741400893]
     test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
     # robot.home(home)
     # print(robot.ur_connection.getl())
@@ -389,20 +398,20 @@ if __name__ == "__main__":
     # CELL ASSEMBLY
 
     # Put a cell into assamply and instal cap on one side
-    robot.pick_tool(home, handE_loc,payload=1.2)
+    # robot.pick_tool(home, handE_loc,payload=1.2)
     robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=9)
     robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
     robot.place_tool(home,tool_loc=handE_loc)
 
-    # Transfer sample using pipette  
+    # # Transfer sample using pipette  
     robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
     robot.pipette_transfer(home=home,tip_loc=tip1,source=sample, target=sample_dispense, volume=8)
     robot.place_tool(home,tool_loc=pipette_loc)
     
     # Install cap on the other side of the cell
     robot.pick_tool(home, handE_loc,payload=1.2)
-    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=9)
     robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
     robot.place_tool(home, handE_loc)
     
