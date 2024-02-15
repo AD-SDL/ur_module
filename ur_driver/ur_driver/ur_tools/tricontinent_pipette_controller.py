@@ -179,7 +179,7 @@ class TricontinentPipetteController():
         sleep(2)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
 
-    def eject_tip(self, eject_tip_loc):        
+    def eject_tip(self, eject_tip_loc:list = None, approach_axis:str = "x"):        
         """
         Description: Drops the pipette tip into trash bin
         """
