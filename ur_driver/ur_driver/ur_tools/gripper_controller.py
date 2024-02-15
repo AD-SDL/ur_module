@@ -37,8 +37,6 @@ class FingerGripperController():
         self.blend_radius_m = 0.001
         self.ref_frame = [0,0,0,0,0,0]
 
-        self.connect_gripper()
-
     def connect_gripper(self):
         """
         Connect to the gripper
@@ -46,12 +44,20 @@ class FingerGripperController():
         for i in range(2):
             try:
                 # GRIPPER SETUP:
-    
                 self.gripper = RobotiqGripper()
                 print('Connecting to gripper...')
                 self.gripper.connect(hostname = self.host, port = self.PORT)
+                
+                if self.gripper.is_active():
+                    print('Gripper already active')
+                else:
+                    print('Activating gripper...')
+                    self.gripper.activate()
+                    print('Opening gripper...')
+                    self.open_gripper()
+            
             except Exception as err:
-                print("Gripper error: ", err)
+                print("Gripper connection failed, try {}: {} ".format(i+1,err))
                 self.ur.set_tool_communication(baud_rate=115200,
                                         parity=0,
                                         stop_bits=1,
@@ -60,13 +66,7 @@ class FingerGripperController():
                 sleep(4)
 
             else:
-                if self.gripper.is_active():
-                    print('Gripper already active')
-                else:
-                    print('Activating gripper...')
-                    self.gripper.activate()
-                    print('Opening gripper...')
-                    self.open_gripper()
+                print("Gripper is ready!")
 
     def disconnect_gripper(self):
         """
@@ -78,7 +78,7 @@ class FingerGripperController():
             print("Gripper error: ", err)
 
         else:
-            print("Gripper conenction is closed")
+            print("Gripper connection is closed")
 
     def home_robot(self, home:list = None) -> None:
         """
