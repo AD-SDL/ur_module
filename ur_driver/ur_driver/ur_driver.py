@@ -250,35 +250,36 @@ class UR():
         self.home(home)
 
         try:
-            # gripper_controller = FingerGripperController(hostname = self.hostname, ur = self.ur_connection)
-            # gripper_controller.connect_gripper()
-            # if gripper_open:
-            #     gripper_controller.gripper_open = gripper_open
-            # if gripper_close:
-            #     gripper_controller.gripper_close = gripper_close
+            gripper_controller = FingerGripperController(hostname = self.hostname, ur = self.ur_connection)
+            gripper_controller.connect_gripper()
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
 
-            # gripper_controller.open_gripper()
-            # above_goal = deepcopy(source)
-            # above_goal[2] += 0.06
-            # self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
-            # self.ur_connection.movel(source, 0.2, 0.2)
+            gripper_controller.pick(pick_goal= source)
+            self.home(home)
+
+            above_goal = deepcopy(target)
+            above_goal[2] += 0.06
+            self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
+            self.ur_connection.movel(target, 0.1, 0.1)
 
             # gripper_controller.close_gripper()
             
-            # target_pose = [0,0,-0.001,0,0,-3.14] #Setting the screw drive motion
-            # print("Removing cap")
-            # screw_time = 15
-            # self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
-            # sleep(screw_time+0.5)
-            # self.ur_connection.translate_tool([0,0,-0.03],0.5,0.5)
-            
-            # self.home(home)
-            # gripper_controller.place(place_goal=target)
-            # self.home(home)
-            pass
+            target_pose = [0,0,0.0001,0,0,3.14] #Setting the screw drive motion
+            print("Placing cap")
+            screw_time = 6
+            self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
+            sleep(screw_time+0.5)
+
+            gripper_controller.open_gripper()
+            self.ur_connection.translate_tool([0,0,-0.03],0.5,0.5)
+            self.home(home)
+
+
         except Exception as err:
             print(err)
-            pass
 
     def pick_and_flip_object(self, home:list = None, target: list = None, approach_axis:str = None, target_approach_distance: float = None, gripper_open:int = None, gripper_close:int = None) -> None:
         '''
@@ -424,6 +425,8 @@ if __name__ == "__main__":
     tip1 = [0.04314792894103472, -0.2860322742006418, 0.2280902599833372, 3.1380017093793624, -0.00934365687097245, -0.0006742913527073343]
     sample = [0.46141141854542533, -0.060288367363232544, 0.25108778472947074, 3.1380721475655364, -0.009380578809401673, -0.0005480714914954698]
     sample_dispense = [0.3171082280819746, -0.2850972337811901, 0.3411125132555506, 3.1379895509880757, -0.009383853947478633, -0.0007087863735219047]
+    vial_cap = [0.46318998963189156, -0.0618242346521575, 0.22044247577669074, 3.1380871312109466, -0.009283145361593024, -0.0008304449494246685]
+    vial_cap_holder = [0.3496362594442045, -0.19833129786349898, 0.21851956360142491, 3.1380370691898447, -0.00907338154155439, -0.0006817652068428923]
     tip_eject = []
 
     cell_screw = [0.28742456966563107, -0.2863121497438419, 0.3180272525328063, 3.1380212198586985, -0.009448362088018303, -0.0006280218794236092]
@@ -432,13 +435,12 @@ if __name__ == "__main__":
     # screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
     hex_key = [0.40061621427107863, -0.19851389684726614, 0.2185475541919895, 3.1374987322951102, -0.009368331063787221, -0.0007768712432287358]
     cell_holder = [0.43785674873555014, -0.1363043381282072, 0.21998506102422555, 3.1380513355558466, -0.009323037734842953, -0.0006690858747472434]
+    assembly_deck = [0.3174903285108201, -0.08258211007606345, 0.11525282484663647, 1.2274734115134542, 1.190534780943193, -1.1813375188608897]
     assembly_above = [0.31914521296697795, -0.2855210106568889, 0.3477093639368639, 3.1380580674341614, -0.009396149170921641, -0.0006625851593942707]
     test_loc = [0.30364466226740844, -0.1243275644148994, 0.2844145579322907, 3.1380384242791366, -0.009336265404641286, -0.0007377624513656736]
-    vial_cap = [0.46318998963189156, -0.0618242346521575, 0.22044247577669074, 3.1380871312109466, -0.009283145361593024, -0.0008304449494246685]
-    vial_cap_holder = [0.3496362594442045, -0.19833129786349898, 0.22051956360142491, 3.1380370691898447, -0.00907338154155439, -0.0006817652068428923]
 
     # robot.home(home)
-    print(robot.ur_connection.getl())
+    # print(robot.ur_connection.getl())
 
     # robot.pick_tool(home, pipette_loc,payload=1.2)
 
@@ -452,23 +454,24 @@ if __name__ == "__main__":
     # CELL ASSEMBLY
 
     # Put a cell into assamply and instal cap on one side
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
-    # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
-    # robot.place_tool(home,tool_loc=handE_loc)
-
-    # # # Transfer sample using pipette  
-    # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    # robot.pipette_transfer(home=home,tip_loc=tip1,source=sample, target=sample_dispense, volume=8)
-    # robot.place_tool(home,tool_loc=pipette_loc)
-    
-    # # Install cap on the other side of the cell
-    # robot.pick_tool(home, handE_loc,payload=1.2)
-    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
-    # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    # robot.place_tool(home, handE_loc)
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
+    robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
     robot.remove_cap(home=home,source=vial_cap,target=vial_cap_holder,gripper_open=120, gripper_close=200)
+    robot.place_tool(home,tool_loc=handE_loc)
+
+    # # Transfer sample using pipette  
+    robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    robot.pipette_transfer(home=home,tip_loc=tip1,source=sample, target=sample_dispense, volume=9)
+    robot.place_tool(home,tool_loc=pipette_loc)
+    
+    # Install cap on the other side of the cell
+    robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.place_cap(home=home,source=vial_cap_holder,target=vial_cap,gripper_open=120, gripper_close=200)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
+    robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
+    robot.place_tool(home, handE_loc)
     robot.ur.disconnect_ur()
     
 
