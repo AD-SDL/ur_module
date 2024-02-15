@@ -189,7 +189,7 @@ class UR():
             self.ur_connection.movel(above_target, self.acceleration, self.velocity)
             self.ur_connection.movel(target, 0.2, 0.2)
 
-            target_pose = [0,0,0.001,0,0,3.14] #Setting the screw drive motion
+            target_pose = [0,0,0.00015,0,0,3.14] #Setting the screw drive motion
             print("Screwing down")
 
             self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
@@ -398,9 +398,9 @@ if __name__ == "__main__":
     # CELL ASSEMBLY
 
     # Put a cell into assamply and instal cap on one side
-    # robot.pick_tool(home, handE_loc,payload=1.2)
+    robot.pick_tool(home, handE_loc,payload=1.2)
     robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=9)
+    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
     robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
     robot.place_tool(home,tool_loc=handE_loc)
 
