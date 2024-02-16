@@ -334,7 +334,7 @@ class UR():
         
         self.home(home)
 
-    def pipette_transfer(self, home:list = None,  tip_loc: list = None, source:list = None, target:list = None, volume:int = 10) -> None:
+    def pipette_transfer(self, home:list = None,  tip_loc: list = None, tip_trash:list = None, source:list = None, target:list = None, volume:int = 10) -> None:
         '''a
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
         ''' 
@@ -347,6 +347,7 @@ class UR():
             pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
             pipette.transfer_sample(home = home, sample_aspirate=source, sample_dispense=target, vol = volume)
+            pipette.eject_tip(eject_tip_loc=tip_trash,approach_axis="y")
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
         except Exception as err:
@@ -427,7 +428,7 @@ if __name__ == "__main__":
     sample_dispense = [0.3171082280819746, -0.2850972337811901, 0.3411125132555506, 3.1379895509880757, -0.009383853947478633, -0.0007087863735219047]
     vial_cap = [0.46318998963189156, -0.0618242346521575, 0.22044247577669074, 3.1380871312109466, -0.009283145361593024, -0.0008304449494246685]
     vial_cap_holder = [0.3496362594442045, -0.19833129786349898, 0.21851956360142491, 3.1380370691898447, -0.00907338154155439, -0.0006817652068428923]
-    tip_eject = []
+    tip_trash = [0.2584365150735084, -0.29839447002022784, 0.26381819707970183, 3.1380107495494363, -0.009257765762271986, -0.0005604922095049701]
 
     cell_screw = [0.28742456966563107, -0.2863121497438419, 0.3180272525328063, 3.1380212198586985, -0.009448362088018303, -0.0006280218794236092]
     cell_screw2 = [0.28802533355775894, -0.3111315576736609, 0.3180272525328063, 3.138055908188219, -0.009412952001123928, -0.0007497956393069067]
@@ -461,9 +462,9 @@ if __name__ == "__main__":
     robot.remove_cap(home=home,source=vial_cap,target=vial_cap_holder,gripper_open=120, gripper_close=200)
     robot.place_tool(home,tool_loc=handE_loc)
 
-    # # Transfer sample using pipette  
+    # Transfer sample using pipette  
     robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    robot.pipette_transfer(home=home,tip_loc=tip1,source=sample, target=sample_dispense, volume=9)
+    robot.pipette_transfer(home=home,tip_loc=tip1, tip_trash=tip_trash, source=sample, target=sample_dispense, volume=9)
     robot.place_tool(home,tool_loc=pipette_loc)
     
     # Install cap on the other side of the cell

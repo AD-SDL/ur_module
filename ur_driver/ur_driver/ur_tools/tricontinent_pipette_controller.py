@@ -179,14 +179,19 @@ class TricontinentPipetteController():
         sleep(2)
         self.ur.movel(sample_above,self.accel_mss,speed_ms)
 
-    def eject_tip(self, eject_tip_loc:list = None, approach_axis:str = "x"):        
+    def eject_tip(self, eject_tip_loc:list = None, approach_axis:str = "x", approach_distance:float = -0.005):        
         """
         Description: Drops the pipette tip into trash bin
         """
+        if approach_axis.lower() == "y":
+            axis = 0
+        else:
+            axis = 1
+
         trash_above = deepcopy(eject_tip_loc)
         trash_front = deepcopy(eject_tip_loc)
         trash_above[2] += 0.1
-        trash_front[0] += 0.01
+        trash_front[axis] += approach_distance
         trash_front_above = deepcopy(trash_front)
         trash_front_above[2] += 0.1
 
