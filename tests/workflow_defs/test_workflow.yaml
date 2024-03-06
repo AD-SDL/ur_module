@@ -1,0 +1,18 @@
+name: Test pf400_module Module
+metadata:
+  author: Doga Ozgulbas
+  info: Tests the functionality of the pf400  Module
+  version: 0.1
+
+modules:
+  - name: pf400_module
+
+flowdef:
+  - name: Transfer
+    module: pf400_module
+    action: transfer
+    args:
+      source:  [0.5713, 1.0934, 1.0514, 0.9831, 0, 0, 0.1826]
+      target:  [0.5713, 1.0934, 1.0514, 0.9831, 0, 0, 0.1826]
+      source_plate_rotation: narrow
+      target_plate_rotation: narrow
