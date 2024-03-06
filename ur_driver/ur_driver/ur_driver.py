@@ -359,7 +359,6 @@ class UR():
    
     def run_droplet(self, home, tip_loc, sample_loc, droplet_loc, tip_trash):
         """Create droplet"""
-
         pipette = OTPipetteController(ur_connection = self.ur_connection, IP = self.hostname)
         pipette.connect_pipette()
 
