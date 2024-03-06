@@ -1,7 +1,7 @@
 [project]
-name = "pf400_module"
+name = "ur_module"
 version = "0.2.0"
-description = "Software for automatting a PF400 robot"
+description = "Software for automatting a UR robot"
 authors = [
     {name = "Ryan D. Lewis", email="ryan.lewis@anl.gov"},
     {name = "Rafael Vescovi", email="ravescovi@anl.gov"},
@@ -15,13 +15,19 @@ dependencies = [
     "fastapi>=0.103.2",
     "uvicorn>=0.21.1",
     "pytest",
+    "paramiko",
+    "scp",
+    "sockets",
+    "pyepics",
+    "urx@git+https://github.com/SintefManufacturing/python-urx.git",
+
 ]
 requires-python = ">=3.8.1"
 readme = "README.md"
 license = {text = "MIT"}
 
 [project.urls]
-homepage = "https://github.com/AD-SDL/pf400_module"
+homepage = "https://github.com/AD-SDL/ur_module"
 
 ######################
 # Build Info + Tools #
