@@ -86,16 +86,10 @@ async def about():
         'actions':
         {
             'status': state,
-            'pick_tool':'home, tool_loc',
-            'place_tool':'home, tool_loc',
+            'pick_tool':'home, tool_loc, docking_axis, payload, tool_name',
+            'place_tool':'home, tool_loc, docking_axis, payload, tool_name',
             'gripper_transfer':'home, source, target, source_approach_axis, target_approach_axis, source_approach_distance, target_approach_distance, gripper_open, gripper_close',
-            'get_current_humidity':'',
-            'get_target_humidity':'',
-            'set_target_humidity':'humidity',
-            'begin_shake':'shaker_speed',
-            'end_shake':'',
-            'load_plate':'stacker, slot',
-            'unload_plate':'stacker, slot',
+      
         }
     }
     return JSONResponse(content={"About": description})
@@ -113,7 +107,8 @@ def do_action(
     action_handle: str,  # The action to be performed
     action_vars: str,  # Any arguments necessary to run that action
 ) -> StepResponse:
-    global state, ur, module_resources
+    
+    global ur, state
     step_response = StepResponse(action_response=StepStatus.IDLE)
     if state == ModuleStatus.BUSY:
         step_response.action_response=StepStatus.FAILED
@@ -121,130 +116,90 @@ def do_action(
     else:
         try:
             state = ModuleStatus.BUSY
-            action_args = json.loads(action_vars)
-            if action_handle == "get_current_temp":
-                state = ModuleStatus.IDLE
-                step_response.action_response=StepStatus.SUCCEEDED
-                step_response.action_msg=str(liconic.climate_controller.current_temperature)
-            elif action_handle == "get_target_temp":
-                state = ModuleStatus.IDLE
-                step_response.action_response=StepStatus.SUCCEEDED
-                step_response.action_msg=str(liconic.climate_controller.target_temperature)
-            elif action_handle == "set_target_temp":
-                try:
-                    temp = float(action_args.get('temp', None))
-                    liconic.climate_controller.target_temperature = temp
-                    state = ModuleStatus.IDLE
-                    step_response.action_response=StepStatus.SUCCEEDED
-                    step_response.action_msg=f"Set temperature to {temp}"
-                except ValueError as val_err:
-                    error_msg = "Error: temp argument must be a float"
-                    print(error_msg)
-                    state = ModuleStatus.IDLE
-                    step_response.action_response=StepStatus.FAILED
-                    step_response.action_log=error_msg
-            elif action_handle == "get_current_humidity":
-                state = ModuleStatus.IDLE
-                step_response.action_response=StepStatus.SUCCEEDED
-                step_response.action_msg=str(liconic.climate_controller.current_humidity)
-            elif action_handle == "get_target_humidity":
-                state = ModuleStatus.IDLE
-                step_response.action_response=StepStatus.SUCCEEDED
-                step_response.action_msg=str(liconic.climate_controller.target_humidity)
-            elif action_handle == "set_target_humidity":
-                try:
-                    humidity = float(action_args.get('humidity', None))
-                    liconic.climate_controller.target_humidity = humidity
-                    state = ModuleStatus.IDLE
-                    step_response.action_response=StepStatus.SUCCEEDED
-                    step_response.action_msg=f"Set humidity to {humidity}"
-                except ValueError as val_err:
-                    error_msg = "Error: humidity argument must be a float"
-                    print(error_msg)
-                    state = ModuleStatus.IDLE
-                    step_response.action_response=StepStatus.FAILED
-                    step_response.action_log=error_msg
-            elif action_handle == "begin_shake":
-                try:
-                    new_shaker_speed = int(action_args.get('shaker_speed'))
-                    if liconic.shaker_controller.shaker_is_active:
-                        if not new_shaker_speed == liconic.shaker_controller.shaker_speed:
-                            """already shaking but not at the desired speed""" 
-                            # stop shaking 
-                            liconic.shaker_controller.stop_shaker()
-                            # set shaking speed to new value 
-                            liconic.shaker_controller.shaker_speed = new_shaker_speed
-                            # restart shaking at new speed 
-                            liconic.shaker_controller.activate_shaker()
-                    else:
-                        """not already shaking"""
-                        # set shaking speed to new value (regardless of if already set to new value)
-                        liconic.shaker_controller.shaker_speed = new_shaker_speed
-                        # start shaking
-                        liconic.shaker_controller.activate_shaker()
-                    step_response.action_response = StepStatus.SUCCEEDED
-                    step_response.action_msg = "Liconic shaker activated, shaker speed: " + str(liconic.shaker_controller.shaker_speed)
-                except ValueError as val_err:
-                    error_msg = "Error: shaker_speed argument must be an int"
-                    print(error_msg)
-                    state = ModuleStatus.IDLE
-                    step_response.action_response=StepStatus.FAILED
-                    step_response.action_log=error_msg
-            elif action_handle == "end_shake":
-                liconic.shaker_controller.stop_shaker()
-                step_response.action_response = StepStatus.SUCCEEDED
-                step_response.action_msg = "Liconic shaker stopped"
-            elif action_handle == "load_plate":
-                try:
-                    stacker = action_args.get('stacker', None)
-                    slot = action_args.get('slot', None)
-                    plate_id = action_args.get('plate_id', None)
-                    if stacker is None or slot is None:
-                        stacker, slot = module_resources.get_next_free_slot_int()
-                    if module_resources.is_location_occupied(stacker, slot):
-                        step_response.action_response = StepStatus.FAILED
-                        step_response.action_log = "load_plate command cannot be completed, already plate in given position"
-                    else:
-                        liconic.plate_handler.move_plate_from_transfer_station_to_slot(stacker, slot)
-                        time.sleep(20)
-                        module_resources.add_plate(plate_id, stacker, slot)
-                        step_response.action_response = StepStatus.SUCCEEDED
-                        step_response.action_msg = "Plate loaded into liconic stack " + str(stacker) + ", slot " + str(slot)
-                except ValueError as val_err:
-                    step_response.action_response = StepStatus.FAILED
-                    step_response.action_msg = "Error: stacker and slot variables must be integers; plate_id required"
-            elif action_handle == "unload_plate":
-                try:
-                    stacker = action_args.get('stacker', None)
-                    slot = action_args.get('slot', None)
-                    plate_id = action_args.get('plate_id', None)
-                    if stacker == None or slot == None:
-                        # get location based on plate id
-                        stacker, slot = module_resources.find_plate(plate_id)
+            action_vars = json.loads(action_vars)
+            if action_handle == "gripper_transfer":
+                home = action_vars.get("home", None)
+                source = action_vars.get("source", None)
+                target = action_vars.get("target", None)
+                source_approach_axis = action_vars.get("source_approach_axis", None)
+                target_approach_axis = action_vars.get("target_approach_axis", None)
+                source_approach_distance = action_vars.get("source_approach_distance", None)
+                target_approach_distance = action_vars.get("target_approach_distance", None)
+                gripper_open = action_vars.get("gripper_open", None)
+                gripper_close = action_vars.get("gripper_close", None)
 
-                        stacker, slot = module_resources.convert_stack_and_slot_int(stacker, slot)
-                    if module_resources.is_location_occupied(stacker, slot):
-                        if plate_id is None:
-                            plate_id = module_resources.get_plate_id(stacker, slot)
-                        liconic.plate_handler.move_plate_from_slot_to_transfer_station(stacker, slot)
-                        if liconic.plate_handler.transfer_station_occupied: 
-                            print("Liconic transfer station occupied")
-                        else: 
-                            print("Liconic transfer station empty")
-                        time.sleep(18)
-                        module_resources.remove_plate(plate_id)
-                        step_response.action_response = StepStatus.SUCCEEDED
-                        step_response.action_msg = "Plate unloaded from liconic stack " + str(stacker) + ", slot " + str(slot)
-                    else:
-                        raise Exception("No plate in location, can't unload.")
-                except ValueError as val_err:
-                    step_response.action_response = StepStatus.FAILED
-                    step_response.action_msg = "Error: stacker and slot variables must be integers; plate_id required"
-                
+                if not source or target or home: #Return Fail
+                    pass
+
+                ur.gripper_transfer(home = home, 
+                                    source = source, 
+                                    target = target, 
+                                    source_approach_axis=source_approach_axis, 
+                                    target_approach_axis=target_approach_axis, 
+                                    gripper_open = gripper_open, 
+                                    gripper_close = gripper_close
+                                    )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Gripper transfer from {source} to {target}",
+                )
+            
+            elif action_handle == "pick_tool":
+                home = action_vars.get("home", None)
+                tool_loc = action_vars.get("tool_loc", None)
+                payload = action_vars.get("payload", None)
+                docking_axis = action_vars.get("docking_axis", None)
+                tool_name = action_vars.get("tool_name", None)
+
+                if not home or tool_loc: #Return Fail
+                    pass
+
+                ur.pick_tool(home = home, 
+                            tool_loc = tool_loc, 
+                            docking_axis = docking_axis, 
+                            payload=payload, 
+                            tool_name=tool_name
+                            )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Pick tool {tool_name} from {tool_loc}",
+                )
+            
+            elif action_handle == "place_tool":
+                home = action_vars.get("home", None)
+                tool_loc = action_vars.get("tool_loc", None)
+                docking_axis = action_vars.get("docking_axis", None)
+                tool_name = action_vars.get("tool_name", None)
+
+                if not home or tool_loc: #Return Fail
+                    pass
+
+                ur.place_tool(home = home, 
+                            tool_loc = tool_loc, 
+                            docking_axis = docking_axis, 
+                            tool_name=tool_name
+                            )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Place tool {tool_name} from {tool_loc}",
+                )
+            
             else:
-                # Handle Unsupported actions
-                step_response.action_response=StepStatus.FAILED
-                step_response.action_log="Unsupported action"
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.FAILED,
+                    action_msg="False",
+                    action_log=f"Action {action_handle} not supported",
+                )
         except Exception as e:
             print(str(e))
             state = ModuleStatus.ERROR
