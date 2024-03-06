@@ -1,7 +1,6 @@
 """REST-based client for the Liconic"""
-import json, os, time
-from argparse import ArgumentParser
-from pathlib import Path
+import json, time
+from argparse import ArgumentParser, Namespace
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,23 +9,28 @@ from fastapi.responses import JSONResponse
 from ur_driver.ur_driver import UR 
 
 from wei.core.data_classes import (
+    ModuleAbout,
+    ModuleAction,
     ModuleStatus,
     StepResponse,
     StepStatus,
 )
+from wei.helpers import extract_version
 
-parser = ArgumentParser()
-parser.add_argument("--name", type=str, default="ur_module", help="Module name")
-parser.add_argument("--host", type=str, default="0.0.0.0", help="Host IP/Domain Name")
-parser.add_argument("--port", type=str, default="2010", help="Port for REST API")
-parser.add_argument("--ur_ip", type=str, default="/dev/ttyUSB3", help="Serial device for communicating with the device")
-args = parser.parse_args()
 
-global state, module_resources, liconic
+def parse_args() -> Namespace:
+    """Parses CLI args for the REST server"""
+    parser = ArgumentParser()
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host IP/Domain Name")
+    parser.add_argument("--port", type=int, default=3011, help="Port for REST API")
+    parser.add_argument("--ur_ip", type=str, default="164.54.116.129", help="IP address of the UR robot")
+    return parser.parse_args()
+
+global ur, state
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global state, module_resources, liconic
+    global ur, state
     """Initial run function for the app, initializes the state
         Parameters
         ----------
@@ -39,10 +43,7 @@ async def lifespan(app: FastAPI):
     try:
         # Do any instrument configuration here
         state = ModuleStatus.IDLE
-        liconic = Stx(args.device)
-        resources_path = Path(args.resources_path).expanduser().resolve()
-        check_resources_folder(resources_path)
-        module_resources = Resource(resources_path)
+        ur = UR(IP)
     except Exception as err:
         print(err)
         state = ModuleStatus.ERROR
@@ -62,11 +63,11 @@ app = FastAPI(
 @app.get("/state")
 def get_state():
     """Returns the current state of the module"""
-    global state, liconic
-    if liconic.ready: 
+    global state, ur
+    if ur.ready: 
         state = ModuleStatus.IDLE
     else:
-        if liconic.has_error: 
+        if ur.has_error: 
             state = ModuleStatus.ERROR
         else: 
             state = ModuleStatus.BUSY
@@ -79,7 +80,7 @@ async def about():
     global state
     description = {
         'name': args.name,
-        'type': 'liconic_incubator',
+        'type': 'ur_incubator',
         'actions':
         {
             'status': state,
@@ -110,7 +111,7 @@ def do_action(
     action_handle: str,  # The action to be performed
     action_vars: str,  # Any arguments necessary to run that action
 ) -> StepResponse:
-    global state, liconic, module_resources
+    global state, ur, module_resources
     step_response = StepResponse(action_response=StepStatus.IDLE)
     if state == ModuleStatus.BUSY:
         step_response.action_response=StepStatus.FAILED
@@ -251,19 +252,6 @@ def do_action(
             state = ModuleStatus.IDLE
     return step_response
 
-def check_resources_folder(resources_folder_path):
-    '''
-    checks if resource file path exists, if not, creates one
-    '''
-    if not os.path.exists(resources_folder_path):
-        os.makedirs(resources_folder_path)
-        print("Creating: " + str(resources_folder_path))
-
-        # create json file within directory
-        new_resources = create_resource_file()
-        with open(resources_folder_path / 'liconic_resources.json', 'w') as f:
-            json.dump(new_resources, f)
-
 def create_resource_file():
     '''
     if resource file does not exist, creates a blank one
@@ -289,8 +277,10 @@ def create_resource_file():
 if __name__ == "__main__":
     import uvicorn
 
+    args = parse_args()
+    
     uvicorn.run(
-        "liconic_rest_node:app",
+        "ur_rest_node:app",
         host=args.host,
         port=int(args.port),
         reload=True,
