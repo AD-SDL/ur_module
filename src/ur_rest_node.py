@@ -65,14 +65,16 @@ app = FastAPI(
 def get_state():
     """Returns the current state of the module"""
     global ur, state
-    state == ModuleStatus.IDLE
-    # if ur.ready: 
-    #     state = ModuleStatus.IDLE
-    # else:
-    #     if ur.has_error: 
-    #         state = ModuleStatus.ERROR
-    #     else: 
-    #         state = ModuleStatus.BUSY
+
+    ur.ur_dashboard.get_overall_robot_status()
+
+    if "NORMAL" not in ur.ur_dashboard.safety_status: 
+        state = ModuleStatus.ERROR
+    elif ur.get_movement_state() == "BUSY":
+        state = ModuleStatus.BUSY
+    else:
+        state = ModuleStatus.IDLE
+
     return JSONResponse(content={"State": state})
 
 
@@ -117,6 +119,7 @@ def do_action(
         try:
             state = ModuleStatus.BUSY
             action_vars = json.loads(action_vars)
+
             if action_handle == "gripper_transfer":
                 home = action_vars.get("home", None)
                 source = action_vars.get("source", None)
@@ -248,6 +251,7 @@ def do_action(
                     action_msg="",
                     action_log=f"Pipette transfer to {target}, volume {volume}",
                 )
+            
             elif action_handle == "pick_and_flip_object":
                 home = action_vars.get("home", None)
                 target = action_vars.get("target", None)
@@ -271,8 +275,75 @@ def do_action(
                 return StepResponse(
                     action_response=StepStatus.SUCCEEDED,
                     action_msg="",
-                    action_log=f"Pipette transfer to {target}, volume {volume}",
+                    action_log=f"Pick and flip object at {target}",
                 )
+            
+            elif action_handle == "remove_cap":
+                home = action_vars.get("home", None)
+                source = action_vars.get("source", None)
+                target = action_vars.get("target", None)
+                gripper_open = action_vars.get("gripper_open", None)
+                gripper_close = action_vars.get("gripper_close", None)
+
+                if not home or source or target: #Return Fail
+                    pass
+
+                ur.remove_cap(home = home, 
+                            source = source,
+                            target = target, 
+                            gripper_open = gripper_open,
+                            gripper_close = gripper_close
+                            )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Remove cap at {target}",
+                )
+            
+            elif action_handle == "place_cap":
+                home = action_vars.get("home", None)
+                source = action_vars.get("source", None)
+                target = action_vars.get("target", None)
+                gripper_open = action_vars.get("gripper_open", None)
+                gripper_close = action_vars.get("gripper_close", None)
+
+                if not home or source or target: #Return Fail
+                    pass
+
+                ur.place_cap(home = home, 
+                            source = source,
+                            target = target, 
+                            gripper_open = gripper_open,
+                            gripper_close = gripper_close
+                            )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Place cap at {target}",
+                )
+            
+            elif action_handle == "run_urp_program":
+                transfer_file_path = action_vars.get("transfer_file_path", None)
+                program_name = action_vars.get("program_name", None)
+
+                if not program_name: #Return Fail
+                    pass
+
+                ur.run_urp_program(transfer_file_path = transfer_file_path, 
+                            program_name = program_name,
+                            )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Run rup program {program_name}",
+                )
+            
             else:
                 state = ModuleStatus.IDLE
                 return StepResponse(
