@@ -1,8 +1,6 @@
 from time import sleep
 from copy import deepcopy
 
-import epics
-
 class WMToolChangerController():
     """Initilizes the WMToolChangerController to pick and place tools with the Wingman tool changers"""    
     
