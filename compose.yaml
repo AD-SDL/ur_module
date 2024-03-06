@@ -1,7 +1,7 @@
-name: pf400_module
+name: ur_module
 services:
-  pf400_module:
-    container_name: pf400_module
+  ur_module:
+    container_name: ur_module
     image: ${IMAGE}
     build:
       context: .
@@ -10,10 +10,10 @@ services:
         - ${IMAGE}:latest
         - ${IMAGE}:${PROJECT_VERSION}
         - ${IMAGE}:dev
-    command: python -m pf400_rest_node --port 3000 --pf400_ip ${PF400_IP} --pf400_port ${PF400_PORT}
+    command: python -m ur_rest_node --port 3011 --ur_ip ${UR_IP}
     env_file: .env
     volumes:
-      - ./src:/home/app/pf400_module/src
-      - ./tests:/home/app/pf400_module/tests
+      - ./src:/home/app/ur_module/src
+      - ./tests:/home/app/ur_module/tests
     ports:
-      - 3000:3000
+      - 3011:3011
