@@ -14,11 +14,11 @@ class TestImports(TestModule_Base):
 
     def test_driver_import(self):
         """Test the driver and rest node imports"""
-        import pf400_driver
-        import pf400_rest_node
+        import ur_driver
+        import ur_rest_node
 
-        assert pf400_driver
-        assert pf400_rest_node
+        assert ur_driver
+        assert ur_rest_node
 
 
 if __name__ == "__main__":
