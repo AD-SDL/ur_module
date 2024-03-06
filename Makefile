@@ -22,12 +22,12 @@ checks: # Runs all the pre-commit checks
 
 test: init .env paths # Runs all the tests
 	@docker compose -f wei.compose.yaml --env-file .env up --build -d
-	@docker compose -f wei.compose.yaml --env-file .env exec pf400_module pytest -p no:cacheprovider -m "not hardware" pf400_module
+	@docker compose -f wei.compose.yaml --env-file .env exec ur_module pytest -p no:cacheprovider -m "not hardware" ur_module
 	@docker compose -f wei.compose.yaml --env-file .env down
 
 # hardware_test: init .env paths # Runs all the tests
 # 	@docker compose -f wei.compose.yaml --env-file .env up --build -d
-# 	@docker compose -f wei.compose.yaml --env-file .env exec pf400_module pytest -p no:cacheprovider -m "hardware" pf400_module
+# 	@docker compose -f wei.compose.yaml --env-file .env exec ur_module pytest -p no:cacheprovider -m "hardware" ur_module
 # 	@docker compose -f wei.compose.yaml --env-file .env down
 
 clean:
