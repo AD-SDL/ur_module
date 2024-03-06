@@ -10,10 +10,10 @@ config:
 #List of all components accessible in this workcell
 modules:
 
-  - name: pf400_module
-    model: Brooks Automation PF400
+  - name: ur_module
+    model: Universal Robot UR5e
     interface: wei_rest_node
     config:
-      rest_node_address: "http://pf400_module:3000"
+      rest_node_address: "http://ur_module:3011"
     workcell_coordinates: [0, 0, 0, 0, 0, 0]
 locations: {}
