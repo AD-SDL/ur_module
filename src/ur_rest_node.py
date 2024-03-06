@@ -100,8 +100,8 @@ async def about():
 @app.get("/resources")
 async def resources():
     """Returns the current resources available to the module"""
-    global state, module_resources
-    return JSONResponse(content={"Resources": module_resources.resources})
+    global state
+    return JSONResponse(content={"Resources": "TEST"})
 
 
 @app.post("/action")
@@ -112,6 +112,7 @@ def do_action(
     
     global ur, state
     step_response = StepResponse(action_response=StepStatus.IDLE)
+    
     if state == ModuleStatus.BUSY:
         step_response.action_response=StepStatus.FAILED
         step_response.action_log="Module is busy"
