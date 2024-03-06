@@ -21,8 +21,9 @@ from wei.helpers import extract_version
 def parse_args() -> Namespace:
     """Parses CLI args for the REST server"""
     parser = ArgumentParser()
+    parser.add_argument("--name", type=str, default="ur_module", help="Module name")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host IP/Domain Name")
-    parser.add_argument("--port", type=int, default=3011, help="Port for REST API")
+    parser.add_argument("--port", type=str, default="3011", help="Port for REST API")
     parser.add_argument("--ur_ip", type=str, default="164.54.116.129", help="IP address of the UR robot")
     return parser.parse_args()
 
@@ -43,7 +44,7 @@ async def lifespan(app: FastAPI):
     try:
         # Do any instrument configuration here
         state = ModuleStatus.IDLE
-        ur = UR(IP)
+        ur = UR(args.ur_ip)
     except Exception as err:
         print(err)
         state = ModuleStatus.ERROR
@@ -63,14 +64,15 @@ app = FastAPI(
 @app.get("/state")
 def get_state():
     """Returns the current state of the module"""
-    global state, ur
-    if ur.ready: 
-        state = ModuleStatus.IDLE
-    else:
-        if ur.has_error: 
-            state = ModuleStatus.ERROR
-        else: 
-            state = ModuleStatus.BUSY
+    global ur, state
+    state == ModuleStatus.IDLE
+    # if ur.ready: 
+    #     state = ModuleStatus.IDLE
+    # else:
+    #     if ur.has_error: 
+    #         state = ModuleStatus.ERROR
+    #     else: 
+    #         state = ModuleStatus.BUSY
     return JSONResponse(content={"State": state})
 
 
@@ -80,13 +82,13 @@ async def about():
     global state
     description = {
         'name': args.name,
-        'type': 'ur_incubator',
+        'type': 'ur_arm',
         'actions':
         {
             'status': state,
-            'get_current_temp':'',
-            'get_target_temp':'',
-            'set_target_temp':'temp',
+            'pick_tool':'home, tool_loc',
+            'place_tool':'home, tool_loc',
+            'gripper_transfer':'home, source, target, source_approach_axis, target_approach_axis, source_approach_distance, target_approach_distance, gripper_open, gripper_close',
             'get_current_humidity':'',
             'get_target_humidity':'',
             'set_target_humidity':'humidity',
