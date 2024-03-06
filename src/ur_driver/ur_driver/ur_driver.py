@@ -455,24 +455,24 @@ if __name__ == "__main__":
 
     # Put a cell into assamply and instal cap on one side
     robot.pick_tool(home, handE_loc,payload=1.2)
-    robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
-    robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
-    robot.remove_cap(home=home,source=vial_cap,target=vial_cap_holder,gripper_open=120, gripper_close=200)
-    robot.place_tool(home,tool_loc=handE_loc)
+    # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
+    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
+    # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
+    # robot.remove_cap(home=home,source=vial_cap,target=vial_cap_holder,gripper_open=120, gripper_close=200)
+    # robot.place_tool(home,tool_loc=handE_loc)
 
-    # Transfer sample using pipette  
-    robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    robot.pipette_transfer(home=home,tip_loc=tip1, tip_trash=tip_trash, source=sample, target=sample_dispense, volume=9)
-    robot.place_tool(home,tool_loc=pipette_loc)
+    # # Transfer sample using pipette  
+    # robot.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
+    # robot.pipette_transfer(home=home,tip_loc=tip1, tip_trash=tip_trash, source=sample, target=sample_dispense, volume=9)
+    # robot.place_tool(home,tool_loc=pipette_loc)
     
-    # Install cap on the other side of the cell
-    robot.pick_tool(home, handE_loc,payload=1.2)
-    robot.place_cap(home=home,source=vial_cap_holder,target=vial_cap,gripper_open=120, gripper_close=200)
-    robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
-    robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    robot.place_tool(home, handE_loc)
-    robot.ur.disconnect_ur()
+    # # Install cap on the other side of the cell
+    # robot.pick_tool(home, handE_loc,payload=1.2)
+    # robot.place_cap(home=home,source=vial_cap_holder,target=vial_cap,gripper_open=120, gripper_close=200)
+    # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
+    # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
+    # robot.place_tool(home, handE_loc)
+    # robot.ur.disconnect_ur()
     
 
 
