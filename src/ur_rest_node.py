@@ -134,6 +134,8 @@ def do_action(
                 ur.gripper_transfer(home = home, 
                                     source = source, 
                                     target = target, 
+                                    source_approach_distance = source_approach_distance,
+                                    target_approach_distance = target_approach_distance,
                                     source_approach_axis=source_approach_axis, 
                                     target_approach_axis=target_approach_axis, 
                                     gripper_open = gripper_open, 
@@ -193,6 +195,84 @@ def do_action(
                     action_log=f"Place tool {tool_name} from {tool_loc}",
                 )
             
+            elif action_handle == "gripper_screw_transfer":
+                home = action_vars.get("home", None)
+                screwdriver_loc = action_vars.get("screwdriver_loc", None)
+                screw_loc = action_vars.get("screw_loc", None)
+                screw_time = action_vars.get("screw_time", None)
+                target = action_vars.get("target", None)
+                gripper_open = action_vars.get("gripper_open", None)
+                gripper_close = action_vars.get("gripper_close", None)
+
+                if not home or screwdriver_loc or screw_loc or target: #Return Fail
+                    pass
+
+                ur.gripper_screw_transfer(home = home, 
+                                        screwdriver_loc = screwdriver_loc, 
+                                        screw_loc = screw_loc, 
+                                        screw_time = screw_time,
+                                        target = target,
+                                        gripper_open = gripper_open,
+                                        gripper_close = gripper_close
+                                        )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Gripper screw transfer to {target}",
+                )
+            
+            elif action_handle == "pipette_transfer":
+                home = action_vars.get("home", None)
+                tip_loc = action_vars.get("tip_loc", None)
+                tip_trash = action_vars.get("tip_trash", None)
+                source = action_vars.get("source", None)
+                target = action_vars.get("target", None)
+                volume = action_vars.get("volume", None)
+
+                if not home or tip_loc or source or target: #Return Fail
+                    pass
+
+                ur.pipette_transfer(home = home, 
+                                    tip_loc = tip_loc, 
+                                    tip_trash = tip_trash, 
+                                    source = source,
+                                    target = target,
+                                    volume = volume,
+                                    )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Pipette transfer to {target}, volume {volume}",
+                )
+            elif action_handle == "pick_and_flip_object":
+                home = action_vars.get("home", None)
+                target = action_vars.get("target", None)
+                approach_axis = action_vars.get("approach_axis", None)
+                target_approach_distance = action_vars.get("target_approach_distance", None)
+                gripper_open = action_vars.get("gripper_open", None)
+                gripper_close = action_vars.get("gripper_close", None)
+
+                if not home or target: #Return Fail
+                    pass
+
+                ur.pick_and_flip_object(home = home, 
+                                        target = target, 
+                                        approach_axis = approach_axis,
+                                        target_approach_distance = target_approach_distance,
+                                        gripper_open = gripper_open,
+                                        gripper_close = gripper_close
+                                        )
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Pipette transfer to {target}, volume {volume}",
+                )
             else:
                 state = ModuleStatus.IDLE
                 return StepResponse(
@@ -208,28 +288,6 @@ def do_action(
         else:
             state = ModuleStatus.IDLE
     return step_response
-
-def create_resource_file():
-    '''
-    if resource file does not exist, creates a blank one
-    '''
-    resources = {}
-    for stack in range(4):
-        curr_stack = "Stack"+str(stack+1)
-        print(curr_stack)
-        slot_dict = {}
-        for slot in range(22):
-            curr_slot = "Slot"+str(slot+1)
-            slot_dict[curr_slot] = {
-                "occupied": False,
-                "time_added": "0",
-                "plate_id": "NONE"
-            }
-
-        resources[curr_stack] = slot_dict
-    
-    return resources
-
 
 if __name__ == "__main__":
     import uvicorn
