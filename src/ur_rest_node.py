@@ -42,6 +42,7 @@ async def lifespan(app: FastAPI):
         -------
         None"""
     try:
+        args = parse_args()
         # Do any instrument configuration here
         state = ModuleStatus.IDLE
         ur = UR(args.ur_ip)
@@ -81,7 +82,9 @@ def get_state():
 @app.get("/about")
 async def about():
     """Returns a description of the actions and resources the module supports"""
-    global state
+    global ur, state
+
+    args = parse_args()
     description = {
         'name': args.name,
         'type': 'ur_arm',
