@@ -9,9 +9,9 @@ from copy import deepcopy
 import json
 from math import radians, degrees
 
-from ur_dashboard import UR_DASHBOARD
-from ur_tools import *
 from urx import Robot, RobotException
+from ur_driver.ur_dashboard import UR_DASHBOARD
+from ur_driver.ur_tools import *
 
 class Connection():
     """Connection to the UR robot to be shared within UR driver """
