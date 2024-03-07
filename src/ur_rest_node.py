@@ -6,8 +6,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from ur_driver import UR 
-
+# from ur_driver import UR 
+from ur_driver.ur_driver.ur_driver import UR
 from wei.core.data_classes import (
     ModuleAbout,
     ModuleAction,
