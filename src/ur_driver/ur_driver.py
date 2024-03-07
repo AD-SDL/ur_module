@@ -10,15 +10,14 @@ import json
 from math import radians, degrees
 
 from urx import Robot, RobotException
-from ur_driver.ur_dashboard import UR_DASHBOARD
-from ur_driver.ur_tools import *
+from ur_dashboard import UR_DASHBOARD
+from ur_tools import *
 
 class Connection():
     """Connection to the UR robot to be shared within UR driver """
-    def __init__(self,  hostname:str = "146.137.240.38", PORT: int = 29999) -> None:
+    def __init__(self,  hostname:str = "146.137.240.38") -> None:
 
         self.hostname = hostname
-        self.PORT = PORT
         
         self.connection = None
         self.connect_ur()
@@ -454,7 +453,7 @@ if __name__ == "__main__":
     # CELL ASSEMBLY
 
     # Put a cell into assamply and instal cap on one side
-    robot.pick_tool(home, handE_loc,payload=1.2)
+    # robot.pick_tool(home, handE_loc,payload=1.2)
     # robot.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
     # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
     # robot.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
@@ -472,7 +471,7 @@ if __name__ == "__main__":
     # robot.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
     # robot.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
     # robot.place_tool(home, handE_loc)
-    # robot.ur.disconnect_ur()
+    robot.ur.disconnect_ur()
     
 
 
