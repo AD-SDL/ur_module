@@ -19,6 +19,7 @@ dependencies = [
     "scp",
     "sockets",
     "pyepics",
+    "opencv-python'
     "urx@git+https://github.com/SintefManufacturing/python-urx.git",
 
 ]
