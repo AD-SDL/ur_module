@@ -67,14 +67,14 @@ def get_state():
     """Returns the current state of the module"""
     global ur, state
 
-    ur.ur_dashboard.get_overall_robot_status()
-
-    if "NORMAL" not in ur.ur_dashboard.safety_status: 
-        state = ModuleStatus.ERROR
-    elif ur.get_movement_state() == "BUSY":
-        state = ModuleStatus.BUSY
-    else:
-        state = ModuleStatus.IDLE
+    if not state == "BUSY":
+        ur.ur_dashboard.get_overall_robot_status()
+        if "NORMAL" not in ur.ur_dashboard.safety_status: 
+            state = ModuleStatus.ERROR
+        elif ur.get_movement_state() == "BUSY":
+            state = ModuleStatus.BUSY
+        else:
+            state = ModuleStatus.IDLE
 
     return JSONResponse(content={"State": state})
 
