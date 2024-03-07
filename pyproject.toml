@@ -19,11 +19,6 @@ dependencies = [
     "scp",
     "sockets",
     "pyepics",
-    "opencv-python",
-    "pyrealsense2",
-    "torch",
-    "torchvision",
-    "ultralytics",
     "urx@git+https://github.com/Dozgulbas/python-urx.git",
 
 ]
