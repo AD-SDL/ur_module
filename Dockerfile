@@ -15,6 +15,8 @@ COPY ./README.md ur_module/README.md
 COPY ./pyproject.toml ur_module/pyproject.toml
 COPY ./tests ur_module/tests
 
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+
 RUN --mount=type=cache,target=/root/.cache \
     pip install -e ./ur_module
 
