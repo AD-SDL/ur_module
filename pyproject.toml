@@ -24,7 +24,7 @@ dependencies = [
     "torch",
     "torchvision",
     "ultralytics",
-    "urx@git+https://github.com/SintefManufacturing/python-urx.git",
+    "urx@git+https://github.com/Dozgulbas/python-urx.git",
 
 ]
 
