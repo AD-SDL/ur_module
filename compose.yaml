@@ -1,0 +1,19 @@
+name: ur_module
+services:
+  ur_module:
+    container_name: ur_module
+    image: ${IMAGE}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - ${IMAGE}:latest
+        - ${IMAGE}:${PROJECT_VERSION}
+        - ${IMAGE}:dev
+    command: python -m ur_rest_node --port 3011 --ur_ip ${UR_IP}
+    env_file: .env
+    volumes:
+      - ./src:/home/app/ur_module/src
+      - ./tests:/home/app/ur_module/tests
+    ports:
+      - 3011:3011
