@@ -66,7 +66,7 @@ class UR():
         self.hostname = hostname
         self.PORT = PORT
         self.ur_dashboard = UR_DASHBOARD(hostname = self.hostname, PORT = self.PORT)
-        self.ur = Connection(hostname = self.hostname, PORT = self.PORT)
+        self.ur = Connection(hostname = self.hostname)
         self.ur_connection = self.ur.connection
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.acceleration = 0.5
