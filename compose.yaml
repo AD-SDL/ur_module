@@ -8,7 +8,6 @@ services:
       dockerfile: Dockerfile
       tags:
         - ${IMAGE}:latest
-        - ${IMAGE}:${PROJECT_VERSION}
         - ${IMAGE}:dev
     command: python -m ur_rest_node --port 3011 --ur_ip ${UR_IP}
     env_file: .env
