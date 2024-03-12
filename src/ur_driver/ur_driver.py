@@ -10,8 +10,8 @@ import json
 from math import radians, degrees
 
 from urx import Robot, RobotException
-from ur_driver.ur_dashboard import UR_DASHBOARD
-from ur_driver.ur_tools import *
+from ur_dashboard import UR_DASHBOARD
+from ur_tools import *
 
 class Connection():
     """Connection to the UR robot to be shared within UR driver """
@@ -266,7 +266,7 @@ class UR():
 
             # gripper_controller.close_gripper()
             
-            target_pose = [0,0,0.0001,0,0,3.14] #Setting the screw drive motion
+            target_pose = [0,0,0.0001,0,0,2.10] #Setting the screw drive motion
             print("Placing cap")
             screw_time = 6
             self.ur_connection.speedl_tool(target_pose,2, screw_time) # This will perform screw driving motion for defined number of seconds
@@ -428,8 +428,8 @@ if __name__ == "__main__":
     vial_cap_holder = [0.3496362594442045, -0.19833129786349898, 0.21851956360142491, 3.1380370691898447, -0.00907338154155439, -0.0006817652068428923]
     tip_trash = [0.2584365150735084, -0.29839447002022784, 0.26381819707970183, 3.1380107495494363, -0.009257765762271986, -0.0005604922095049701]
 
-    cell_screw = [0.28742456966563107, -0.2863121497438419, 0.3180272525328063, 3.1380212198586985, -0.009448362088018303, -0.0006280218794236092]
-    cell_screw2 = [0.28802533355775894, -0.3111315576736609, 0.3180272525328063, 3.138055908188219, -0.009412952001123928, -0.0007497956393069067]
+    cell_screw = [0.2874263975289342, -0.2865822322485842, 0.3180272525328063, 3.1380331051698533, -0.009437118292235473, -0.0007542998874791568]
+    cell_screw2 = [0.28785074639084496, -0.3117594886471939, 0.3180272525328063, 3.138005298544322, -0.009407801356733062, -0.0005678208909298462]
 
     # screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
     hex_key = [0.4484990523709619, -0.1237038201799127, 0.2186755997135713, 3.135206222241475, -0.02162004543818643, 0.010296128434757565]
@@ -443,23 +443,8 @@ if __name__ == "__main__":
     ur5_cell_holder = [0.023601991519811308, -0.8269812730950779, 0.22224875259615529, -3.1294422940780655, 0.024367760380236043, -0.006320087283384127]
     ur5_home = [0.2069321870803833, -1.4558529642275353, -1.5868407487869263, -1.665375371972555, 1.5850671529769897, -1.350588623677389]
 
-    # UR5 ----------------
-    # print(robot3.ur_connection.getl())
-    # robot5.home(ur5_home)
-    # robot5.pick_tool(home= ur5_home,tool_loc=ur5_handE)
-    # print(robot5.ur_connection.getj())    
-    # robot5.ur_connection.movel(ur5_home,0.1,0.1)
-    # print(robot5.ur_connection.getl())
-    # robot5.gripper_transfer(home = ur5_home, source = ur5_measurement_unit , target = ur5_cell_holder, source_approach_axis="z", target_approach_axis="z",source_approach_distance=0.15, target_approach_distance=0.15, gripper_open = 190, gripper_close = 240)
-
-
-    
-    # OLD SCREWDRIVING ---------------------------
-    # robot.pick_tool(home, screwdriver_loc,payload=3)
-    # robot3.screwdriver_transfer(home=home,source=hex_key,target=hex_key, source_approach_distance=0.04)
-    # robot.place_tool(home,screwdriver_loc)
-    
     # ----------------------------------------
+    # print(robot3.ur_connection.getl())
     # CELL ASSEMBLY
 
     # Put a cell into assamply and instal cap on one side
@@ -478,7 +463,7 @@ if __name__ == "__main__":
     # Install cap on the other side of the cell
     # robot3.pick_tool(home, handE_loc,payload=1.2)
     # robot3.place_cap(home=home,source=vial_cap_holder,target=vial_cap,gripper_open=120, gripper_close=200)
-    # robot3.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
+    robot3.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
     # robot3.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
     # robot3.place_tool(home, handE_loc)
     
