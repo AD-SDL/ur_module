@@ -1,13 +1,32 @@
+"""URP Generator Class"""
+
 
 class URPGenerator:
-    def __init__(self, filename):
+    """This object is designed to genereate URP scripts on local to be later trasnfer on to the Polyscope"""
+
+    def __init__(self, filename: str = None):
+        """Contractor for the URPGenerator
+
+        Args:
+            filename (str): Filename to be used after the URP program is generated
+        """
         self.filename = filename
         self.program = ""
 
-    def add_line(self, line):
+    def add_line(self, line: str = None):
+        """Adds a new line
+
+        Args:
+            line (str): A  string to be added as a new line
+        """
         self.program += line + "\n"
 
-    def add_activate_tool(self,tool_name:str = None):
+    def add_activate_tool(self, tool_name: str = None):
+        """Adds the necessary lines to activate a tool into the URP program
+
+        Args:
+            tool_name (str): Name of the tool
+        """
         self.add_line("def activate_tool():")
         self.add_line("    textmsg('Activating Robotiq screwdriver tool')")
         self.add_line("")
@@ -24,7 +43,13 @@ class URPGenerator:
         self.add_line("")
         self.add_line("end")
 
-    def add_pick_and_place(self, pick_location, place_location):
+    def add_pick_and_place(self, pick_location: str = None, place_location: str = None):
+        """Adds the necessary lines for pick and place jobs into the URP program
+
+        Args:
+            pick_location (str): Pick location
+            place_location (str): Place location
+        """
         self.add_line("def pick_and_place():")
         self.add_line("    textmsg('Starting pick and place operation')")
         self.add_line("")
@@ -45,8 +70,14 @@ class URPGenerator:
         self.add_line("    textmsg('Pick and place operation completed')")
         self.add_line("")
         self.add_line("end")
-        
-    def add_drive_screw(self, torque, rotation_speed):
+
+    def add_drive_screw(self, torque: float = None, rotation_speed: float = None):
+        """Adds the necessary lines for driving the screwdriver into the URP program
+
+        Args:
+            torque (float): NM
+            rotation_speed (float): RPM
+        """
         self.add_line("def drive_screw(torque, rotation_speed):")
         self.add_line("    textmsg('Driving screw')")
         self.add_line("")
@@ -68,6 +99,7 @@ class URPGenerator:
         self.add_line("end")
 
     def add_deactivate_tool(self):
+        """Adds the necessary lines to deactivate the tool into the URP program"""
         self.add_line("def deactivate_tool():")
         self.add_line("    textmsg('Deactivating Robotiq screwdriver tool')")
         self.add_line("")
@@ -84,6 +116,7 @@ class URPGenerator:
         self.add_line("end")
 
     def generate_program(self):
+        """Gerates the program and saves it to local path"""
         with open(self.filename, "w") as file:
             file.write(self.program)
 
@@ -91,8 +124,22 @@ class URPGenerator:
 
 
 # Usage example
-pick_location = [0.1, 0.2, 0.3, 0, 3.14159, 0]  # Example pick location (x, y, z, rx, ry, rz)
-place_location = [0.4, 0.5, 0.6, 0, 3.14159, 0]  # Example place location (x, y, z, rx, ry, rz)
+pick_location = [
+    0.1,
+    0.2,
+    0.3,
+    0,
+    3.14159,
+    0,
+]  # Example pick location (x, y, z, rx, ry, rz)
+place_location = [
+    0.4,
+    0.5,
+    0.6,
+    0,
+    3.14159,
+    0,
+]  # Example place location (x, y, z, rx, ry, rz)
 
 # generator = URPGenerator("pick_and_place.urp")
 # generator.add_pick_and_place(pick_location, place_location)
