@@ -1,3 +1,5 @@
+"""Interpreter Socket to create remote communication with Interpreter URP generator that runs on UR polyscope"""
+
 import logging
 import re
 import socket
@@ -7,10 +9,17 @@ UR_INTERPRETER_SOCKET = 30020
 
 
 class InterpreterSocket:
+    """This socket creates a remote interface with the interpreter urp program generator to create urp programs on the polyscope remotely"""
+
     log = logging.getLogger("interpreter.InterpreterHelper")
     STATE_REPLY_PATTERN = re.compile(r"(\w+):\W+(\d+)?")
 
-    def __init__(self, hostname: str = None, port: int = UR_INTERPRETER_SOCKET, timeout: float = 2.0) -> None:
+    def __init__(
+        self,
+        hostname: str = None,
+        port: int = UR_INTERPRETER_SOCKET,
+        timeout: float = 2.0,
+    ) -> None:
         """Constructor for the InterpreterSocket class.
         :param hostname: Hostname or ip.
         :param port: Port.
@@ -32,7 +41,7 @@ class InterpreterSocket:
         except socket.error as exc:
             self.log.error(f"Interpreter Socket Error = {exc}")
             raise exc
-        
+
     def disconnect(self) -> None:
         """Closes the connection with the Interpreter socket."""
         self.socket.close()
@@ -42,7 +51,7 @@ class InterpreterSocket:
         read one line from the socket
         :return: text until new line
         """
-        collected = b''
+        collected = b""
         while True:
             part = self.socket.recv(1)
             if part != b"\n":
@@ -71,30 +80,40 @@ class InterpreterSocket:
         return int(reply.group(2))
 
     def clear(self):
+        """Clear the urp programs"""
         return self.execute_command("clear_interpreter()")
 
     def skip(self):
+        """Skips the buffer"""
         return self.execute_command("skipbuffer")
 
     def abort_move(self):
+        """Abort"""
         return self.execute_command("abort")
 
     def get_last_interpreted_id(self):
+        """Gets the last interpreted ID"""
         return self.execute_command("statelastinterpreted")
 
     def get_last_executed_id(self):
+        """Gets the last executed ID"""
         return self.execute_command("statelastexecuted")
 
     def get_last_cleared_id(self):
+        """Get the last cleared ID"""
         return self.execute_command("statelastcleared")
 
     def get_unexecuted_count(self):
+        """Get unexecuted line count"""
         return self.execute_command("stateunexecuted")
 
     def end_interpreter(self):
+        """End interpreter program"""
         return self.execute_command("end_interpreter()")
 
+
 if __name__ == "__main__":
+    """Tests"""
     tool = InterpreterSocket(ip="164.54.116.129")
     tool.connect()
     tool.execute_command("rq_screw_turn(1,1,3600,100,False,9)")
