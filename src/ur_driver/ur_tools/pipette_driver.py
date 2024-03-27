@@ -1,4 +1,4 @@
-'''
+"""
 This is a python code to control the Z-series pump of Tricontinent.
 It assumes two things:
 1. the pump is connected to the Tool I/O of a UR robot, which requires wiring of 4 pins of the Z-pump control board.
@@ -8,15 +8,16 @@ According to a UR3 manual, gray for Power, red for GND, brown for Analog input 3
 
 Author: Byeongdu Lee (Argonne National Laboratory)
 Date: July, 2023
-'''
+"""
+
 import socket
 import threading
 import time
-from typing import Union, OrderedDict
-import sys
-#HOST = 'ur5-12idc.xray.aps.anl.gov'
+from typing import OrderedDict, Union
+
+# HOST = 'ur5-12idc.xray.aps.anl.gov'
 HOST = "164.54.116.129"
-'''
+"""
 # set commands
 Initialization Commands
 V (5-6000)  Set top speed in half steps per second. Default = 1400
@@ -91,23 +92,37 @@ Q Returns the status character. (refer to DT Protocol, Answer Block)
 ?30 reports string 0, ?31 string 1, and so on.
 & Returns the firmware revision and date.
 F Reports command buffer status. If the buffer is empty, the pump returns status code
-'''
+"""
 
 
 ## Exception handling....
 class CommunicationException(Exception):
+    """Commincation Error Exception"""
+
     pass
+
 
 class PipetError(Exception):
+    """Pipette Error Exception"""
+
     pass
+
 
 class PipetteTimeout(Exception):
+    """Pipette Timeout Exception"""
+
     pass
+
 
 class PipetSocketError(Exception):
+    """Pipette Socker Error Exception"""
+
     pass
 
-class PipetteDriver():
+
+class PipetteDriver:
+    """Tricontinent Pipette Driver. This object creates a socket connection with RS485 URCap that is running on UR polyscope to send remote commands"""
+
     # host = 'robot_ip'
     # port = 54321# Remains the same, because it is specified as default port in URCaps code
     # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -117,19 +132,19 @@ class PipetteDriver():
     # s.close()
     # print('Received', repr(data))
 
-    ENCODING = 'UTF-8'  # ASCII and UTF-8 both seem to work
+    ENCODING = "UTF-8"  # ASCII and UTF-8 both seem to work
     NoError_NotBusy = "`"
     NoError_Busy = "@"
-        # InitializationError_NotBusy = "a"
-        # InitializationError_Busy = "A"
-        # InvalidCommand_NotBusy = "b"
-        # InvalidCommand_Busy = "B"
-        # InvalidOperand_NotBusy = "c"
-        # InvalidOperand_Busy = "C"
-        # DeviceNotInitialized_NotBusy = "g"
-        # DeviceNotInitialized_Busy = "G"
-        # CommandOverflow_NotBusy = "o"
-        # CommandOverflow_Busy = "O"
+    # InitializationError_NotBusy = "a"
+    # InitializationError_Busy = "A"
+    # InvalidCommand_NotBusy = "b"
+    # InvalidCommand_Busy = "B"
+    # InvalidOperand_NotBusy = "c"
+    # InvalidOperand_Busy = "C"
+    # DeviceNotInitialized_NotBusy = "g"
+    # DeviceNotInitialized_Busy = "G"
+    # CommandOverflow_NotBusy = "o"
+    # CommandOverflow_Busy = "O"
 
     def __init__(self):
         """Constructor."""
@@ -147,119 +162,164 @@ class PipetteDriver():
         self._max_backlash_step = 31
         self._min_deadvolume = 0
         self._max_deavvolume = 80
-        self.volume = 200 # 200uL in full volume.
+        self.volume = 200  # 200uL in full volume.
         # for this volume resolution is 0.1905 uL
-        self._comm_setting = {"baud_rate": 9600, 
-                      "parity": 0,
-                      "stop_bits": 1,
-                      "rx_idle_chars": 1.5,
-                      "tx_idle_chars": 3.5}
+        self._comm_setting = {
+            "baud_rate": 9600,
+            "parity": 0,
+            "stop_bits": 1,
+            "rx_idle_chars": 1.5,
+            "tx_idle_chars": 3.5,
+        }
         self._step = 0
 
     def get_step(self):
+        """Get step"""
         try:
-            pos = self._get_var('?0')
+            pos = self._get_var("?0")
             return pos
         except PipetSocketError:
             pos = -1
         timeout = 10
         cnt = 1
-        while (pos<0) and (cnt<timeout):
+        while (pos < 0) and (cnt < timeout):
             try:
-                pos = self._get_var('?0', trial=cnt)
+                pos = self._get_var("?0", trial=cnt)
             except PipetSocketError:
                 pos = -1
-            time.sleep(0.1*cnt)
-            if cnt>1:
+            time.sleep(0.1 * cnt)
+            if cnt > 1:
                 self.disconnect()
-#                print(f"Pipet: get_step tried {cnt} times.")
-            cnt = cnt+1
+            #                print(f"Pipet: get_step tried {cnt} times.")
+            cnt = cnt + 1
             self.connect()
         self._step = pos
-        if cnt==timeout:
+        if cnt == timeout:
             raise CommunicationException("Pipet Communication Timeout.")
         return pos
-    
+
     def get_step_percent(self):
+        """Get step percentage"""
         pos = self.get_step()
         return self._convert_step_to_percent(pos)
-    
+
     def get_volume(self):
+        """Get valume
+
+        Returns: Volume
+        """
         pos = self.get_step()
         return self._convert_step_to_volume(pos)
-    
+
     def get_speed_start(self):
-        return self._get_var('?1')
+        """Get speed start"""
+        return self._get_var("?1")
 
     def get_speed_start_percent(self):
-        return self.get_speed_start()/self._max_start_speed*100
+        """Get speed start percentage"""
+        return self.get_speed_start() / self._max_start_speed * 100
 
     def get_speed(self):
-        return self._get_var('?2')
+        """Get speed"""
+        return self._get_var("?2")
 
     def get_speed_percent(self):
-        return self.get_speed()/self._max_top_speed*100
+        """Get speed percent"""
+        return self.get_speed() / self._max_top_speed * 100
 
     def get_speed_stop(self):
-        return self._get_var('?3')
+        """Get speed stop"""
+        return self._get_var("?3")
 
     def get_max_homing_steps(self):
-        return self._get_var('?7')
+        """Get maximum homing steps"""
+        return self._get_var("?7")
 
     def get_speed_stop_percent(self):
-        return self.get_speed_stop()/self._max_stop_speed*100
+        """Get stop percentage"""
+        return self.get_speed_stop() / self._max_stop_speed * 100
 
     def get_dead_volume(self):
-        return self._get_var('?10')
+        """Get dead volume"""
+        return self._get_var("?10")
 
     def get_backlash(self):
-        return self._get_var('?11')
+        """Get backlash"""
+        return self._get_var("?11")
 
     def get_dead_volume2(self):
-        return self._get_var('?24')
+        """Get dead volume2"""
+        return self._get_var("?24")
 
     def get_hold_current(self):
-        return self._get_var('?25')
+        """Get gold current"""
+        return self._get_var("?25")
 
     def get_run_current(self):
-        return self._get_var('?26')
+        """Get run current"""
+        return self._get_var("?26")
 
     def get_parameter(self, parameter):
-        return self._get_var(parameter, isfloat = False)
+        """Get parameter"""
+        return self._get_var(parameter, isfloat=False)
 
     def initialize(self):
+        """Initializes the pipette motor"""
         self.send_command("z1600A0A10z0", wait=True)
-    
+
     def set_speed(self, start, top, stop):
-        self._set_vars({"v":start, "V":top, "c":stop})
+        """Sets the speed
+        Args
+            start: Start value
+            top: Top value
+            stop: Stop value
+        """
+        self._set_vars({"v": start, "V": top, "c": stop})
 
     def set_motorcurrent(self, value=50):
+        """Sets motor current
+        Args
+            value: Current value
+        """
         self._set_var("m", value)
-    
+
     def set_step(self, value):
+        """Sets the steps
+        Args
+            value: Step value
+        """
         self.send_command(f"z{value}", wait=True)
-    
+
     def dispense(self, vol=0, percent=0, start=0, speed=0, stop=0):
+        """Dispense pipette
+
+        Args
+            vol: Volume
+            percent: Percentage
+            start: Start step
+            speed: Speed of the pipette
+            stop: Stop step
+        """
         cvol = self.get_volume()
         cpos = self._convert_vol_to_step(cvol)
-#        print("got the volume.")
-        if vol !=0:
+        #        print("got the volume.")
+        if vol != 0:
             pos = self._convert_vol_to_step(vol)
         else:
             pos = self._convert_percent_to_step(percent)
         par = {"D": pos}
-        if cpos-pos<0:
+        if cpos - pos < 0:
             raise PipetError("Cannot dispense to negative volume.")
-        if start !=0:
-            par.update({"v":start})
-        if speed !=0:
-            par.update({"V":speed})
-        if stop !=0:
-            par.update({"c":stop})
+        if start != 0:
+            par.update({"v": start})
+        if speed != 0:
+            par.update({"V": speed})
+        if stop != 0:
+            par.update({"c": stop})
         self._set_vars(par)
 
         newpos = self.get_step()
-        while (newpos > cpos-pos):
+        while newpos > cpos - pos:
             time.sleep(0.1)
             _pos = self.get_step()
             if newpos == _pos:
@@ -269,27 +329,35 @@ class PipetteDriver():
         vol = self.get_volume()
         print(f"Pipet is at {vol} uL position.")
 
-    
     def aspirate(self, vol=0, percent=0, start=0, speed=0, stop=0):
+        """Aspirate pipette
+
+        Args
+            vol: Volume
+            percent: Percentage
+            start: Start step
+            speed: Pipette speed
+            stop: Stop step
+        """
         cvol = self.get_volume()
         cpos = self._convert_vol_to_step(cvol)
-        if vol !=0:
+        if vol != 0:
             pos = self._convert_vol_to_step(vol)
         else:
             pos = self._convert_percent_to_step(percent)
-        if cpos+pos > self._max_position:
+        if cpos + pos > self._max_position:
             raise PipetError("Cannot aspirate more than the max.")
         par = {"P": pos}
-        if start !=0:
-            par.update({"v":start})
-        if speed !=0:
-            par.update({"V":speed})
-        if stop !=0:
-            par.update({"c":stop})
+        if start != 0:
+            par.update({"v": start})
+        if speed != 0:
+            par.update({"V": speed})
+        if stop != 0:
+            par.update({"c": stop})
         self._set_vars(par)
 
         newpos = self.get_step()
-        while (newpos < cpos+pos):
+        while newpos < cpos + pos:
             time.sleep(0.1)
             _pos = self.get_step()
             if newpos == _pos:
@@ -303,34 +371,64 @@ class PipetteDriver():
         vol = self.get_volume()
         print(f"Pipet is at {vol} uL position.")
 
-    def _convert_vol_to_step(self, vol): #mL
-        percent = vol/self.volume*100
+    def _convert_vol_to_step(self, vol):  # mL
+        """Convert the mL volume to steps to drive the pipette
+
+        Args
+            vol: Volume in mL
+        """
+        percent = vol / self.volume * 100
         return self._convert_percent_to_step(percent)
 
     def _convert_step_to_volume(self, value):
-        vol = value/self._max_position*self.volume
+        """Converts step value to valume to drive the pipette
+
+        Args
+            value: Step value
+        """
+
+        vol = value / self._max_position * self.volume
         return vol
 
     def _convert_step_to_percent(self, value):
-        percent = value/self._max_position*100
+        """Converts step value to percentage to drive the pipette
+
+        Args
+            value: Move value
+        """
+
+        percent = value / self._max_position * 100
         return percent
-    
+
     def _convert_percent_to_step(self, percent):
-        value = percent/100*self._max_position
+        """Converts percentage value to steps to drive the pipette
+
+        Args
+            percent: Move percentage
+        """
+        value = percent / 100 * self._max_position
         return int(value)
-    
+
     def stop(self):
+        """Stops the pipette"""
         self.send_command("T")
 
-    def move(self, newpos, relative=True):
+    def move(self, newpos, relative: bool = True):
+        """Moves the pipette
+
+        Args:
+            newpos: New pose
+            relative (bool): True/False
+        """
         if relative:
             pos = self.get_step()
             newpos = pos + newpos
-        return self._set_var('A', newpos)
+        return self._set_var("A", newpos)
 
-    def connect(self, hostname: str=HOST, port: int = 54321, socket_timeout: float = 1) -> None:
-        """Connects to a pipet at the given address.
-        """
+    def connect(
+        self, hostname: str = HOST, port: int = 54321, socket_timeout: float = 1
+    ) -> None:
+        """Connects to a pipette at the given address"""
         if hasattr(self, hostname):
             con = (self.hostname, self.port)
         else:
@@ -341,23 +439,34 @@ class PipetteDriver():
         self.socket.settimeout(socket_timeout)
 
     def reconnect(self):
+        """Reconnect to the pipette"""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(self.address)
         self.socket.settimeout(1)
-        #self.socket.connect(self.address)
+        # self.socket.connect(self.address)
 
     def disconnect(self) -> None:
-        """Closes the connection with the gripper."""
+        """Closes the connection with the pipette"""
         try:
             self.socket.close()
-        except:
-            print("Connection has never been made.")
-    
-    def var_test(self, var_dict: OrderedDict[str, Union[int, float]], wait=True):
+        except Exception as err:
+            print("Connection has never been made. Err: " + err)
+
+    def var_test(
+        self, var_dict: OrderedDict[str, Union[int, float]], wait: bool = True
+    ):
+        """Tests the variables given
+
+        Args:
+            var_dict (OrderedDict): variable dictinoary
+            wait (bool): True/False
+        """
         for variable, value in var_dict.items():
             print(f"{variable}{str(value)}.")
 
-    def _set_vars(self, var_dict: OrderedDict[str, Union[str, int, float]], timeout = 10, wait=True):
+    def _set_vars(
+        self, var_dict: OrderedDict[str, Union[str, int, float]], timeout=10, wait=True
+    ):
         """set variables or parameters.
         :param var_dict: Dictionary of variables to set (variable_name, value).
         :return: True on successful reception of ack, false if no ack was received, indicating the set may not
@@ -366,42 +475,44 @@ class PipetteDriver():
         # construct unique command
         cmd = "/1"
         for variable, value in var_dict.items():
-            if type(value) == str:
+            if isinstance(value, str):
                 val = value
             else:
                 val = str(value)
             cmd += f"{variable}{val}"
-        cmd += 'R\r'  # R for execution and new line is required for the command to finish
+        cmd += (
+            "R\r"  # R for execution and new line is required for the command to finish
+        )
         # atomic commands send/rcv
         status, val, data = self.query(cmd)
         errcheck, notbusy = self._status_check(status)
-#         with self.command_lock:
-#             self.socket.sendall(cmd.encode(self.ENCODING))
-#             time.sleep(0.1)
-#             ans = ""
-#             data = ""
-#             try:
-#                 data = self.socket.recv(1024)
-# #                print(data, "Normal")
-#             except CommunicationException:
-#                 data = ""
-#             except ConnectionAbortedError:
-#                 self.connect()
-#                 data = ""
-#             except socket.timeout:
-#                 print("socket timeout in set_var")
-#                 time.sleep(0.1)
-#                 data = ""
-#             try:
-#                 ans = self._get_answer(data)
-#             except:
-# #                print(data, "Decode error on line 347")
-#                 pass
-#             if len(ans)>0:
-#                 errcheck, notbusy = self._status_check(ans)
-#             else:
-#                 wait = False
-#                 errcheck = False
+        #         with self.command_lock:
+        #             self.socket.sendall(cmd.encode(self.ENCODING))
+        #             time.sleep(0.1)
+        #             ans = ""
+        #             data = ""
+        #             try:
+        #                 data = self.socket.recv(1024)
+        # #                print(data, "Normal")
+        #             except CommunicationException:
+        #                 data = ""
+        #             except ConnectionAbortedError:
+        #                 self.connect()
+        #                 data = ""
+        #             except socket.timeout:
+        #                 print("socket timeout in set_var")
+        #                 time.sleep(0.1)
+        #                 data = ""
+        #             try:
+        #                 ans = self._get_answer(data)
+        #             except:
+        # #                print(data, "Decode error on line 347")
+        #                 pass
+        #             if len(ans)>0:
+        #                 errcheck, notbusy = self._status_check(ans)
+        #             else:
+        #                 wait = False
+        #                 errcheck = False
 
         t = time.time()
         timeout = 5
@@ -409,49 +520,56 @@ class PipetteDriver():
             while not notbusy:
                 time.sleep(0.1)
                 errcheck, notbusy = self.get_status()
-                if time.time()-t > timeout:
-#                    print("get_status timeout in set_vars.")
+                if time.time() - t > timeout:
+                    #                    print("get_status timeout in set_vars.")
                     break
         return errcheck
-            # if noerror:
-            #     while notbusy:
-    
+        # if noerror:
+        #     while notbusy:
+
     def get_status(self):
+        """Get status of the pipette"""
         cmd = "/1Q\r"
         readdone = False
         timeout = 10
         cnt = 1
-        while ((not readdone) and (cnt < timeout)):
+        while (not readdone) and (cnt < timeout):
             try:
                 status, _, _ = self.query(cmd)
                 errcheck, busycheck = self._status_check(status)
                 readdone = True
             except CommunicationException:
-                time.sleep(0.1*cnt)
+                time.sleep(0.1 * cnt)
             except socket.timeout:
-                time.sleep(0.1*cnt)
+                time.sleep(0.1 * cnt)
             except ConnectionAbortedError:
                 self.connect()
-                time.sleep(0.1*cnt)
+                time.sleep(0.1 * cnt)
             cnt = cnt + 1
-        if cnt==timeout:
+        if cnt == timeout:
             raise CommunicationException("Time out.")
         return (errcheck, busycheck)
-    
-    def query(self, cmd, trial = 10, timeofsleep = 0.1):
+
+    def query(self, cmd, trial=10, timeofsleep=0.1):
+        """Query a command over the socket to execute it on the pipette
+        Args
+            cmd: Command to be sent
+            trial: Max number of tries to try running the command
+            timeofsleep: Sleep time of
+        """
         readdone = False
         cnt = 1
         data = ""
         status = ""
         with self.command_lock:
-            while (readdone==False) and (cnt<trial):
+            while (readdone is False) and (cnt < trial):
                 try:
                     self.socket.sendall(cmd.encode(self.ENCODING))
                     time.sleep(timeofsleep)
                     data = self._recv()
                     readdone = True
                 except CommunicationException:
-                    time.sleep(0.1*cnt)
+                    time.sleep(0.1 * cnt)
                 except ConnectionAbortedError:
                     self.reconnect()
                 except PipetteTimeout as err:
@@ -460,47 +578,53 @@ class PipetteDriver():
                 except BrokenPipeError as err2:
                     print(err2)
                     self.reconnect()
-                cnt = cnt+1
-            if cnt==trial:
+                cnt = cnt + 1
+            if cnt == trial:
                 raise PipetteTimeout
-        if len(data)>0:
+        if len(data) > 0:
             status, val = self._get_answer(data)
         else:
             val = ""
         return status, val, data
 
     def _recv(self):
-        data = b''
-        k = b'/'
+        """Recieves a response message from the socket"""
+        data = b""
+        k = b"/"
         timeout = 5
         t = time.time()
         while True:
             try:
                 k = self.socket.recv(1)
-                if len(k)>0:
+                if len(k) > 0:
                     if isinstance(k, bytes):
                         data += k
                     if k[0] == 10:
                         break
                 else:
                     break
-                if (time.time()-t>timeout):
+                if time.time() - t > timeout:
                     raise PipetteTimeout
-            except socket.timeout:
-                raise PipetteTimeout
+            except socket.timeout as time_err:
+                raise PipetteTimeout from time_err
         return data
 
     def send_command(self, command, value="", timeout=10, wait=True):
+        """Sends a command over the socket"""
         return self._set_var(command, value=value, timeout=timeout, wait=wait)
-    
-    def _set_var(self, variable: str, value: Union[str, int, float], timeout = 10, wait=True):
+
+    def _set_var(
+        self, variable: str, value: Union[str, int, float], timeout=10, wait=True
+    ):
         """set a single variable.
         :param variable: Variable to set.
         :param value: Value to set for the variable.
         :return: True on successful reception of ack, false if no ack was received, indicating the set may not
         have been effective.
         """
-        return self._set_vars(OrderedDict([(variable, value)]), timeout = timeout, wait=wait)
+        return self._set_vars(
+            OrderedDict([(variable, value)]), timeout=timeout, wait=wait
+        )
 
     def _get_var(self, variable: str, trial=3, isfloat=True):
         """Retrieve the value of a variable from the pipet, blocking until the
@@ -511,36 +635,36 @@ class PipetteDriver():
         # atomic commands send/rcv
         cmd = "/1"
         cmd += f"{variable}"
-        cmd += '\r'
-        #readdone = False
-        #cnt = 1
-        #data = ""
+        cmd += "\r"
+        # readdone = False
+        # cnt = 1
+        # data = ""
         status, val, data = self.query(cmd)
         resp, notbusy = self._status_check(status)
-        if resp == False:
+        if resp is False:
             raise PipetSocketError
-        if isfloat == False:
+        if isfloat is False:
             return val
         try:
             return float(val)
-        except ValueError:
-#            print(data, "Pipet: Return decode error. ans should be a number string.")
-            raise PipetSocketError
+        except ValueError as value_err:
+            #            print(data, "Pipet: Return decode error. ans should be a number string.")
+            raise PipetSocketError from value_err
 
-    def _get_answer(self,data):
-        if len(data)==0:
+    def _get_answer(self, data):
+        if len(data) == 0:
             raise CommunicationException
-        dt = data.split(b'\n')
-        if len(dt)==1:
+        dt = data.split(b"\n")
+        if len(dt) == 1:
             raise CommunicationException
         # return should start from /x (id of the controller) and ends with \n
-        data = dt[len(dt)-2]
-        data, _ = data.split(b'\x03')
+        data = dt[len(dt) - 2]
+        data, _ = data.split(b"\x03")
         if data[0] != 47:
             raise CommunicationException
         status = data[2]
         status = chr(status)
-        if len(data)>2:
+        if len(data) > 2:
             value = data[3:]
             value = value.decode(self.ENCODING)
         else:
@@ -548,73 +672,75 @@ class PipetteDriver():
         return status, value
 
     def _decode_answer(self, data):
-        if len(data)==0:
+        if len(data) == 0:
             raise CommunicationException
-        dt = data.split(b'\n')
-        if len(dt)==1:
+        dt = data.split(b"\n")
+        if len(dt) == 1:
             raise CommunicationException
         # return should start from /x (id of the controller) and ends with \n
-        data = dt[len(dt)-2][1:]
-        data, _ = data.split(b'\x03')
+        data = dt[len(dt) - 2][1:]
+        data, _ = data.split(b"\x03")
         data = data.decode(self.ENCODING)
         ans = data[2:]
         return ans
-    
+
     def _status_check(self, data):
         resp = ""
         notbusy = False
         if len(data) == 0:
             return (False, notbusy)
-#            raise CommunicationException
+        #            raise CommunicationException
         if data == "`":
-#            print('Not busy')
+            #            print('Not busy')
             return ("", True)
         if data == "@":
-#            print('Busy')
+            #            print('Busy')
             return ("", False)
         if data.isupper():
-            #isbusy = "Busy"
+            # isbusy = "Busy"
             notbusy = True
         else:
-            #isbusy = "NotBusy"
+            # isbusy = "NotBusy"
             notbusy = False
         data = data.lower()
-        if data == 'a':
+        if data == "a":
             resp = "Initialization Error"
-        if data == 'b':
+        if data == "b":
             resp = "Invalid Command"
-        if data == 'c':
+        if data == "c":
             resp = "Invalid Operand"
-        if data == 'g':
+        if data == "g":
             resp = "Device Not Initialized"
-        if data == 'o':
+        if data == "o":
             resp = "Command Overflow"
-        if data == 'i':
+        if data == "i":
             resp = "Plunger Overload"
-        if data == 'h':
+        if data == "h":
             resp = "CAN Bus failure"
         raise PipetError(resp)
-#        try:
-#            print(resp, notbusy)
-#        except:
-#            print(data, "status_check")
-#        return (False, notbusy)
-        # NoError_NotBusy = "`"
-        # NoError_Busy = "@"
-        # InitializationError_NotBusy = "a"
-        # InitializationError_Busy = "A"
-        # InvalidCommand_NotBusy = "b"
-        # InvalidCommand_Busy = "B"
-        # InvalidOperand_NotBusy = "c"
-        # InvalidOperand_Busy = "C"
-        # DeviceNotInitialized_NotBusy = "g"
-        # DeviceNotInitialized_Busy = "G"
-        # CommandOverflow_NotBusy = "o"
-        # CommandOverflow_Busy = "O"
-            
+
+    #        try:
+    #            print(resp, notbusy)
+    #        except:
+    #            print(data, "status_check")
+    #        return (False, notbusy)
+    # NoError_NotBusy = "`"
+    # NoError_Busy = "@"
+    # InitializationError_NotBusy = "a"
+    # InitializationError_Busy = "A"
+    # InvalidCommand_NotBusy = "b"
+    # InvalidCommand_Busy = "B"
+    # InvalidOperand_NotBusy = "c"
+    # InvalidOperand_Busy = "C"
+    # DeviceNotInitialized_NotBusy = "g"
+    # DeviceNotInitialized_Busy = "G"
+    # CommandOverflow_NotBusy = "o"
+    # CommandOverflow_Busy = "O"
+
     @staticmethod
     def _is_ack(data: str):
-        return data == b'ack'    
+        return data == b"ack"
+
 
 if __name__ == "__main__":
     a = PipetteDriver()

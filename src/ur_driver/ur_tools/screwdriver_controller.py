@@ -4,7 +4,7 @@ import os
 from copy import deepcopy
 from time import sleep
 
-from robotiq_screwdriver_driver import RobotiqScrewdriver
+from .robotiq_screwdriver_driver import RobotiqScrewdriver
 
 
 class ScrewdriverController:
@@ -63,9 +63,7 @@ class ScrewdriverController:
         approach_axis: str = None,
         approach_distance: float = None,
     ):
-        """
-        Description: Picks up a new screw.
-        """
+        """Picks up a new screw."""
         if not screw_loc:
             raise Exception("Please provide the source loaction")
 

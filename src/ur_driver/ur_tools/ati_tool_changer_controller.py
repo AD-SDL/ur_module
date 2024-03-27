@@ -1,16 +1,17 @@
-from time import sleep
-from copy import deepcopy
+"""Remote interface for ATI Tool Changers"""
 
 import epics
 
-class ATIToolChangerController():
-    
 
-    def __init__(self, tool_changer_pv:str = None):
+class ATIToolChangerController:
+    """Remotely controls the ATI tool chagers over EPICS PVs"""
+
+    def __init__(self, tool_changer_pv: str = None):
+        """Constructor"""
         self.current_tool = None
         self.pv = tool_changer_pv
         self.connect_tool_changer()
-        
+
     def connect_tool_changer(self):
         """
         Connect tool changer
@@ -43,8 +44,8 @@ class ATIToolChangerController():
 
     def get_tool_changer_status(self):
         """
-        Description: 
-            - Gets the tool changer current status. 
+        Description:
+            - Gets the tool changer current status.
             - Tool changer is controlled by pyepics PV commands.
         """
         status = self.tool_changer.get()
@@ -52,8 +53,8 @@ class ATIToolChangerController():
 
     def lock_tool_changer(self):
         """
-        Description: 
-            - Locks the tool changer. 
+        Description:
+            - Locks the tool changer.
             - Tool changer is controlled by pyepics PV commands.
         """
         try:
@@ -64,8 +65,8 @@ class ATIToolChangerController():
 
     def unlock_tool_changer(self):
         """
-        Description: 
-            - Unlocks the tool changer. 
+        Description:
+            - Unlocks the tool changer.
             - Tool changer is controlled by pyepics PV commands.
         """
         try:

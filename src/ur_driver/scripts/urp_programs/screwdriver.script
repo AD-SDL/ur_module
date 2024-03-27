@@ -112,7 +112,7 @@ def unnamed():
   RQ_GENERAL_MAJOR_ALARM = 32
   RQ_APPLICATION_MAJOR_ALARM = 64
   RQ_CRITICAL_ALARM = 128
-  
+
   RQ_NO_FAULT_MESSAGE = "NO_FAULT"
   RQ_APPLICATION_WARNING_MESSAGE = "APPLICATION_WARNING"
   RQ_MOTOR_MINOR_ALARM_MESSAGE = "MOTOR_MINOR_ALARM"
@@ -122,7 +122,7 @@ def unnamed():
   RQ_GENERAL_MAJOR_ALARM_MESSAGE = "GENERAL_MAJOR_ALARM"
   RQ_APPLICATION_MAJOR_ALARM_MESSAGE = "APPLICATION_MAJOR_ALARM"
   RQ_CRITICAL_ALARM_MESSAGE = "CRITICAL_ALARM"
-  
+
   ###################################################
   #
   #  Critical Alarm v2
@@ -135,7 +135,7 @@ def unnamed():
   RQ_SOLENOID_INIT = 16
   RQ_FLASH_INIT = 32
   RQ_ADC_INIT = 64
-  
+
   RQ_ACCELEROMETER_INIT_MESSAGE = "ACCELEROMETER_INIT"
   RQ_MOTOR_PWM_INIT_MESSAGE = "MOTOR_PWM_INIT"
   RQ_POSITION_SENSOR_INIT_MESSAGE = "POSITION_SENSOR_INIT"
@@ -143,7 +143,7 @@ def unnamed():
   RQ_SOLENOID_INIT_MESSAGE = "SOLENOID_INIT"
   RQ_FLASH_INIT_MESSAGE = "FLASH_INIT"
   RQ_ADC_INIT_MESSAGE = "ADC_INIT"
-  
+
   ###################################################
   #
   #  Application Warnings v2
@@ -155,43 +155,43 @@ def unnamed():
   RQ_TIMEOUT = 8
   RQ_REG_WHILE_NOT_ACT = 16
   RQ_NOT_ACTIVATED = 32
-  
+
   RQ_COMMUNICATION_NOT_READY_MESSAGE = "1 - COMMUNICATION_NOT_READY"
   RQ_BLOCKED_AT_START_MESSAGE = "2 - BLOCKED_AT_START"
   RQ_RESTRICTION_BEFORE_ANGLE_MESSAGE = "4 - RESTRICTION_BEFORE_ANGLE"
   RQ_TIMEOUT_MESSAGE = "8 - TIMEOUT"
   RQ_REGULATION_WHILE_NOT_ACT_MESSAGE = "16 - REGULATION_WHILE_NOT_ACT"
   RQ_NOT_ACTIVATED_MESSAGE = "32 - NOT_ACTIVATED"
-  
-  
+
+
   ###################################################
   #
   #  General Minor Alarm v2
   #
   ###################################################
-  
+
   RQ_OVER_TEMPERATURE_SYSTEM = 2
-  
+
   RQ_OVER_TEMPERATURE_SYSTEM_MESSAGE = "OVER_TEMPERATURE_SYSTEM"
-  
+
   ###################################################
   #
   #  General Major Alarm v2
   #
   ###################################################
-  
+
   RQ_E_STOP = 256
   RQ_OVER_CURRENT_SYSTEM = 512
   RQ_UNDER_VOLTAGE_24V = 1024
   RQ_UNDER_VOLTAGE_8V = 2048
   RQ_UNDER_VOLTAGE_3V = 4096
-  
+
   RQ_E_STOP_MESSAGE = "E_STOP"
   RQ_OVER_CURRENT_SYSTEM_MESSAGE = "OVER_CURRENT_SYSTEM"
   RQ_UNDER_VOLTAGE_24V_MESSAGE = "UNDER_VOLTAGE_24V"
   RQ_UNDER_VOLTAGE_8V_MESSAGE = "UNDER_VOLTAGE_8V"
   RQ_UNDER_VOLTAGE_3V_MESSAGE = "UNDER_VOLTAGE_3V"
-  
+
   ###################################################
   #
   #  Motor Minor Alarm v2
@@ -200,7 +200,7 @@ def unnamed():
   RQ_CALIBRATION_PHASE_ERROR = 1
   RQ_CALIBRATION_POSITION_ERROR = 2
   RQ_CALIBRATION_PARAMETERS_ERROR = 4
-  
+
   RQ_CALIBRATION_PHASE_ERROR_MESSAGE = "CALIBRATION_PHASE_ERROR"
   RQ_CALIBRATION_POSITION_ERROR_MESSAGE = "CALIBRATION_POSITION_ERROR"
   RQ_CALIBRATION_PARAMETERS_ERROR_MESSAGE = "CALIBRATION_PARAMETERS_ERROR"
@@ -217,7 +217,7 @@ def unnamed():
   RQ_POSITION_SENSOR_ERROR = 32
   RQ_PHASE_DRIVER_ERROR = 64
   RQ_PHASE_SENSOR_ERROR = 128
-  
+
   RQ_UNDER_VOLTAGE_MESSAGE = "UNDER_VOLTAGE"
   RQ_OVER_VOLTAGE_MESSAGE = "OVER_VOLTAGE"
   RQ_OVER_CURRENT_AC_MESSAGE = "OVER_CURRENT_AC"
@@ -243,11 +243,11 @@ def unnamed():
     rq_error_list = [0,0,0,0,0,0,0,0]
     registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
     rq_error_type = registers_200x[0]
-  
+
     if (rq_error_type == RQ_NO_FAULT):
       return rq_error_list
     end
-  
+
     registers_250x = rq_comm_read_registers_250x(slave_id)
     rq_application_warnings = rq_extract_boolean_from_register_value(rq_error_type, 0)
     rq_motor_minor = rq_extract_boolean_from_register_value(rq_error_type, 1)
@@ -257,7 +257,7 @@ def unnamed():
     rq_general_major = rq_extract_boolean_from_register_value(rq_error_type, 5)
     rq_application_major = rq_extract_boolean_from_register_value(rq_error_type, 6)
     rq_critical = rq_extract_boolean_from_register_value(rq_error_type, 7)
-  
+
     if(rq_application_warnings):
      rq_error_list[0] = rq_extract_value_from_register_value(registers_250x[1], 0, 16)
     end
@@ -282,10 +282,10 @@ def unnamed():
     if(rq_critical):
      rq_error_list[7] = rq_extract_value_from_register_value(registers_250x[0], 0, 16)
     end
-  
+
     return rq_error_list
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Activate echo       2000[8]     Echo of the activate
   #--------------------------------------------------------------------------------------------------
@@ -296,12 +296,12 @@ def unnamed():
   def rq_extract_is_screw_activated_echo(registers_200x):
       return rq_extract_boolean_from_register_value(registers_200x[0], 8)
   end
-  
+
   def rq_get_activation_and_screw_detection(slave_id):
     registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
     activation = rq_extract_is_screw_activated_echo(registers_200x)
     screw_detection = rq_extract_boolean_from_register_value(registers_200x[1], 12)
-  
+
     return [activation, screw_detection]
   end
   #--------------------------------------------------------------------------------------------------
@@ -314,7 +314,7 @@ def unnamed():
   def rq_extract_screw_direction_echo(registers_200x):
       return rq_extract_boolean_from_register_value(registers_200x[0], 9)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Regulate echo       2000[11]    Echo of the regulate.
   #--------------------------------------------------------------------------------------------------
@@ -325,7 +325,7 @@ def unnamed():
   def rq_extract_screw_regulate_echo(registers_200x):
       return rq_extract_boolean_from_register_value(registers_200x[0], 11)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Screwdriver status  2000[13-12]     3 = Activation done
   #                                       1 = Activation in progress
@@ -348,7 +348,7 @@ def unnamed():
       registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
       return rq_extract_value_from_register_value(registers_200x[0], 14, 2)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Regulation mode echo   2001[2-0]    0 = regulates speed, stops at desired current or timeout (ramp down at angle)
   #                                       1 = regulates speed, stops at desired current or timeout
@@ -366,7 +366,7 @@ def unnamed():
   def rq_extract_regulation_mode_echo(registers_200x):
       return rq_extract_value_from_register_value(registers_200x[1], 0, 2)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Vacuum screw detection 2001[12]     0 = not detected
   #                                       1 = detected
@@ -375,7 +375,7 @@ def unnamed():
       registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
       return rq_extract_boolean_from_register_value(registers_200x[1], 12)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Vacuum echo            2001[13]     0 = close
   #                                       1 = open
@@ -387,7 +387,7 @@ def unnamed():
   def rq_extract_screw_vacuum_echo(registers_200x):
       return rq_extract_boolean_from_register_value(registers_200x[1], 13)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Operation mode echo    2001[14]    Echo of the screwdriver mode
   #--------------------------------------------------------------------------------------------------
@@ -398,7 +398,7 @@ def unnamed():
   def rq_extract_screw_operation_mode(registers_200x):
       return rq_extract_boolean_from_register_value(registers_200x[1], 14)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Rotation current echo   2002        Desired current to apply. 1 bit = 1 mA
   #--------------------------------------------------------------------------------------------------
@@ -409,7 +409,7 @@ def unnamed():
   def rq_extract_rotation_current_echo(registers_200x):
       return registers_200x[2]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Rotation speed echo     2003        Desired rotation speed to regulate in RPM
   #--------------------------------------------------------------------------------------------------
@@ -420,7 +420,7 @@ def unnamed():
   def rq_extract_screw_rotation_speed_echo_rpm(registers_200x):
       return registers_200x[3]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Actual delta angle      2004[15-0]-2005[15-8]    Actual delta angle in degrees
   #--------------------------------------------------------------------------------------------------
@@ -429,7 +429,7 @@ def unnamed():
       register_2005_8_15 = rq_extract_value_from_register_value(registers_200x[5], 8, 8)
       return registers_200x[4] + register_2005_8_15 * pow(2, 16)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Desired delta angle      2007[15-0]-2008[15-8]    Desired delta angle in degrees
   #--------------------------------------------------------------------------------------------------
@@ -438,7 +438,7 @@ def unnamed():
       register_2008_8_15 = rq_extract_value_from_register_value(registers_200x[8], 8, 8)
       return registers_200x[7] + register_2008_8_15 * pow(2, 16)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Actual current          2005[7-0]  Actual current, 1 bit = 100 mA
   #--------------------------------------------------------------------------------------------------
@@ -447,7 +447,7 @@ def unnamed():
       register_2005_0_7 = rq_extract_value_from_register_value(registers_200x[5], 0, 8)
       return register_2005_0_7 * 100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Actual rotation speed   2006    Actual rotation speed   RPM
   #--------------------------------------------------------------------------------------------------
@@ -455,7 +455,7 @@ def unnamed():
       registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
       return registers_200x[6]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Torque Threshold        2010
   #--------------------------------------------------------------------------------------------------
@@ -466,7 +466,7 @@ def unnamed():
   def rq_extract_torque_threshold_echo(registers_200x):
       return rq_convert_unsigned16_to_signed16(registers_200x[10])
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Torque Angle Slope      2011
   #--------------------------------------------------------------------------------------------------
@@ -477,7 +477,7 @@ def unnamed():
   def rq_extract_torque_angle_slope_echo(registers_200x):
       return rq_convert_unsigned16_to_signed16(registers_200x[11])
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Torque Gain %     2012  value between 0 and 100. Default is 12
   #--------------------------------------------------------------------------------------------------
@@ -485,40 +485,40 @@ def unnamed():
       registers = rq_read_registers(slave_id, 2012, 1, rq_xml_rpc_modbus_debug)
       return registers[0]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Debug register          6021
   #--------------------------------------------------------------------------------------------------
   def rq_get_screw_register_6021(slave_id=9):
       register_6020 = rq_comm_read_3_registers_6020(slave_id)
-  
+
       return register_6020[1]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Debug register          6022
   #--------------------------------------------------------------------------------------------------
   def rq_get_screw_register_6022(slave_id=9):
       register_6020 = rq_comm_read_3_registers_6020(slave_id)
-  
+
       return register_6020[2]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Look for screwdriver activation
   #--------------------------------------------------------------------------------------------------
   def rq_screwdriver_is_activated(slave_id=9):
     registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
-  
+
     return (rq_extract_screw_status_echo(registers_200x) == RQ_SCREW_STATUS_ACTIVATION_DONE) and rq_extract_is_screw_activated_echo(registers_200x)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns True when all echo matches parameters
   #--------------------------------------------------------------------------------------------------
   def rq_screwdriver_echo_equal(slave_id, vacuum, rotation_current, regulate, direction, rotation_speed, operation_mode, regulation_mode, torque_threshold, torque_angle_slope):
     registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
-  
+
     return (vacuum == rq_extract_screw_vacuum_echo(registers_200x)) and
            (rotation_current == rq_extract_rotation_current_echo(registers_200x)) and
            (regulate == rq_extract_screw_regulate_echo(registers_200x)) and
@@ -528,28 +528,28 @@ def unnamed():
            (regulation_mode == rq_extract_regulation_mode_echo(registers_200x)) and
            (torque_threshold == rq_extract_torque_threshold_echo(registers_200x)) and
            (torque_angle_slope == rq_extract_torque_angle_slope_echo(registers_200x))
-  
+
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Refresh registers 200x to get actual communication state. Return communication state.
   #--------------------------------------------------------------------------------------------------
   def rq_is_comm_lost(slave_id):
     rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
-  
+
     return rq_comm_lost[rq_comm_slave_id_to_index(slave_id)]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the magnetic encoder count - Register 4000(LSB) - 4001(MSB)
   #--------------------------------------------------------------------------------------------------
   def rq_get_magnetic_encoder_count(slave_id=9):
       registers_lsb = rq_read_registers(slave_id, 4000, 1, rq_xml_rpc_modbus_debug)
       registers_msb = rq_read_registers(slave_id, 4001, 1, rq_xml_rpc_modbus_debug)
-  
+
       return (registers_msb[0] * pow(2,16)) + registers_lsb[0]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the magnetic encoder error flag - Register 4002[15-13]
   #                                                         13 = Framing error
@@ -558,7 +558,7 @@ def unnamed():
   #--------------------------------------------------------------------------------------------------
   def rq_get_magnetic_encoder_error_flag(slave_id=9):
       registers = rq_read_registers(slave_id, 4002, 1, rq_xml_rpc_modbus_debug)
-  
+
       if (rq_extract_boolean_from_register_value(registers[0], 13)):
         return "Encoder error - Framing error"
       elif (rq_extract_boolean_from_register_value(registers[0], 14)):
@@ -566,118 +566,118 @@ def unnamed():
       elif (rq_extract_boolean_from_register_value(registers[0], 15)):
         return "Encoder error - Parity error"
       end
-  
+
       return "No magnetic encoder error"
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the magnetic encoder is ready - Register 4002[8]
   #--------------------------------------------------------------------------------------------------
   def rq_get_magnetic_encoder_ready(slave_id=9):
       registers = rq_read_registers(slave_id, 4002, 1,rq_xml_rpc_modbus_debug)
-  
+
       return not rq_extract_boolean_from_register_value(registers[0], 8)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the magnetic encoder field strength - Register 4002[7-0]
   #--------------------------------------------------------------------------------------------------
   def rq_get_magnetic_encoder_field_strength(slave_id=9):
       registers = rq_read_registers(slave_id, 4002, 1, rq_xml_rpc_modbus_debug)
-  
+
       return rq_extract_value_from_register_value(registers[0], 0, 8)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the CPU percent max live - Register 4003
   #--------------------------------------------------------------------------------------------------
   def rq_get_cpu_percent_max_live(slave_id=9):
       registers = rq_read_registers(slave_id, 4003, 1,rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the CPU percent max since boot - Register 4004
   #--------------------------------------------------------------------------------------------------
   def rq_get_cpu_percent_max_since_boot(slave_id=9):
       registers = rq_read_registers(slave_id, 4004, 1, rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the current motor analog Amps - Register 4005
   #--------------------------------------------------------------------------------------------------
   def rq_get_current_motor_amps(slave_id=9):
       registers = rq_read_registers(slave_id, 4005, 1, rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]/100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the analog 24v voltage - Register 4006
   #--------------------------------------------------------------------------------------------------
   def rq_get_analog_24_volt(slave_id=9):
       registers =rq_read_registers(slave_id, 4006, 1, rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]/100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the analog 8v8 voltage - Register 4007
   #--------------------------------------------------------------------------------------------------
   def rq_get_analog_8v8_volt(slave_id=9):
       registers = rq_read_registers(slave_id, 4007, 1, rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]/100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the microcontroller temperature Celsius - Register 4008
   #--------------------------------------------------------------------------------------------------
   def rq_get_uc_temp_celsius(slave_id=9):
       registers = rq_read_registers(slave_id, 4008, 1, rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]/100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the motor temperature Celsius - Register 4009
   #--------------------------------------------------------------------------------------------------
   def rq_get_motor_temp_celsius(slave_id=9):
       registers = rq_read_registers(slave_id, 4009, 1,rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]/100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the vacuum pressure Psi - Register 4010
   #--------------------------------------------------------------------------------------------------
   def rq_get_vacuum_pressure_kpa(slave_id=9):
       registers = rq_read_registers(slave_id, 4010, 1, rq_xml_rpc_modbus_debug)
-  
+
       return rq_convert_unsigned16_to_signed16(registers[0]) / 100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the estimated load torque - Register 4012
   #--------------------------------------------------------------------------------------------------
   def rq_get_load_nm(slave_id=9):
       registers = rq_read_registers(slave_id, 4012, 1, rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]/1000
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns the estimated maximum load torque - Register 4013
   #--------------------------------------------------------------------------------------------------
   def rq_get_max_load_nm(slave_id=9):
       registers = rq_read_registers(slave_id, 4013, 1, rq_xml_rpc_modbus_debug)
-  
+
       return registers[0]/1000
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # add all diagnostic registers output in Polyscope Log tab.
   #--------------------------------------------------------------------------------------------------
@@ -697,7 +697,7 @@ def unnamed():
     textmsg("estimated load torque Nm LIVE : ", rq_get_load_nm(slave_id))
     textmsg("estimated maximum load torque Nm :", rq_get_max_load_nm(slave_id))
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Pressure sensor offset        441 (100bit = kPa (signed))
   #                                 pressure_offset in kpa
@@ -705,10 +705,10 @@ def unnamed():
   #--------------------------------------------------------------------------------------------------
   def get_pressure_sensor_offset(slave_id = 9):
     registers = rq_read_registers(slave_id, 441, 1, rq_xml_rpc_modbus_debug)
-  
+
     return rq_convert_unsigned16_to_signed16(registers[0]) / 100
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Convert unsigned 16 bits integer to signed 16 bits integer
   #--------------------------------------------------------------------------------------------------
@@ -773,26 +773,26 @@ def unnamed():
       registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 13, vacuum)
       registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 14, operation_mode)
       registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 15, modify_command)
-  
+
       registers_100x[1] = max_supply_current_mA
-  
+
       registers_100x[2] = rotation_current
-  
+
       registers_100x[3] = rotation_speed_rpm
-  
+
       rotation_angle_lsb = floor(rotation_delta_angle % pow(2, 16))
       rotation_angle_msb = floor((rotation_delta_angle -  rotation_angle_lsb) / pow(2, 16))
-  
+
       registers_100x[4] = rotation_angle_lsb
       registers_100x[5] = rq_insert_msb_in_register_value(registers_100x[5], rotation_angle_msb)
       registers_100x[5] = rq_insert_lsb_in_register_value(registers_100x[5], floor(rotation_timeout_ms / 100))
-  
+
       registers_100x[6] = torque_threshold
       registers_100x[7] = torque_angle_slope
-  
+
       rq_comm_write_registers_100x(slave_id, registers_100x, 8)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Activate screwdriver, sequence:
   #   1 - Reset screwdriver (activate = False) and wait echo
@@ -805,7 +805,7 @@ def unnamed():
           rq_comm_write_registers_100x(slave_id, registers_100x, 8)
           sleep(0.1)
       end
-  
+
       while(not rq_get_screw_activated_echo(slave_id) or rq_get_screw_status(slave_id) != RQ_SCREW_STATUS_ACTIVATION_DONE):
           registers_100x = rq_comm_get_registers_100x(slave_id, 8)
           registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 8, True)
@@ -813,7 +813,7 @@ def unnamed():
           sleep(0.1)
       end
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Regulate            1000[11]    0 = doing nothing (stop movement)
   #                                   1 = regulating movement
@@ -823,7 +823,7 @@ def unnamed():
       registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 11, regulate)
       rq_comm_write_registers_100x(slave_id, registers_100x, 8)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Torque gain %            1008   torque gain is a value between 0 and 100. The default value is 12.
   #
@@ -831,46 +831,46 @@ def unnamed():
   def rq_set_torque_gain_pct(torque_gain = 12, slave_id=9):
     rq_write_registers(slave_id, 1008, [torque_gain], rq_xml_rpc_modbus_debug)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Vacuum command on
   #--------------------------------------------------------------------------------------------------
   def rq_screw_vacuum_on(slave_id = 9):
       rq_set_screw_vacuum(True, slave_id)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Vacuum command off
   #--------------------------------------------------------------------------------------------------
   def rq_screw_vacuum_off(slave_id = 9):
       rq_set_screw_vacuum(False, slave_id)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Vacuum command off and regulate to false
   #--------------------------------------------------------------------------------------------------
-  
+
   def rq_screw_vacuum_off_and_stop_regulate(slave_id=9):
     registers_100x = rq_comm_get_registers_100x(slave_id, 8)
     registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
-  
+
     activate = rq_extract_boolean_from_register_value(registers_200x[0], 8)
     rotation_direction = rq_extract_boolean_from_register_value(registers_200x[0], 9)
     regulation_mode = rq_extract_value_from_register_value(registers_200x[1], 0, 2)
     operation_mode = rq_extract_value_from_register_value(registers_200x[1], 14, 1)
     regulate = False
     vacuum = False
-  
+
     registers_100x[0] = rq_insert_value_in_register_value(registers_100x[0], 0, 2, regulation_mode)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 8, activate)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 9, rotation_direction)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 11, regulate)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 13, vacuum)
     registers_100x[0] = rq_insert_value_in_register_value(registers_100x[0], 14, 2, operation_mode)
-  
+
     rq_comm_write_registers_100x(slave_id, registers_100x, 8)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Vacuum command         1000[13]     0 = close
   #                                       1 = open
@@ -878,23 +878,23 @@ def unnamed():
   def rq_set_screw_vacuum(vacuum, slave_id = 9):
     registers_100x = rq_comm_get_registers_100x(slave_id, 8)
     registers_200x = rq_comm_read_registers_200x(slave_id, RQ_READ_SCREWDRIVER_REGISTERS_SIZE)
-  
+
     activate = rq_extract_boolean_from_register_value(registers_200x[0], 8)
     rotation_direction = rq_extract_boolean_from_register_value(registers_200x[0], 9)
     regulate = rq_extract_boolean_from_register_value(registers_200x[0], 11)
     regulation_mode = rq_extract_value_from_register_value(registers_200x[1], 0, 2)
     operation_mode = rq_extract_value_from_register_value(registers_200x[1], 14, 1)
-  
+
     registers_100x[0] = rq_insert_value_in_register_value(registers_100x[0], 0, 2, regulation_mode)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 8, activate)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 9, rotation_direction)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 11, regulate)
     registers_100x[0] = rq_insert_boolean_in_register_value(registers_100x[0], 13, vacuum)
     registers_100x[0] = rq_insert_value_in_register_value(registers_100x[0], 14, 2, operation_mode)
-  
+
     rq_comm_write_registers_100x(slave_id, registers_100x, 8)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Set Pressure sensor offset        441 (100bit = kPa (signed))
   #                                      pressure_offset in kpa
@@ -903,14 +903,14 @@ def unnamed():
   def set_pressure_sensor_offset(pressure_offset=0, slave_id = 9):
     SAVE_PRESSURE_OFFSET = 56
     KPA_TO_BIT = 100
-  
+
     offset_in_bit = rq_convert_unsigned32_to_signed16(pressure_offset * KPA_TO_BIT)
     rq_write_registers(slave_id, 441, [offset_in_bit], rq_xml_rpc_modbus_debug)
-  
+
     save_pressure_offset_msb = floor(SAVE_PRESSURE_OFFSET * pow(2,8))
     rq_write_registers(slave_id, 440, [save_pressure_offset_msb], rq_xml_rpc_modbus_debug)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Convert unsigned 32 bits integer to signed 16 bits integer
   #--------------------------------------------------------------------------------------------------
@@ -920,55 +920,55 @@ def unnamed():
     end
     return value
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   #   Reset Pressure sensor offset to ambient pressure       440
   #
   #--------------------------------------------------------------------------------------------------
   def reset_pressure_sensor_offset(slave_id = 9):
     RESET_PRESSURE_OFFSET = 131
-  
+
     reset_pressure_offset_msb = floor(RESET_PRESSURE_OFFSET * pow(2,8))
     rq_write_registers(slave_id, 440, [reset_pressure_offset_msb], rq_xml_rpc_modbus_debug)
   end
   global rq_feeder_timeout = 90
   global rq_pick_rotation_speed = 200
-  
+
   def rq_is_feeder_screw_ready(ready_input):
     return get_standard_digital_in(ready_input)
   end
-  
+
   def rq_is_feeder_status_ok(feeder_status):
     return get_standard_digital_in(feeder_status)
   end
-  
+
   def rq_wait_for_feeder_status_ok(feeder_status, timeout):
     time_step = 0.008
-  
+
     if(not rq_is_feeder_status_ok(feeder_status)):
       textmsg("Waiting for feeder status.")
     end
-  
+
     while((not rq_is_feeder_status_ok(feeder_status)) and (timeout > 0)):
           sleep(time_step)
           timeout = timeout - time_step
     end
-  
+
     return rq_is_feeder_status_ok(feeder_status)
   end
-  
+
   def rq_pick_screw(screw_pose, status_input, ready_input, test_in_action=False, approach_dist=10, rotation_speed=rq_pick_rotation_speed,
   pick_speed=25, timeout=rq_feeder_timeout, retract_speed=40, direction=RQ_DIRECTION_CCW, slave_id=9):
       global thread_slave_id = slave_id
       global thread_rotation_speed = rotation_speed
       global thread_direction = direction
-  
+
       rq_screwdriver_index = rq_comm_slave_id_to_index(slave_id)
       approach_dist_m = norm(approach_dist) / 1000
       pick_speed_m = pick_speed / 1000
       retract_speed_m = retract_speed / 1000
       approach_in_screw_frame = p[0, 0, -approach_dist_m, 0, 0, 0]
-  
+
       def move_to_approach(screw_pose_in_base_frame, approach_in_screw_frame, blend=True):
         approach_in_base_frame = pose_trans(screw_pose_in_base_frame, approach_in_screw_frame)
         dist_to_approach = point_dist(get_actual_tcp_pose(), approach_in_base_frame)
@@ -981,7 +981,7 @@ def unnamed():
           movel(approach_in_base_frame)
         end
       end
-  
+
       def move_to_retract_servoj(ready_input, robot_speed, slave_id):
         max_distance = 0.05
         linear_speed = -robot_speed
@@ -989,24 +989,24 @@ def unnamed():
         initial_pose = get_actual_tcp_pose()
         linear_step = linear_speed * time_step
         distance = 0
-  
+
         while(get_standard_digital_in(ready_input)):
           distance = distance + linear_step
           next_pose = pose_trans(initial_pose, p[0, 0, distance, 0, 0, 0])
           next_joint_position = get_inverse_kin(next_pose)
           servoj(next_joint_position, t=time_step)
-  
+
           if (norm(distance) >= max_distance):
             break
           end
         end
         stopj(2)
       end
-  
+
       def move_to_screw(screw_pose_in_base_frame, robot_speed):
           movel(screw_pose_in_base_frame, v = robot_speed)
       end
-  
+
       thread start_screwdriver_thread():
         torque_Nm = 1
         rotation_current_mA = floor(torque_Nm * 100)
@@ -1015,11 +1015,11 @@ def unnamed():
         torque_threshold = 0
         torque_angle_slope = 0
         retries = 40
-  
+
         rq_set_screw_registers_100x(thread_slave_id, RQ_REGULATION_MODE_SPEED, RQ_ACTIVATE, thread_direction,
         RQ_MODE_NORMAL, RQ_SCREWDRIVER_ON, RQ_TEACHING_OFF, RQ_VACUUM_ON, rotation_current_mA, RQ_MAX_SUPPLY_CURRENT_MA,
         thread_rotation_speed, rotation_delta_angle, rotation_timeout_ms, torque_threshold, torque_angle_slope)
-  
+
         while (not rq_screwdriver_echo_equal(thread_slave_id, RQ_VACUUM_ON, rotation_current_mA, RQ_SCREWDRIVER_ON,
         thread_direction, thread_rotation_speed, RQ_MODE_NORMAL, RQ_REGULATION_MODE_SPEED, torque_threshold, torque_angle_slope)):
           if ((retries <= 0) or (rq_comm_lost[rq_comm_slave_id_to_index(thread_slave_id)])):
@@ -1032,7 +1032,7 @@ def unnamed():
           retries = retries - 1
         end
       end
-  
+
       def stop_screwdriver(slave_id = 9):
           rotation_current_mA = 0
           rotation_delta_angle = 100
@@ -1040,11 +1040,11 @@ def unnamed():
           rotation_speed_rpm = 0
           torque_threshold = 0
           torque_angle_slope = 0
-  
+
           rq_set_screw_registers_100x(slave_id, RQ_REGULATION_MODE_SPEED, RQ_ACTIVATE, RQ_DIRECTION_CW, RQ_MODE_NORMAL,
           RQ_SCREWDRIVER_OFF, RQ_TEACHING_OFF, RQ_VACUUM_ON, rotation_current_mA, RQ_MAX_SUPPLY_CURRENT_MA,
           rotation_speed_rpm, rotation_delta_angle, rotation_timeout_ms, torque_threshold, torque_angle_slope)
-  
+
           while (RQ_SCREWDRIVER_ON == rq_get_screw_regulate_echo(slave_id)):
             if(rq_comm_lost[rq_comm_slave_id_to_index(slave_id)]):
               break
@@ -1055,11 +1055,11 @@ def unnamed():
             rotation_speed_rpm, rotation_delta_angle, rotation_timeout_ms, torque_threshold, torque_angle_slope)
           end
       end
-  
+
       def wait_for_screw_present(status_input, ready_input, timeout):
         time_step = 1
         screw_ready = get_standard_digital_in(ready_input)
-  
+
         while(not screw_ready):
           if (timeout <= 0):
             feeder_status = get_standard_digital_in(status_input)
@@ -1072,10 +1072,10 @@ def unnamed():
           timeout = timeout - time_step
           screw_ready = get_standard_digital_in(ready_input)
         end
-  
+
         return RQ_FEEDER_SCREW_PRESENT
       end
-  
+
       thread stop_vacuum_thread():
         rq_set_screw_vacuum(False, thread_slave_id)
          while (RQ_VACUUM_ON == rq_get_screw_vacuum_echo(thread_slave_id)):
@@ -1086,7 +1086,7 @@ def unnamed():
            rq_set_screw_vacuum(False, thread_slave_id)
          end
       end
-  
+
       thread screw_detection():
         global screw_detected_flag = False
         index = rq_comm_slave_id_to_index(thread_slave_id)
@@ -1099,16 +1099,16 @@ def unnamed():
         end
         global screw_detected_flag = not rq_comm_lost[index]
       end
-  
+
       def start_screw_detection():
         global screw_detected_flag = False
         return run screw_detection()
       end
-  
+
       def screw_detected():
         return screw_detected_flag
       end
-  
+
       def wait_for_screw_detected(timeout):
         time_step = 0.1
         detected = False
@@ -1124,14 +1124,14 @@ def unnamed():
         kill thread_id
         return detected
       end
-  
+
       thread peck():
         while (True):
           movel(pose_trans(get_target_tcp_pose(), p[0, 0, -0.004, 0, 0, 0]), a=0.15, v=0.25)
           movel(pose_trans(get_target_tcp_pose(), p[0, 0, 0.004, 0, 0, 0]), a=0.15, v=0.25)
         end
       end
-  
+
     #--------------------------------------------------------------------------------------------------
     # Process begins here
     #--------------------------------------------------------------------------------------------------
@@ -1141,56 +1141,56 @@ def unnamed():
         join stop_vacuum_thread_id
         if (rq_comm_lost[rq_screwdriver_index]):
           textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST_TEXT)
-  
+
           return RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
         end
       elif(not rq_is_feeder_status_ok(status_input)):
         sleep(0.008)
         return RQ_PICK_FAIL_ON_FEEDER_NOT_READY
       end
-  
+
       if ((not rq_is_feeder_screw_ready(ready_input)) and (rq_wait_for_feeder_status_ok(status_input, timeout))):
         move_to_approach(screw_pose, approach_in_screw_frame, blend=False)
       elif(not rq_is_feeder_status_ok(status_input)):
         return RQ_PICK_FAIL_ON_FEEDER_NOT_READY
       end
-  
+
       feeder_result = wait_for_screw_present(status_input, ready_input, timeout)
       if (RQ_FEEDER_SCREW_PRESENT != feeder_result):
           return feeder_result
       end
-  
+
       start_screwdriver_thread_id = run start_screwdriver_thread()
       move_to_screw(screw_pose, pick_speed_m)
       join start_screwdriver_thread_id
-  
+
       if (rq_comm_lost[rq_screwdriver_index]):
         textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST_TEXT)
         kill start_screwdriver_thread_id
-  
+
         return RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
       end
-  
+
       if (not rq_screwdriver_is_activated(slave_id)):
         return RQ_PICK_FAIL_ON_SCREWDRIVER_NOT_ACTIVATED
       end
-  
+
       peck_thread_id = run peck()
       wait_for_screw_detected(2)
       kill peck_thread_id
       move_to_retract_servoj(ready_input, retract_speed_m, slave_id)
       is_screw_detected = wait_for_screw_detected(2)
       stop_screwdriver(slave_id)
-  
+
       if (rq_comm_lost[rq_screwdriver_index]):
         textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST_TEXT)
-  
+
         return RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
       end
       if (not is_screw_detected):
           return RQ_PICK_FAIL_ON_SCREW_NOT_DETECTED
       end
-  
+
       return RQ_PICK_SUCCESS
   end
   global rq_screwdriver_faults = [0,0,0,0,0,0,0,0]
@@ -1202,7 +1202,7 @@ def unnamed():
   global app_time = 0
   global rq_find_surface_time = 0
   global rq_screwing_time = 0
-  
+
   thread app_timer():
     step_time = get_steptime()
     app_time = 0
@@ -1211,7 +1211,7 @@ def unnamed():
       sleep(step_time)
     end
   end
-  
+
   def rq_screw(operation_mode, regulation_mode, rotation_current, rotation_speed, rotation_angle, timeout, teaching,
   torque_threshold, torque_angle_slope, direction=RQ_DIRECTION_CW, slave_id=9):
     direction = direction
@@ -1222,11 +1222,11 @@ def unnamed():
     max_supply_current = RQ_MAX_SUPPLY_CURRENT_MA
     time_max = timeout * 1000
     index = rq_comm_slave_id_to_index(slave_id)
-  
+
     if(timeout == RQ_UNUSED_PARAMETER):
       time_max = RQ_ENDLESS_TIMEOUT
     end
-  
+
     retries = 40
     rq_set_screw_registers_100x(slave_id, regulation_mode, activation, direction, operation_mode, regulate, teaching, vacuum,
                                 rotation_current, max_supply_current, rotation_speed_raw, rotation_angle, time_max,
@@ -1243,7 +1243,7 @@ def unnamed():
     end
      return True
   end
-  
+
   def rq_screw_with_force(operation_mode, regulation_mode, rotation_current, rotation_speed, rotation_angle,
   teach_thread_mating_position, teach_final_position, teaching, torque_threshold, torque_angle_slope, force=10,
   timeout=10, distance_tolerance=0, direction=RQ_DIRECTION_CW, slave_id=9):
@@ -1251,13 +1251,13 @@ def unnamed():
     if(rq_log_screwing):
       app_timer_id = run app_timer()
     end
-  
+
     def kill_app_timer(app_timer_id):
       if(rq_log_screwing):
         kill app_timer_id
       end
     end
-  
+
     thread action_status_thread():
       while (True):
         thread_action_status = rq_get_screw_action(thread_slave_id)
@@ -1266,49 +1266,49 @@ def unnamed():
         end
       end
     end
-  
+
     global find_surface_turn_direction = direction
     thread start_find_surface_screwdriver():
       rq_screw_turn(regulation_mode=RQ_REGULATION_MODE_SPEED, torque_Nm=1, rotation_angle=0, rotation_speed_rpm=100, direction=not find_surface_turn_direction, slave_id=thread_slave_id)
     end
-  
+
     def is_enabled(parameter):
       return parameter > RQ_UNUSED_PARAMETER
     end
-  
+
     global thread_slave_id = slave_id
     rq_unhandled_error = RQ_NO_FAULT
     rq_screwdriver_index = rq_comm_slave_id_to_index(slave_id)
-  
+
     global rq_actual_thread_mating_position = get_actual_tcp_pose()
-  
+
     if (rq_is_comm_lost(slave_id)):
       textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST_TEXT)
       rq_unhandled_error = RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
       kill_app_timer(app_timer_id)
-  
+
       return RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
     end
-  
+
     activation_and_screw_detection_registers = rq_get_activation_and_screw_detection(slave_id)
-  
+
     if (not activation_and_screw_detection_registers[0]):
       textmsg(RQ_NOT_ACTIVATED_MESSAGE)
       kill_app_timer(app_timer_id)
-  
+
       return RQ_SCREW_FAIL_ON_SCREWDRIVER_NOT_ACTIVATED
     end
-  
+
     if(not activation_and_screw_detection_registers[1]):
       textmsg(RQ_SCREW_FAIL_ON_NO_SCREW_TEXT)
       kill_app_timer(app_timer_id)
-  
+
       return RQ_SCREW_FAIL_ON_SCREW_NOT_DETECTED
     end
-  
+
     before_find_surface_time = app_time
     start_find_surface_screwdriver_id = run start_find_surface_screwdriver()
-  
+
     success = rq_wait_for_contact_with_thread(rq_max_thread_contact_distance, rq_fs_speed)
     if (not success):
       kill start_find_surface_screwdriver_id
@@ -1316,24 +1316,24 @@ def unnamed():
       textmsg(RQ_SCREW_FAIL_ON_CONTACT_NOT_FOUND_TEXT)
       rq_unhandled_error = RQ_SCREW_FAIL_ON_CONTACT_NOT_FOUND
       kill_app_timer(app_timer_id)
-  
+
       return RQ_SCREW_FAIL_ON_CONTACT_NOT_FOUND
     end
-  
+
     rq_find_surface_time = app_time - before_find_surface_time
-  
+
     kill start_find_surface_screwdriver_id
-  
+
     rq_actual_thread_mating_position = get_actual_tcp_pose()
-  
+
     if(not rq_is_screw_detected(slave_id)):
       rq_screw_stop()
       textmsg(RQ_SCREW_FAIL_ON_NO_SCREW_TEXT)
       kill_app_timer(app_timer_id)
-  
+
       return RQ_SCREW_FAIL_ON_SCREW_NOT_DETECTED
     end
-  
+
     before_screwing_time = app_time
     result = rq_screw(operation_mode, regulation_mode, rotation_current, rotation_speed, rotation_angle, timeout,
     teaching, torque_threshold, torque_angle_slope, direction, slave_id)
@@ -1342,94 +1342,94 @@ def unnamed():
         textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST_TEXT)
         rq_unhandled_error = RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
         kill_app_timer(app_timer_id)
-  
+
         return RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
       else:
         textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_NOT_RESPONDING_TEXT)
         rq_unhandled_error = RQ_SCREW_FAIL_ON_SCREWDRIVER_NOT_RESPONDING
         rq_screw_stop()
         kill_app_timer(app_timer_id)
-  
+
         return RQ_SCREW_FAIL_ON_SCREWDRIVER_NOT_RESPONDING
       end
-  
+
     end
     global thread_action_status = RQ_IN_ACTION
     action_status_thread_id = run action_status_thread()
-  
+
     rq_speed_slider = copilot_kinematics_rpc_server.gettargetspeedfraction()
     if(rq_speed_slider < 1.0):
       copilot_kinematics_rpc_server.settargetspeedfraction(1.0)
     end
-  
+
     follow_time_step = 0.008
-  
+
     force_node_thread_id = rq_setup_screw_force(force)
-  
+
     teach_final_pose_in_thread_frame = pose_trans(pose_inv(teach_thread_mating_position), teach_final_position)
-  
+
     while (thread_action_status == RQ_IN_ACTION):
       sleep(follow_time_step)
       if (rq_comm_lost[rq_screwdriver_index]):
         kill action_status_thread_id
         kill force_node_thread_id
         kill_app_timer(app_timer_id)
-  
+
         textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST_TEXT)
         rq_unhandled_error = RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
         copilot_kinematics_rpc_server.settargetspeedfraction(rq_speed_slider)
-  
+
         return RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
       end
-  
+
       if(is_enabled(distance_tolerance)):
         tool_position = get_actual_tcp_pose()
         actual_tool_pose_in_thread_frame = pose_trans(pose_inv(rq_actual_thread_mating_position), tool_position)
-  
+
         position_delta = actual_tool_pose_in_thread_frame[2] - teach_final_pose_in_thread_frame[2]
-  
+
         if(position_delta > (distance_tolerance / RQ_MILLI_UNIT_TO_UNIT_FACTOR)):
           copilot_kinematics_rpc_server.settargetspeedfraction(rq_speed_slider)
-  
+
           kill action_status_thread_id
           kill force_node_thread_id
           kill_app_timer(app_timer_id)
-  
+
           rq_screw_stop()
           textmsg(RQ_SCREW_FAIL_ON_DISTANCE_MAX_TEXT)
-  
+
           return RQ_SCREW_FAIL_ON_DISTANCE_MAX
         end
       end
     end
-  
+
     rq_screwing_time = app_time - before_screwing_time
     if(rq_speed_slider < 1.0):
       copilot_kinematics_rpc_server.settargetspeedfraction(rq_speed_slider)
     end
-  
+
     kill action_status_thread_id
     kill force_node_thread_id
-  
+
     if (rq_comm_lost[rq_screwdriver_index]):
       textmsg(RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST_TEXT)
       rq_unhandled_error = RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
       kill_app_timer(app_timer_id)
-  
+
       return RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
     end
-  
+
     rq_screwdriver_faults = rq_get_screw_fault()
     rq_log_application_warning(rq_screwdriver_faults)
     actual_final_position = get_actual_tcp_pose()
-  
+
     kill_app_timer(app_timer_id)
-  
+
     return rq_get_screw_with_force_result(regulation_mode, thread_action_status,
     teach_thread_mating_position, teach_final_position, rq_actual_thread_mating_position, actual_final_position,
     distance_tolerance, timeout, rq_screwdriver_faults)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Returns screw with a clutch result
   #
@@ -1444,16 +1444,16 @@ def unnamed():
   #--------------------------------------------------------------------------------------------------
   def rq_get_screw_with_force_result(regulation_mode, action_status, teach_thread_mating_position,
   teach_final_position, actual_thread_mating_position, actual_final_position, distance_tolerance, timeout, screwdriver_faults):
-  
+
     def is_enabled(parameter):
         return parameter > RQ_UNUSED_PARAMETER
     end
-  
+
     teach_final_pose_in_thread_frame = pose_trans(pose_inv(teach_thread_mating_position), teach_final_position)
     actual_final_pose_in_thread_frame = pose_trans(pose_inv(actual_thread_mating_position), actual_final_position)
-  
+
     position_delta = actual_final_pose_in_thread_frame[2] - teach_final_pose_in_thread_frame[2]
-  
+
     if(is_enabled(timeout) and timeout > 0 and rq_is_timeout_cause()):
       return RQ_SCREW_FAIL_ON_TIME_MAX
     elif(is_enabled(distance_tolerance) and (position_delta > (distance_tolerance / RQ_MILLI_UNIT_TO_UNIT_FACTOR))):
@@ -1471,19 +1471,19 @@ def unnamed():
       return RQ_SCREW_SUCCESS
     end
   end
-  
+
   def rq_log_application_warning(screwdriver_faults):
-  
+
      if(not rq_screwdriver_in_fault(screwdriver_faults)):
       rq_application_warning_message = RQ_NO_FAULT_MESSAGE
       textmsg(RQ_NO_FAULT_MESSAGE)
      end
-  
+
      if(screwdriver_faults[0] > 0):
        rq_warning_prefix = "Application warnings : "
        rq_fault_separator = ", "
        rq_application_warning = integer_to_binary_list(screwdriver_faults[0])
-  
+
        if(rq_application_warning[0]):
          rq_application_warning_message = str_cat(rq_warning_prefix, RQ_COMMUNICATION_NOT_READY_MESSAGE)
          textmsg(rq_application_warning_message)
@@ -1526,7 +1526,7 @@ def unnamed():
         end
      end
   end
-  
+
   def rq_screwdriver_in_fault(screwdriver_faults):
     index = 0
     while (index < get_list_length(screwdriver_faults)):
@@ -1535,10 +1535,10 @@ def unnamed():
      end
      index = index + 1
     end
-  
+
     return False
   end
-  
+
   def rq_get_screwdriver_faults_message():
     if(rq_screwdriver_faults[0] == 0):
       return str_cat("Screwdriver faults code : ", to_str(rq_screwdriver_faults))
@@ -1546,7 +1546,7 @@ def unnamed():
     rq_application_warning_message = "Application warnings : "
     rq_fault_separator = "<br>"
     rq_application_warning = integer_to_binary_list(rq_screwdriver_faults[0])
-  
+
     if(rq_application_warning[0]):
          rq_application_warning_message = str_cat(rq_application_warning_message, RQ_COMMUNICATION_NOT_READY_MESSAGE)
     end
@@ -1572,41 +1572,41 @@ def unnamed():
     end
     return rq_application_warning_message
   end
-  
+
   def rq_is_blocked_at_start_cause():
     rq_application_warning = integer_to_binary_list(rq_screwdriver_faults[0])
-  
+
     return rq_application_warning[1]
   end
-  
+
   def rq_is_restricted_before_angle_cause():
     rq_application_warning = integer_to_binary_list(rq_screwdriver_faults[0])
-  
+
     return rq_application_warning[2]
   end
-  
+
   def rq_is_timeout_cause():
     rq_application_warning = integer_to_binary_list(rq_screwdriver_faults[0])
-  
+
     return rq_application_warning[3]
   end
-  
+
   def rq_is_communication_lost_cause():
     return rq_unhandled_error == RQ_SCREW_FAIL_ON_SCREWDRIVER_COMMUNICATION_LOST
   end
-  
+
   def rq_is_screwdriver_wrong_echo_cause():
     return rq_unhandled_error == RQ_SCREW_FAIL_ON_SCREWDRIVER_NOT_RESPONDING
   end
-  
+
   def rq_is_contact_not_found_cause():
     return rq_unhandled_error == RQ_SCREW_FAIL_ON_CONTACT_NOT_FOUND
   end
-  
+
   def rq_is_action_finished_without_detection_cause():
     return rq_unhandled_error == RQ_SCREW_FAIL_WITHOUT_DETECTION
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Turns the screwdriver at the specified speed and torque
   #
@@ -1629,11 +1629,11 @@ def unnamed():
       time_max = 0
       torque_threshold = 0
       torque_angle_slope = 0
-  
+
       rq_set_screw_registers_100x(slave_id, regulation_mode, activation, direction, operation_mode, regulate, RQ_TEACHING_OFF, vacuum,
       rotation_current, max_supply_current, rotation_speed_raw, rotation_angle, time_max, torque_threshold, torque_angle_slope)
   end
-  
+
   #--------------------------------------------------------------------------------------------------
   # Stops the screwdriver
   #
@@ -1643,7 +1643,7 @@ def unnamed():
   def rq_screw_stop(slave_id = 9):
       rq_set_screw_regulate(slave_id, False)
   end
-  
+
   def rq_stop_regulating_and_stop_vacuum(slave_id = 9):
       thread_slave_id = slave_id
       thread stop_vacuum():
@@ -1679,7 +1679,7 @@ def unnamed():
     end
     return 1
   end
-  
+
   global rq_z_window = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   global rq_dz_window = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   global rq_z_avg_last = 0
@@ -1691,7 +1691,7 @@ def unnamed():
     rq_dz_window = rq_update_window_with_next_value(new_dz, rq_dz_window)
     return rq_are_all_values_positive(rq_dz_window)
   end
-  
+
   thread rq_auto_stop():
     counter = 0
     stop_signal = 0
@@ -1712,31 +1712,31 @@ def unnamed():
       sleep(0.008)
     end
   end
-  
+
   def rq_unscrew(direction, force=5, rotation_speed_rpm=100, torque_Nm=4, unscrew_stiffness = [100, 100, 70, 100, 100, 100], unscrew_adaptive_stiffness = True, slave_id=9):
     result = rq_screw_start_force_control_tool_z(force)
     thread_id = result[0]
     force_node_id = result[1]
     rotation_current_mA = floor(torque_Nm * 100)
-  
+
     node_rpc_server.setforcecontrolstiffness(force_node_id, unscrew_stiffness)
     node_rpc_server.setforcecontroladaptivestiffnessenabledaxes(force_node_id, unscrew_adaptive_stiffness)
-  
+
     vacuum = rq_get_screw_vacuum_echo(slave_id)
-  
+
     rq_set_screw_registers_100x(slave_id, RQ_REGULATION_MODE_SPEED, RQ_ACTIVATE, direction, RQ_MODE_NORMAL,
     RQ_SCREWDRIVER_ON, RQ_TEACHING_OFF, vacuum, rotation_current_mA, RQ_MAX_SUPPLY_CURRENT_MA, rotation_speed_rpm,
     0, 0, 0, 0)
-  
+
     return thread_id
   end
-  
+
   def rq_wait_for_interruption(slave_id = 9):
     while(get_flag(0) and (rq_get_screw_action(slave_id) == RQ_IN_ACTION)):
       sleep(0.008)
     end
   end
-  
+
   def rq_unscrew_stop(thread_id, tcp_pose_before_unscrew, slave_id=9):
     vacuum = rq_get_screw_vacuum_echo(slave_id)
     rq_set_screw_registers_100x(slave_id, RQ_REGULATION_MODE_SPEED, RQ_ACTIVATE, RQ_DIRECTION_CW, RQ_MODE_NORMAL,
@@ -1747,19 +1747,19 @@ def unnamed():
     distance_to_unscrew = point_dist(tcp_pose_before_unscrew, tcp_pose_after_unscrew) * 1000
     pitch_estimated = distance_to_unscrew/turns_to_unscrew
   end
-  
+
   def rq_wait_nb_turns(nb_turns=2, slave_id=9):
     time_step_ms = 0.1
     timeout_ms = 2000
     remaining_retries = timeout_ms / time_step_ms
     minimum_nb_degrees = rq_get_screw_delta_angle_deg(slave_id) + nb_turns * 360
-  
+
     while(rq_get_screw_delta_angle_deg(slave_id) < minimum_nb_degrees and remaining_retries > 0):
       sleep(time_step_ms)
       remaining_retries = remaining_retries - 1
     end
   end
-  
+
   def rq_auto_unscrew(direction=RQ_DIRECTION_CCW, rotation_speed=100):
     tcp_pose_before_unscrew = get_actual_tcp_pose()
     thread_id = rq_unscrew(direction,rotation_speed_rpm=rotation_speed)
@@ -1800,7 +1800,7 @@ def unnamed():
       active_and_reset_node(force_node_id)
       active_and_reset_node(servoj_node_id)
       zero_ftsensor()
-  
+
       return [run execute_node_thread(), force_node_id]
   end
   def rq_screw_stop_force_control(node_execution_thread):
@@ -1840,7 +1840,7 @@ def unnamed():
   end
   def rq_wait_for_contact_with_thread(max_distance, wanted_speed = 0.004):
     zero_ftsensor()
-  
+
     return rq_linear_search_urcap(direction="Z+", force_threshold = 10, speed = wanted_speed, max_distance = max_distance, feature = 1)
   end
   def rq_extract_value_from_register_value(register_value, first_bit, total_of_bit):
@@ -1849,7 +1849,7 @@ def unnamed():
       value = 0
       next_bit = first_bit
       last_bit = first_bit + total_of_bit
-  
+
       while(next_bit < last_bit):
           if(register_binary_list[next_bit]):
               value = value + pow(2,bit_exponent)
@@ -1857,53 +1857,53 @@ def unnamed():
           next_bit = next_bit + 1
           bit_exponent = bit_exponent + 1
       end
-  
+
       return value
   end
-  
+
   def rq_extract_boolean_from_register_value(register_value, bit_number):
       register_binary_list = integer_to_binary_list(register_value)
       return register_binary_list[bit_number]
   end
-  
+
   def rq_insert_boolean_in_register_value(register_value, bit_number, boolean_value):
       register_binary_list = integer_to_binary_list(register_value)
       register_binary_list[bit_number] = boolean_value
       return binary_list_to_integer(register_binary_list)
   end
-  
+
   def rq_insert_lsb_in_register_value(register_value, byte_value):
       return rq_insert_value_in_register_value(register_value, 0, 8, byte_value)
   end
-  
+
   def rq_insert_msb_in_register_value(register_value, byte_value):
       return rq_insert_value_in_register_value(register_value, 8, 8, byte_value)
   end
-  
+
   def rq_insert_value_in_register_value(register_value, first_bit, total_of_bit, value):
       register_binary_list = integer_to_binary_list(register_value)
       value_list = integer_to_binary_list(value)
       next_value_bit = 0
       next_register_value_bit = first_bit
       last_bit = first_bit + total_of_bit
-  
+
       while(next_register_value_bit < last_bit):
           register_binary_list[next_register_value_bit] = value_list[next_value_bit]
           next_register_value_bit = next_register_value_bit + 1
           next_value_bit = next_value_bit + 1
       end
-  
+
       return binary_list_to_integer(register_binary_list)
   end
   RQ_READ_SCREWDRIVER_REGISTERS_SIZE = 22
-  
+
   rq_xml_rpc_modbus = rpc_factory("xmlrpc", "http://127.0.0.1:8090/")
   rq_xml_rpc_modbus_debug = rpc_factory("xmlrpc", "http://127.0.0.1:8090/")
-  
+
   rq_comm_slave_ids = [9]
-  
+
   global rq_comm_lost = [False, False, False, False]
-  
+
   rq_comm_write_3_registers_100x_request = [False, False, False, False]
   rq_comm_write_8_registers_100x_request = [False, False, False, False]
   rq_comm_write_register_1000 = [0, 0, 0, 0]
@@ -1914,10 +1914,10 @@ def unnamed():
   rq_comm_write_register_1005 = [0, 0, 0, 0]
   rq_comm_write_register_1006 = [0, 0, 0, 0]
   rq_comm_write_register_1007 = [0, 0, 0, 0]
-  
+
   rq_comm_write_register_6020_request = [False, False, False, False]
   rq_comm_write_register_6020 = [0, 0, 0, 0]
-  
+
   rq_comm_read_3_registers_200x_request = [False, False, False, False]
   rq_comm_read_22_registers_200x_request = [False, False, False, False]
   rq_comm_read_register_2000 = [0, 0, 0, 0]
@@ -1942,7 +1942,7 @@ def unnamed():
   rq_comm_read_register_2019 = [0, 0, 0, 0]
   rq_comm_read_register_2020 = [0, 0, 0, 0]
   rq_comm_read_register_2021 = [0, 0, 0, 0]
-  
+
   rq_comm_read_registers_250x_request = [False, False, False, False]
   rq_comm_read_register_2500 = [0, 0, 0, 0]
   rq_comm_read_register_2501 = [0, 0, 0, 0]
@@ -1953,12 +1953,12 @@ def unnamed():
   rq_comm_read_register_2506 = [0, 0, 0, 0]
   rq_comm_read_register_2507 = [0, 0, 0, 0]
   rq_comm_read_register_2508 = [0, 0, 0, 0]
-  
+
   rq_comm_read_3_registers_602x_request = [False, False, False, False]
   rq_comm_read_register_6020 = [0, 0, 0, 0]
   rq_comm_read_register_6021 = [0, 0, 0, 0]
   rq_comm_read_register_6022 = [0, 0, 0, 0]
-  
+
   def rq_comm_write_registers_100x(slave_id, registers_100x, number_of_registers):
       if(number_of_registers == 3):
           enter_critical
@@ -1968,11 +1968,11 @@ def unnamed():
               rq_comm_write_register_1002[index] = registers_100x[2]
               rq_comm_write_3_registers_100x_request[index] = True
           exit_critical
-  
+
           while(rq_comm_write_3_registers_100x_request[index]):
               sleep(0.008)
           end
-  
+
       elif(number_of_registers == 8):
           enter_critical
               index = rq_comm_slave_id_to_index(slave_id)
@@ -1986,29 +1986,29 @@ def unnamed():
               rq_comm_write_register_1007[index] = registers_100x[7]
               rq_comm_write_8_registers_100x_request[index] = True
           exit_critical
-  
+
           while(rq_comm_write_8_registers_100x_request[index]):
               sleep(0.008)
           end
-  
+
       end
   end
-  
+
   def rq_comm_write_1_register_6020(slave_id, register_value):
       enter_critical
           index = rq_comm_slave_id_to_index(slave_id)
           rq_comm_write_register_6020[index] = register_value
           rq_comm_write_register_6020_request[index] = True
       exit_critical
-  
+
       while(rq_comm_write_register_6020_request[index]):
           sleep(0.008)
       end
   end
-  
+
   def rq_comm_get_registers_100x(slave_id, number_of_registers):
       index = rq_comm_slave_id_to_index(slave_id)
-  
+
       if(number_of_registers == 3):
           return [rq_comm_write_register_1000[index],
                   rq_comm_write_register_1001[index],
@@ -2026,32 +2026,32 @@ def unnamed():
           popup("Invalid number_of_registers in rq_comm_get_registers_100x(slave_id, number_of_registers)", title="rq_comm_get_registers_100x()", error=True, blocking=True)
       end
   end
-  
+
   def rq_comm_read_registers_200x(slave_id, number_of_registers):
       if(number_of_registers == 3):
           enter_critical
               index = rq_comm_slave_id_to_index(slave_id)
               rq_comm_read_3_registers_200x_request[index] = True
           exit_critical
-  
+
           while(rq_comm_read_3_registers_200x_request[index]):
               sleep(0.008)
           end
-  
+
           return [rq_comm_read_register_2000[index],
                   rq_comm_read_register_2001[index],
                   rq_comm_read_register_2002[index]]
-  
+
       elif(number_of_registers == RQ_READ_SCREWDRIVER_REGISTERS_SIZE):
           enter_critical
               index = rq_comm_slave_id_to_index(slave_id)
               rq_comm_read_22_registers_200x_request[index] = True
           exit_critical
-  
+
           while(rq_comm_read_22_registers_200x_request[index]):
               sleep(0.008)
           end
-  
+
           return [rq_comm_read_register_2000[index],
                   rq_comm_read_register_2001[index],
                   rq_comm_read_register_2002[index],
@@ -2078,17 +2078,17 @@ def unnamed():
           popup("Invalid number_of_registers in rq_comm_read_registers_200x(slave_id, number_of_registers)", title="rq_comm_read_registers_200x()", error=True, blocking=True)
       end
   end
-  
+
   def rq_comm_read_registers_250x(slave_id):
       enter_critical
           index = rq_comm_slave_id_to_index(slave_id)
           rq_comm_read_registers_250x_request[index] = True
       exit_critical
-  
+
       while(rq_comm_read_registers_250x_request[index]):
           sleep(0.008)
       end
-  
+
       return [rq_comm_read_register_2500[index],
               rq_comm_read_register_2501[index],
               rq_comm_read_register_2502[index],
@@ -2099,22 +2099,22 @@ def unnamed():
               rq_comm_read_register_2507[index],
               rq_comm_read_register_2508[index]]
   end
-  
+
   def rq_comm_read_3_registers_6020(slave_id):
       enter_critical
           index = rq_comm_slave_id_to_index(slave_id)
           rq_comm_read_3_registers_602x_request[index] = True
       exit_critical
-  
+
       while(rq_comm_read_3_registers_602x_request[index]):
           sleep(0.008)
       end
-  
+
       return [rq_comm_read_register_6020[index],
               rq_comm_read_register_6021[index],
               rq_comm_read_register_6022[index]]
   end
-  
+
   def rq_comm_slave_id_to_index(slave_id = 9):
       if(slave_id == 9):
           return 0
@@ -2122,17 +2122,17 @@ def unnamed():
           return (slave_id - 1)
       end
   end
-  
+
   def rq_get_number_of_slaves():
       return get_list_length(rq_comm_slave_ids)
   end
-  
+
   def rq_read_registers(slave_id, start_address, number_of_registers, client_modbus):
     retries = 10
     index = rq_comm_slave_id_to_index(slave_id)
     while (retries >= 0):
       registers = client_modbus.ModbusServiceWrapper.readRegisters(slave_id, start_address, number_of_registers)
-  
+
       if(get_list_length(registers) > 0):
         if(registers[0] >= 0):
           rq_comm_lost[index] = False
@@ -2145,18 +2145,18 @@ def unnamed():
         textmsg("An error occurred while reading modbus registers: ", "No registers read")
         rq_comm_lost[index] = True
       end
-  
+
       retries = retries - 1
     end
-  
+
     return registers
   end
-  
+
   def rq_write_registers(slave_id, start_address, registers, client_modbus):
     retries = 10
     success = -1
     index = rq_comm_slave_id_to_index(slave_id)
-  
+
     while (retries >= 0 and success != 0):
       success = client_modbus.ModbusServiceWrapper.writeRegisters(slave_id, start_address, registers)
       retries = retries - 1
@@ -2164,12 +2164,12 @@ def unnamed():
     if(success < 0):
       textmsg("An error occurred while writing modbus registers: ", rq_convert_error_number_to_exception(success))
     end
-  
+
     rq_comm_lost[index] = (success < 0)
-  
+
     return success
   end
-  
+
   thread rq_modbus_comm():
       def rq_handle_write_requests():
           index = 0
@@ -2192,7 +2192,7 @@ def unnamed():
               index = index + 1
           end
       end
-  
+
       def rq_handle_read_requests():
           index = 0
           while(index < rq_get_number_of_slaves()):
@@ -2246,18 +2246,18 @@ def unnamed():
               index = index + 1
           end
       end
-  
+
       while(True):
           rq_handle_write_requests()
           rq_handle_read_requests()
           sleep(0.032)
       end
   end
-  
+
   def rq_convert_gripper_id_to_slave_id(gripper_id):
       # Line to support gripper_id in integer and string
       gripper_id_string = str_cat("", gripper_id)
-  
+
       if (gripper_id_string == "1"):
           return 9
       elif (gripper_id_string == "2"):
@@ -2269,7 +2269,7 @@ def unnamed():
       end
       return 9
   end
-  
+
   def rq_convert_error_number_to_exception(error_number):
       if(error_number == -1):
           return "INTERRUPTED_ERROR"
@@ -2281,7 +2281,7 @@ def unnamed():
           return "SERVICE_UNAVAILABLE_ERROR"
       end
   end
-  
+
   rq_modbus_comm_thread_id = run rq_modbus_comm()
   # end: URCap Installation Node
   # begin: URCap Installation Node
@@ -3018,7 +3018,7 @@ def unnamed():
 
   run read_force()
   start_node_executor()
-  
+
   preparationErrorXmlRpcClient = rpc_factory("xmlrpc","http://localhost:35647")
   contactOffsetXmlRpcClient = rpc_factory("xmlrpc","http://localhost:41115")
   palletizerXmlRpcClient = rpc_factory("xmlrpc","http://localhost:43775")
@@ -3032,25 +3032,25 @@ def unnamed():
         halt
       end
     end
-  
+
     checkForScriptPreparationException()
   #***********************************************************************************************
   # verify tap detection
   #***********************************************************************************************
-  
+
   def rq_tap_count(forces, high_threshold):
-  
+
     low_threshold = 2
     tapCount = 0
     lookingForPeak = True
     indexDown = 0
-  
+
     i = 1
     lastIndex = length(forces) - 1
     while i <= lastIndex:
-  
+
       deltaForce = forces[i] - forces[0]
-  
+
      if lookingForPeak:
         if deltaForce >  high_threshold:
           lookingForPeak = False
@@ -3063,28 +3063,28 @@ def unnamed():
         end
       end
       i = i + 1
-  
+
     end
-  
+
     if indexDown != lastIndex:
       tapCount = 0
     end
-  
+
     return tapCount
-  
+
   end
   def shift_right(list, default_value = 0):
-  
+
      i = length(list)-1
      while (i > 0):
         list[i]=list[i-1]
         i=i-1
      end
      list[0] = default_value
-  
+
      return list
   end
-  
+
   #***********************************************************************************************
   # Wait for force reached
   #***********************************************************************************************
@@ -3094,25 +3094,25 @@ def unnamed():
   # timeout        : timeout in miliseconds
   #***********************************************************************************************
   def rq_wait_for_force_reached(desired_wrench, is_active, feature, timeout):
-  
+
     feature_base = 0
     feature_tool = 1
     time_constant = 0.025
     alpha = 1 - pow(2.718, -1.0 * rq_controller_time_step / time_constant)
-  
+
     thresholds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     minimal_thresholds = [1.0, 1.0, 1.0, 0.1, 0.1, 0.1]
-  
+
     applied_wrench = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     filtered_wrench = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-  
+
     if (feature == feature_base):
       applied_wrench = list_by_scalar_multiply(base_wrench, -1.0)
     else:
       applied_wrench = list_by_scalar_multiply(tcp_wrench, -1.0)
     end
     filtered_wrench = applied_wrench
-  
+
     i = 0
     while (i < 6):
       if (is_active[i]):
@@ -3125,27 +3125,27 @@ def unnamed():
       end
       i = i+1
     end
-  
+
    force_reached = False
-  
+
    timer = 0
-  
+
    while ((not force_reached) and (timer < timeout)):
-  
+
       if (feature == feature_base):
          applied_wrench = list_by_scalar_multiply(base_wrench, -1.0)
       else:
          applied_wrench = list_by_scalar_multiply(tcp_wrench, -1.0)
       end
-  
+
       i = 0
       while (i < 6):
         filtered_wrench[i] = (alpha * applied_wrench[i]) + ((1.0 - alpha) * filtered_wrench[i])
         i = i+1
       end
-  
+
       force_reached = True
-  
+
       i = 0
       while ((i < 6) and force_reached):
         error = norm(desired_wrench[i] - filtered_wrench[i])
@@ -3154,28 +3154,28 @@ def unnamed():
         end
         i = i + 1
       end
-  
+
       timer = timer + rq_controller_time_step
-  
+
       sleep(rq_controller_time_step)
-  
+
     end
-  
+
     return force_reached
   end
   #***********************************************************************************************
   # verify click detection
   #***********************************************************************************************
   click_detection_children_ended = False
-  
+
   def rq_click_detection(force_drop_threshold = 10, torque_drop_threshold = 1, force_radio_button_selected = True):
-  
+
     current_norm = 0
     drop_threshold = 0
     norms = [0.0, 0.0, 0.0, 0.0, 0.0]
     click_detected = False
     wrench_indices = [0,0,0]
-  
+
     if(force_radio_button_selected):
       drop_threshold = force_drop_threshold
       wrench_indices = [0,1,2]
@@ -3183,19 +3183,19 @@ def unnamed():
       drop_threshold =torque_drop_threshold
       wrench_indices = [3,4,5]
     end
-  
+
     while ((not click_detection_children_ended) and (not click_detected)):
-  
+
       current_norm = norm([sensor_wrench[wrench_indices[0]], sensor_wrench[wrench_indices[1]], sensor_wrench[wrench_indices[2]]])
-  
+
       norms[4] = norms[3]
       norms[3] = norms[2]
       norms[2] = norms[1]
       norms[1] = norms[0]
       norms[0] = current_norm
-  
+
       avg_norm = (norms[2] + norms[3] + norms[4]) / 3.0
-  
+
       #Check if clicking is detected with force
       norm_drop = avg_norm - current_norm
       if(norm_drop > drop_threshold):
@@ -3205,14 +3205,14 @@ def unnamed():
         sleep(rq_controller_time_step)
       end
     end
-  
+
     return click_detected
   end
   ###############################################################
   # Script file used to define Robotiq functions for the Insertion node
   # Version: 0.0.2
   ###############################################################
-  
+
   rq_ins_offset = p[0, 0, 0, 0, 0, 0]
   rq_ins_start_pose = p[0, 0, 0, 0, 0, 0]
   rq_actual_to_destination = p[0, 0, 0, 0, 0, 0]
@@ -3221,7 +3221,7 @@ def unnamed():
   rq_rotation_not_completed = False
   rq_find_bottom_not_completed = False
   rq_spiral_not_completed = False
-  
+
   def ins_actual_force_urcap(direction="X+"):
     axis = str_at(direction, 0)
     if (axis == "x") or (axis == "X"):
@@ -3234,7 +3234,7 @@ def unnamed():
       textmsg("ins_actual_force_urcap, invalid direction ", direction)
     end
   end
-  
+
   def ins_actual_torque_urcap(direction = "Z+"):
     if (direction == "X+") or (direction == "X-") or (direction == "X"):
       return get_applied_tcp_force(3)
@@ -3243,18 +3243,18 @@ def unnamed():
     else:
       return get_applied_tcp_force(5)
     end
-  
+
   end
-  
+
   def square(a):
     return a*a
   end
-  
+
   def update_servoj_node_target(target_joint_pos):
     set_servoj_node_cmd(target_joint_pos)
     sleep(rq_controller_time_step)
   end
-  
+
   def create_all_insertion_nodes():
     global rq_insertion_force_node_id = node_rpc_server.createnewforcenode()
     global rq_insertion_movej_node_id = node_rpc_server.createnewmovejnode()
@@ -3262,7 +3262,7 @@ def unnamed():
     node_rpc_server.setparentid(rq_insertion_movej_node_id, rq_insertion_force_node_id)
     node_rpc_server.setparentid(rq_insertion_servoj_node_id, rq_insertion_force_node_id)
   end
-  
+
   def get_offset_projected_in_spiral_plane(direction, current_pose, pose_ref):
     axis = str_at(direction, 0)
     axis_index = 0
@@ -3275,24 +3275,24 @@ def unnamed():
     else:
       textmsg("get_offset_projected_in_spiral_plane, invalid direction ", direction)
     end
-  
+
     pose_offset = pose_trans( pose_inv(pose_ref), current_pose ) # current_pose and pose_ref should have the same orientations.
                                                                  # pose_offset is returned expressed in pose_ref frame
-  
+
     pose_offset[axis_index] = 0 # valeur en direction mise a zero
     pose_offset[3] = 0 # valeur en Rx mise a zero
     pose_offset[4] = 0 # valeur en Ry mise a zero
     pose_offset[5] = 0 # valeur en Rz mise a zero
-  
+
     return pose_offset
   end
-  
+
   def update_spiral_offset(direction, spiral_initial_pose, spiral_initial_pose_offset, spiral_initial_pose_offset_name):
     pos_diff_tcp = get_offset_projected_in_spiral_plane(direction, get_actual_tcp_pose(), spiral_initial_pose)
     spiral_initial_pose_offset = interpolate_pose(spiral_initial_pose_offset, pos_diff_tcp, 0.35)
     storevar.setvariablepose(spiral_initial_pose_offset_name, spiral_initial_pose_offset)
   end
-  
+
   def determine_max_spiral_radius_from_actual_position(direction, spiral_initial_pose, max_radius):
       dist_to_initial_pose = norm( get_offset_projected_in_spiral_plane(direction, get_actual_tcp_pose(), spiral_initial_pose))
       if (max_radius > dist_to_initial_pose):
@@ -3300,10 +3300,10 @@ def unnamed():
       else:
         new_max_radius = 0
       end
-  
+
       return new_max_radius
   end
-  
+
   def insertion_compliant_move_urcap(axis = "Z",
                                      direction_sign = 1,
                                      compliant_insert_force_threshold = 20,
@@ -3312,7 +3312,7 @@ def unnamed():
                                      max_position_deviation = 0.1):
     feature_base = 0
     feature_tool = 1
-  
+
     if axis == "X":
       axis_index = 0
     elif axis == "Y":
@@ -3322,7 +3322,7 @@ def unnamed():
     else:
       textmsg("insertion_compliant_move_urcap, invalid direction ", axis)
     end
-  
+
     current_pose = get_actual_tcp_pose()
     insertion_offset = p[0,0,0,0,0,0]
     rq_actual_to_destination = pose_trans(pose_inv(current_pose), rq_ins_destination)
@@ -3331,12 +3331,12 @@ def unnamed():
     distance = point_dist(current_pose, insertion_pose)
     number_of_steps = floor( distance / (speed * rq_controller_time_step) ) + 1
     alpha_step  = 1.0 / number_of_steps
-  
+
     # initialize forcenode
     node_execution_thread = initialise_force_node(position_controlled_direction = axis_index,
                                                   feature = feature_tool,
                                                   max_position_deviation = max_position_deviation)
-  
+
     alpha = 0.0
     surface_found = False
     while (alpha <= 1.0) and (not surface_found):
@@ -3354,21 +3354,21 @@ def unnamed():
         surface_found = True
       end
     end
-  
+
     final_pos_reached = (alpha >= 1)
-  
+
     kill_thread( node_execution_thread )
-  
+
     return final_pos_reached
   end # insertion_compliant_move_urcap
-  
+
   def insert_spiral_find_hole(axis = "Z", direction_sign = 1,
                               stop_force_threshold = 3,
                               max_radius = 0.005,
                               radius_incr_per_turn = 0.0003,
                               peck_mode = False,
                               tangential_speed = 0.005):
-  
+
     if (stop_force_threshold < 0) or (stop_force_threshold > 40):
       popup("stop_force_threshold parameter in Newton must be between 0 and 40 Newtons","ERROR rq_insert_spiral_urcap")
       halt
@@ -3381,9 +3381,9 @@ def unnamed():
       popup("radius_incr_per_turn parameter in mm must be between 0.01 mm and 5 mm","ERROR rq_insert_spiral_urcap")
       halt
     end
-  
+
     rq_spiral_not_completed = False
-  
+
     ins_x = 0
     ins_y = 0
     ins_z = 0
@@ -3396,12 +3396,12 @@ def unnamed():
     radius_inc_per_rad = radius_incr_per_turn / (2*ins_PI)
     ins_actual_radius = 0.0001  #Start radius
     ins_desired_arc_length = tangential_speed * rq_controller_time_step
-  
+
     sleep(rq_controller_time_step)
     #Find the bore of the part
     ins_current_pos = get_actual_tcp_pose()
     sleep(rq_controller_time_step)
-  
+
     # if axis == "Z"
     search_axis = 2
     other_axis_A = 0
@@ -3415,7 +3415,7 @@ def unnamed():
       other_axis_A = 2
       other_axis_B = 0
     end
-  
+
     #********************************************************************************************************************
     #Spiral Search using any Axis
     #********************************************************************************************************************
@@ -3431,10 +3431,10 @@ def unnamed():
         ins_desired_arc_length = 0.0005
         delta_angle = ins_desired_arc_length / ins_actual_radius #small angle approximation
         ins_actual_angle = ins_actual_angle + delta_angle
-  
+
         ins_pose[other_axis_A] = cos( ins_actual_angle ) * ins_actual_radius
         ins_pose[other_axis_B] = sin( ins_actual_angle ) * ins_actual_radius
-  
+
         ins_actual_radius = ins_actual_angle * radius_inc_per_rad + ins_radius_offset
         next_tcp_pose = pose_trans(ins_current_pos, ins_pose)
         movej(next_tcp_pose)
@@ -3448,7 +3448,7 @@ def unnamed():
         #standard mode: the Spiral_Search function will maintain contact between both mating parts at all times
         ins_pose[other_axis_A] = cos( ins_actual_angle ) * ins_actual_radius
         ins_pose[other_axis_B] = sin( ins_actual_angle ) * ins_actual_radius
-  
+
         delta_angle = ins_desired_arc_length / ins_actual_radius
         ins_actual_angle = ins_actual_angle + delta_angle
         ins_actual_radius = ins_actual_angle * radius_inc_per_rad + ins_radius_offset
@@ -3465,9 +3465,9 @@ def unnamed():
     end
     stopj(2)
     return ins_search_result
-  
+
   end # insert_spiral_find_hole
-  
+
   ####################  SPIRAL #############################
   def rq_insert_spiral_urcap(direction = "Z",
                              stop_force_threshold = 3,
@@ -3478,20 +3478,20 @@ def unnamed():
                              compliant_insert_force_threshold = 10,
                              spiral_initial_pose_offset_name = "defaultname",
                              intelligent_approach_enabled = False):
-  
+
     max_radius = max_radius / 1000 #TODO: change unit to meters and remove this line
     radius_incr = radius_incr / 1000 #TODO: change unit to meters and remove this line
-  
+
     if (rq_insertion_force_node_id == -1):
       create_all_insertion_nodes()
     end
-  
+
     hole_found = False
     spiral_bottom_target_reached = False
     number_of_failed_spiral_tries = 0
     number_of_spiral_tries_max = 5
     max_position_deviation = max_radius
-  
+
     # define the direction sign from rq_ins_destination
     current_pose = get_actual_tcp_pose()
     rq_actual_to_destination = pose_trans(pose_inv(current_pose), rq_ins_destination)
@@ -3511,7 +3511,7 @@ def unnamed():
       direction_sign = -1
       direction = str_cat(axis,"-")
     end
-  
+
     # linearsearch param
     lin_search_stop_force_threshold = compliant_insert_force_threshold
     spiral_initial_pose = get_actual_tcp_pose()
@@ -3550,7 +3550,7 @@ def unnamed():
     end # while
     return (not spiral_bottom_target_reached)
   end # rq_insert_spiral_urcap
-  
+
   def insertion_finish_move_urcap(direction = "Z+"):
     insertion_offset = p[0,0,0,0,0,0]
     current_pose = get_actual_tcp_pose()
@@ -3568,11 +3568,11 @@ def unnamed():
     insertion_pose = pose_trans(current_pose, insertion_offset)
     movel(insertion_pose, a=0.05, v=rq_ins_speed_setting)
   end
-  
+
   def rq_xor(a, b):
     return (a and not(b)) or (not(a) and b)
   end
-  
+
   def rq_adapt_force_control_to_direction(position_controlled_direction = 2, feature = 1, max_position_deviation = 0.1):
     force_control_enabled_vector = [True, True, True, False, False, False]
     force_control_enabled_vector[position_controlled_direction] = False
@@ -3589,7 +3589,7 @@ def unnamed():
                                max_positive_deviation_vector,
                                adaptiveStiffness)
   end
-  
+
   def initialise_force_node(position_controlled_direction = 2, feature = 1, max_position_deviation = 0.1):
     movej(get_actual_joint_positions()) # This moveJ is used to prevent "another thread is already controlling the robot error".
     rq_adapt_force_control_to_direction(position_controlled_direction = position_controlled_direction,
@@ -3602,7 +3602,7 @@ def unnamed():
     node_execution_thread = run execute_node_thread()
     return node_execution_thread
   end
-  
+
   ####################  ROTATIONAL #############################
   def rq_insert_rotation_urcap(positive_rotation_desired = True,
                                direction="Z",
@@ -3612,15 +3612,15 @@ def unnamed():
                                max_angle_deg = 360,
                                peck_mode = False,
                                max_rotation_torque=1):
-  
+
     speed = speed / 1000 # TODO: change speed input units to meters instead of mm and remove this line
     max_force_control_position_deviation = 0.002 # TODO: add a parameter for this in the interface
     max_torque_reached_counter_fail_threshold = 1/rq_controller_time_step # try for about one second
-  
+
     if (rq_insertion_force_node_id == -1):
         create_all_insertion_nodes()
     end
-  
+
     # define the direction sign
     rq_actual_to_destination = pose_trans(pose_inv(get_actual_tcp_pose()), rq_ins_destination)
     axis = str_at(direction, 0)
@@ -3646,13 +3646,13 @@ def unnamed():
       direction = str_cat(axis,"-")
       positive_rotation_desired = not positive_rotation_desired
     end
-  
+
     distance_to_destination = norm( rq_actual_to_destination[axis_index] )
-  
+
     contact_with_piece_initiated = rq_linear_search_urcap(direction, force_threshold, speed, distance_to_destination, feature = 1)
-  
+
     if( contact_with_piece_initiated ):
-  
+
       # verify validity of user inputs
       if ((rotation_speed <= 0) or (rotation_speed > 60)):
         popup("rotation speed parameter in degrees / second must be between 0.01 and 60","ERROR rq_insert_rotation_urcap")
@@ -3664,12 +3664,12 @@ def unnamed():
         popup("max angle parameter in degree must be between 1 and 360","ERROR rq_insert_rotation_urcap")
         halt
       end
-  
+
       # initialize forcenode: adapt to direction
       node_execution_thread = initialise_force_node(position_controlled_direction = axis_index,
                                                     feature = 1,
                                                     max_position_deviation = max_force_control_position_deviation)
-  
+
       if positive_rotation_desired:
         rot_direction_sign = 1
       else:
@@ -3681,7 +3681,7 @@ def unnamed():
       time_step_signed = rq_controller_time_step * rot_direction_sign * direction_sign
       rot_step = d2r(rotation_speed) * time_step_signed
       rot_step_5deg_per_second = d2r(5) * time_step_signed
-  
+
       line_step = rq_ins_speed_setting * rq_controller_time_step * direction_sign
       rot_actual_angle = 0
       rot_actual_mode = 1 #1= linear, 2 = rotation
@@ -3690,7 +3690,7 @@ def unnamed():
       rq_actual_to_destination = pose_trans( pose_inv(ins_rotation_initial_pose), rq_ins_destination )
       distance_to_destination = norm( rq_actual_to_destination[axis_index] )
       global rq_insertion_max_torque_reached_counter = 0
-  
+
       if peck_mode:
         #peck mode
         positive_rotation_computed = positive_rotation_desired
@@ -3757,7 +3757,7 @@ def unnamed():
           update_servoj_node_target(next_joint_pos)
         end # while
       end # if peck_mode
-  
+
       kill_thread( node_execution_thread )
       stopj(2)
       rq_rotation_not_completed = ( (norm(rot_actual_angle) > max_rot_angle) or
@@ -3765,10 +3765,10 @@ def unnamed():
     else: # initial find_surface was unsuccessfull, assume a direct hit to target, which is a success
       rq_rotation_not_completed = False
     end # if contact_with_piece_initiated
-  
+
     return rq_rotation_not_completed
   end # insert rotation 2
-  
+
   def limit_rotation_step_when_close_to_max_angle(rot_step, minimal_rot_step, max_rot_angle, rot_actual_angle):
     rot_deceleration_angle_distance = d2r(3)
     rot_direction = 1
@@ -3785,7 +3785,7 @@ def unnamed():
     end
     return ( rot_direction * rot_step_limited )
   end
-  
+
   def compute_rotation_next_angle(current_angle, step, is_max_torque_reached):
   #This function compute the rotation angle for rotational insertion by
   # incrementing the current angle by the desired step size.
@@ -3800,7 +3800,7 @@ def unnamed():
     end
     return new_angle
   end
-  
+
   def center_one_axis(axis, lin_search_stop_force_threshold, speed, max_distance, feature):
     # Initiate contact in forward direction
     contact_initiated = rq_linear_search_urcap( str_cat(axis, "+"), lin_search_stop_force_threshold, speed, max_distance, feature)
@@ -3817,9 +3817,9 @@ def unnamed():
     end
     return contact_initiated
   end
-  
+
   def rq_insert_recenter_urcap(axis = "Z", max_distance = 0.1, speed = 0.005, feature = 1, lin_search_stop_force_threshold = 5):
-  
+
     if (max_distance < 0) or (max_distance > 1):
       popup("max_distance parameter in m must be between 0 and 1","ERROR rq_insert_recenter_urcap")
       halt
@@ -3827,7 +3827,7 @@ def unnamed():
       popup("max_radius parameter in mm must be between 0.0001m/s and 0.5m/s","ERROR rq_insert_recenter_urcap")
       halt
     end
-  
+
     #--------------------------------------------------------------------------------------------------------------------
     #For insertion in the X axis
     #--------------------------------------------------------------------------------------------------------------------
@@ -3847,19 +3847,19 @@ def unnamed():
       recenter_axis_1 = "X"
       recenter_axis_2 = "Y"
     end
-  
+
     recenter_successfull = center_one_axis(recenter_axis_1, lin_search_stop_force_threshold, speed, max_distance, feature)
     if recenter_successfull:
       recenter_successfull = center_one_axis(recenter_axis_2, lin_search_stop_force_threshold, speed, max_distance, feature)
     end
-  
+
     if (recenter_successfull == False):
       textmsg("rq_insert_recenter_urcap failed, could not initiate contact with piece")
     end
-  
+
     return recenter_successfull
   end # rq_insert_recenter_urcap
-  
+
   # ******************* MAIN of Insertion Preamble *******************
   storevar.clearall()
   global rq_insertion_force_node_id = -1
@@ -3875,7 +3875,7 @@ def unnamed():
       halt
     end
   end
-  
+
   def rq_linear_search_get_direction_sign(direction):
     sign = str_at(direction, 1)
     direction_sign = 1
@@ -3884,7 +3884,7 @@ def unnamed():
     end
     return direction_sign
   end
-  
+
   def rq_linear_search_get_force_index(direction):
     axis = str_at(direction, 0)
     force_index = 0
@@ -3900,22 +3900,22 @@ def unnamed():
     end
     return force_index
   end
-  
+
   def rq_linear_search_get_pose_offset(force_index, max_distance):
     pose_offset = p[0,0,0,0,0,0]
     pose_offset[force_index] = max_distance
     return pose_offset
   end
-  
+
   def rq_linear_search_execution(pose_from, pose_to, force_threshold, speed, T_tcp_to_force_frame, force_index, direction_sign):
     steptime = rq_controller_time_step
     distance = point_dist(pose_from, pose_to)
     number_pose_interpolate = floor(distance / (speed * steptime)) + 1
     delta_alpha = 1.0 / number_pose_interpolate
-  
+
     alpha = 0.0
     local surface_found = False
-  
+
     pose_step = 0
     end_pose_pause_time = 0.2 # to refine
     max_pose_steps = number_pose_interpolate + end_pose_pause_time/steptime
@@ -3927,20 +3927,20 @@ def unnamed():
       else:
         pose_interpolate = pose_to
       end
-  
+
       servoj(get_inverse_kin(pose_interpolate), 0.1, 0.1, steptime, 0.05, 500)
-  
+
       wrench = express_force_in_frame(T_tcp_to_force_frame, tcp_wrench)
       applied_force = -1 * wrench[force_index]
-  
+
       if (direction_sign * applied_force) >= force_threshold:
         surface_found = True
       end
     end
-  
+
     return surface_found
   end
-  
+
   #************************************************
   #Function:  rq_linear_search_urcap(direction="Z+", force[N] = 10, speed[m/s] = 0.004, max_distance[m] = 0.02)
   #   Find a specific force in the direction of "direction".
@@ -3949,21 +3949,21 @@ def unnamed():
   #
   #************************************************
   def rq_linear_search_urcap(direction="Z+", force_threshold = 10, speed = 0.004, max_distance = 0.02, feature = 0 ):
-  
+
     rq_linear_search_common_validation(max_distance, speed, force_threshold)
     if (feature != 0) and (feature != 1):
       popup("feature value should be 0 for base or 1 for tool","ERROR rq_linear_search_urcap")
       halt
     end
-  
+
     feature_base = 0
     feature_tool = 1
-  
+
     force_index = rq_linear_search_get_force_index(direction)
     direction_sign = rq_linear_search_get_direction_sign(direction)
     max_distance = direction_sign * max_distance
     pose_offset = rq_linear_search_get_pose_offset(force_index, max_distance)
-  
+
     tcp_pose = get_actual_tcp_pose()
     pose_from = tcp_pose
     pose_to = pose_from
@@ -3972,39 +3972,39 @@ def unnamed():
     elif feature == feature_tool:
       pose_to = pose_trans(pose_from, pose_offset)
     end
-  
+
     T_tcp_to_force_frame = p[0, 0, 0, 0, 0, 0] # default for feature_tool
     if (feature == feature_base):
       T_tcp_to_force_frame = pose_inv(tcp_pose)
     end
-  
+
     surface_found = rq_linear_search_execution(pose_from, pose_to, force_threshold, speed, T_tcp_to_force_frame, force_index, direction_sign)
-  
+
     return surface_found
   end
-  
+
   def rq_linear_search_custom_frame(direction="Z+", force_threshold = 10, speed = 0.004, abs_max_distance = 0.02, feature_frame = p[0, 0, 0, 0, 0, 0]):
-  
+
     rq_linear_search_common_validation(abs_max_distance, speed, force_threshold)
-  
+
     force_index = rq_linear_search_get_force_index(direction)
     direction_sign = rq_linear_search_get_direction_sign(direction)
     max_distance = direction_sign * abs_max_distance
     pose_offset = rq_linear_search_get_pose_offset(force_index, max_distance)
-  
+
     tcp_pose = get_actual_tcp_pose()
     offset_frame = p[tcp_pose[0], tcp_pose[1], tcp_pose[2], feature_frame[3], feature_frame[4], feature_frame[5]]
     tcp_position_with_offset = pose_trans(offset_frame, pose_offset)
     pose_from = tcp_pose
     pose_to = p[tcp_position_with_offset[0], tcp_position_with_offset[1], tcp_position_with_offset[2], tcp_pose[3], tcp_pose[4], tcp_pose[5]]
-  
+
     T_tcp_to_force_frame = pose_trans(pose_inv(tcp_pose), feature_frame)
-  
+
     surface_found = rq_linear_search_execution(pose_from, pose_to, force_threshold, speed, T_tcp_to_force_frame, force_index, direction_sign)
-  
+
     return surface_found
   end
-  
+
   def validate_wait_for_force_drop_common_parameters(force_threshold, timeout_seconds):
     if (timeout_seconds < 0.0) or (timeout_seconds > 3600):
       popup("timeout parameter in s must be between 0 and 3600","ERROR rq_wait_for_force_drop")
@@ -4014,51 +4014,51 @@ def unnamed():
       halt
     end
   end
-  
+
   def rq_wait_for_force_drop_execution(force_threshold, T_tcp_to_force_frame, force_index, direction_sign, timeout_seconds):
     local steptime = get_steptime()
     local release_detected = False
     local time = 0
-  
+
     while (time < timeout_seconds) and (not release_detected):
       time = time + steptime
-  
+
       local wrench = express_force_in_frame(T_tcp_to_force_frame, tcp_wrench)
       local force = -1 * wrench[force_index]
-  
+
       if (direction_sign * force) < force_threshold:
         release_detected = True
       end
       sync()
     end
-  
+
     return release_detected
   end
-  
+
   def rq_wait_for_force_drop_custom_frame(direction="Z+", force_threshold = 10, timeout_seconds = 60, feature_frame = p[0, 0, 0, 0, 0, 0] ):
     validate_wait_for_force_drop_common_parameters(force_threshold, timeout_seconds)
-  
+
     local force_index = rq_linear_search_get_force_index(direction)
     local direction_sign = rq_linear_search_get_direction_sign(direction)
-  
+
     local tcp_pose = get_actual_tcp_pose()
     local T_tcp_to_force_frame = pose_trans(pose_inv(tcp_pose), feature_frame)
-  
+
     local release_detected = rq_wait_for_force_drop_execution(force_threshold, T_tcp_to_force_frame, force_index, direction_sign, timeout_seconds)
-  
+
     return release_detected
   end
-  
+
   def rq_wait_for_force_drop(direction="Z+", force_threshold = 10, timeout_seconds = 60, feature = 0 ):
     validate_wait_for_force_drop_common_parameters(force_threshold, timeout_seconds)
     if (feature != 0) and (feature != 1):
       popup("feature value should be 0 for base or 1 for tool","ERROR rq_wait_for_force_drop")
       halt
     end
-  
+
     local force_index = rq_linear_search_get_force_index(direction)
     local direction_sign = rq_linear_search_get_direction_sign(direction)
-  
+
     local feature_base = 0
     local feature_tool = 1
     local tcp_pose = get_actual_tcp_pose()
@@ -4066,14 +4066,14 @@ def unnamed():
     if (feature == feature_base):
       T_tcp_to_force_frame = pose_inv(tcp_pose)
     end
-  
+
     local release_detected = rq_wait_for_force_drop_execution(force_threshold, T_tcp_to_force_frame, force_index, direction_sign, timeout_seconds)
-  
+
     return release_detected
   end
-  
-  
-  
+
+
+
     ##############################################
     # OFFSET FEATURE-RELATED VARIABLES AND METHODS
     ##############################################
@@ -4084,27 +4084,27 @@ def unnamed():
       v_temp[2]=vector1[0]*vector2[1]-vector1[1]*vector2[0]
       return v_temp
     end
-  
+
     def relocate_xyzr(init_feature, init_touch_pose, touch_pose):
       init_touch_pose_2_init_feature = pose_trans( pose_inv(init_touch_pose), init_feature)
       new_feature = pose_trans( touch_pose, init_touch_pose_2_init_feature )
-  
+
       return new_feature
     end
-  
+
     def relocate_orientation(touch1_init_pose, touch2_init_pose, feature_init_pose, touch1_pose, touch2_pose):
       #when relocating using 2 touch, the center of rotation is around touch point 1 (this could be changed)
-  
+
       # initial touch2 pose in initial touch 1 pose frame:
       touch2_initial_pose_in_touch1_initial_pose_frame = pose_trans(pose_inv(touch1_init_pose), touch2_init_pose)
-  
+
       # find theoric touch2_pose if no rotation
       touch2_pose_if_no_rotation = pose_trans(touch1_pose, touch2_initial_pose_in_touch1_initial_pose_frame)
-  
+
       # vectors touch1 to touch2
       touch1_pose_to_touch2_pose = pose_trans(pose_inv(touch1_pose), touch2_pose)
       touch1_pose_to_touch2_pose_if_no_rotation = pose_trans(pose_inv(touch1_pose), touch2_pose_if_no_rotation)
-  
+
       #angle axis calculation
       normal_vector = cross_product(touch1_pose_to_touch2_pose_if_no_rotation, touch1_pose_to_touch2_pose)
       normal_vector_norm = norm(normal_vector)
@@ -4113,29 +4113,29 @@ def unnamed():
         normal_vector_to_angle_axis_multiply_norm_factor = rotation_angle_rad / normal_vector_norm
         angle_axis = [normal_vector[0] * normal_vector_to_angle_axis_multiply_norm_factor, normal_vector[1] * normal_vector_to_angle_axis_multiply_norm_factor, normal_vector[2] * normal_vector_to_angle_axis_multiply_norm_factor]
         rotation_offset_pose = p[0, 0, 0, angle_axis[0], angle_axis[1], angle_axis[2]]
-  
+
         #rotate touch1 pose using touch2 information
         touch1_pose_rotated = pose_trans(touch1_pose, rotation_offset_pose)
       else:
         touch1_pose_rotated = touch1_pose
       end
-  
+
       # relocate the feature using touch1_rotated_pose
       return relocate_xyzr(feature_init_pose, touch1_init_pose, touch1_pose_rotated)
     end
-  
+
     def relocate_1_touch(touch_init_pose, touch_pose, feature_init_pose, feature_actual_pose):
       touch_initial_pose_in_initial_feature_frame = pose_trans(pose_inv(feature_init_pose), touch_init_pose)
       touch_actual_pose_in_actual_feature_frame = pose_trans(pose_inv(feature_actual_pose), touch_pose)
-  
+
       # difference between touch poses in their respective feature frame
       touch_pose_offset = pose_sub(touch_actual_pose_in_actual_feature_frame, touch_initial_pose_in_initial_feature_frame)
-  
+
       # remove all rotation from offset
       touch_pose_offset[3] = 0
       touch_pose_offset[4] = 0
       touch_pose_offset[5] = 0
-  
+
       # apply pose offset to actual feature
       return pose_trans(feature_actual_pose, touch_pose_offset)
     end
@@ -4146,20 +4146,20 @@ def unnamed():
       checkForScriptPreparationException()
       halt
     end
-  
+
     ##############################################
     # PALLETIZER-RELATED VARIABLES AND METHODS
     ##############################################
-  
+
     palletizerXmlRpcClient.setCurrentPalletizerNode("")
-  
+
     def rq_get_nb_processed_boxes():
       rq_palletizer_uuid = palletizerXmlRpcClient.getCurrentPalletizerNode()
       if rq_palletizer_uuid == "":
         popup("rq_get_nb_processed_boxes() should only be called from within a Palletizer node.", title="Palletizer", error=True, blocking=True)
         halt
       end
-  
+
       rq_box_count = palletizerXmlRpcClient.getCurrentBoxCount(rq_palletizer_uuid)
       if rq_box_count == -1:
         popup("Invalid Palletizer node id used for rq_get_nb_processed_boxes()", title="Palletizer", error=True, blocking=True)
@@ -4167,47 +4167,47 @@ def unnamed():
       end
       return rq_box_count
     end
-  
+
     def rq_get_current_box_type():
          rq_palletizer_uuid = palletizerXmlRpcClient.getCurrentPalletizerNode()
          if rq_palletizer_uuid == "":
             popup("rq_get_current_box_type() should only be called from within a Palletizer node.", title="Palletizer", error=True, blocking=True)
             halt
          end
-  
+
          rq_box_type_name = palletizerXmlRpcClient.getCurrentBoxTypeName(rq_palletizer_uuid)
          return rq_box_type_name
     end
-  
+
      def rq_get_current_pal_recipe():
          rq_palletizer_uuid = palletizerXmlRpcClient.getCurrentPalletizerNode()
          if rq_palletizer_uuid == "":
             popup("rq_get_current_pal_recipe() should only be called from within a Palletizer node.", title="Palletizer", error=True, blocking=True)
             halt
          end
-  
+
          rq_pal_unit_load_name = palletizerXmlRpcClient.getCurrentPalletUnitLoadName(rq_palletizer_uuid)
          return rq_pal_unit_load_name
      end
-  
+
     def rq_set_pallet_completed():
       rq_palletizer_uuid = palletizerXmlRpcClient.getCurrentPalletizerNode()
       if rq_palletizer_uuid == "":
         popup("rq_set_pallet_completed() should only be called from within a Palletizer node.", title="Palletizer", error=True, blocking=True)
         halt
       end
-  
+
       palletizerXmlRpcClient.skipToAfterPallet(rq_palletizer_uuid)
     end
-  
+
     def rq_demo_mode_switch_palletizer_mode():
       palletizerXmlRpcClient.demoModeFakePalletSwapAndAndSwitchPalletizerMode()
     end
-  
+
     def rq_linear_axis_scan(halt_on_error=True):
       local succeeded = False
       local error_message = ""
-  
+
       if not node_rpc_server.linearaxisconnected():
         succeeded = node_rpc_server.linearaxisscan()
         if succeeded:
@@ -4219,7 +4219,7 @@ def unnamed():
         succeeded = True
         textmsg("Linear axis already connected")
       end
-  
+
       if not succeeded:
         if halt_on_error:
           popup(error_message, title="Linear Axis", error=True, blocking=True)
@@ -4228,14 +4228,14 @@ def unnamed():
           textmsg(error_message)
         end
       end
-  
+
       return succeeded
     end
-  
+
     def rq_linear_axis_start(halt_on_error=True):
       local succeeded = False
       local error_message = ""
-  
+
       if not node_rpc_server.linearaxisconnected():
         error_message = "rq_linear_axis_start() was unable to start linear axis : linear axis not connected"
       else:
@@ -4246,7 +4246,7 @@ def unnamed():
           error_message = "rq_linear_axis_start() was unable to start linear axis"
         end
       end
-  
+
       if not succeeded:
         if halt_on_error:
           popup(error_message, title="Linear Axis", error=True, blocking=True)
@@ -4255,14 +4255,14 @@ def unnamed():
           textmsg(error_message)
         end
       end
-  
+
       return succeeded
     end
-  
+
     def rq_linear_axis_disable(halt_on_error=True):
       local succeeded = False
       local error_message = ""
-  
+
       if not node_rpc_server.linearaxisconnected():
         error_message = "rq_linear_axis_disable() was unable to disable linear axis : linear axis not connected"
       else:
@@ -4273,7 +4273,7 @@ def unnamed():
           error_message = "rq_linear_axis_disable() was unable to disable linear axis"
         end
       end
-  
+
       if not succeeded:
         if halt_on_error:
           popup(error_message, title="Linear Axis", error=True, blocking=True)
@@ -4282,17 +4282,17 @@ def unnamed():
           textmsg(error_message)
         end
       end
-  
+
       return succeeded
     end
-  
+
     global rq_palletizer_state_changed = False
     def rq_set_palletizer_state(palletizer_index, processed_boxes, next_step, other_pallet_state="ABSENT", current_pallet="CURRENT", left_recipe="", right_recipe=""):
       palletizerXmlRpcClient.setPalletizerState(palletizer_index, processed_boxes, next_step, other_pallet_state, current_pallet, left_recipe, right_recipe)
       checkForScriptPreparationException()
       rq_palletizer_state_changed = True
     end
-  
+
     def rq_get_pallet_state(is_pallet_left):
       return node_rpc_server.getPalletState(is_pallet_left)
     end
@@ -4301,7 +4301,7 @@ def unnamed():
     ###############################################################
     def verify_is_in_linear_axis_range(target_axis_position):
       axis_position_range = node_rpc_server.linearaxisgetpositionrange()
-  
+
       if target_axis_position < axis_position_range[0] or target_axis_position > axis_position_range[1]:
         textmsg("Linear axis target position : ", target_axis_position)
         textmsg("Linear axis position range : ", axis_position_range)
@@ -4309,13 +4309,13 @@ def unnamed():
         halt
       end
     end
-  
+
     def rq_get_linear_axis_pos():
         axis_position = node_rpc_server.linearaxisgetactualposition()
         textmsg("Linear axis actual position : ", axis_position)
         return axis_position
     end
-  
+
   BLOW_OFF_MODE_NO_AIR = 0
   BLOW_OFF_MODE_SMART_AIR = 1
   UNDEFINED_THREAD_ID = -1
@@ -4323,16 +4323,16 @@ def unnamed():
   STANDARD_TYPE = "STANDARD"
   INVALID_OUTPUT_ADDRESS = -1
   RQ_UNUSED_TIMEOUT = -1
-  
+
   global rq_cnc_insertion_node_ids = [-1, -1]
   global rq_run_timeout = 30
-  
+
   ###################################################################################
   #
   # Generic methods
   #
   ###################################################################################
-  
+
   def bool_to_str(value):
     if value:
       return "true"
@@ -4340,17 +4340,17 @@ def unnamed():
       return "false"
     end
   end
-  
+
   def bool_array_to_string(array, index):
     if (index >= length(array)):
       return "]"
     end
-  
+
     separator = ","
     if (index == length(array) - 1):
       separator = ""
     end
-  
+
     if (index == 0):
       str_array = concat("[", bool_to_str(array[index]), separator)
       return str_cat(str_array, bool_array_to_string(array, index + 1))
@@ -4358,11 +4358,11 @@ def unnamed():
       return concat(bool_to_str(array[index]), separator, bool_array_to_string(array, index + 1))
     end
   end
-  
+
   def rq_bool_array_to_string(array):
     return bool_array_to_string(array, 0)
   end
-  
+
   def json_force_node(force, max_negative_deviation, max_positive_deviation, stiffness, enabled_axis, feature, is_adaptive):
     json = "{"
     json = concat(json, key_val("forceFrame", feature), ",")
@@ -4375,80 +4375,80 @@ def unnamed():
     json = concat(json, key_val("targetTcpWrench", force), "}")
     return json
   end
-  
+
   def rq_setup_machine_tending_force_node(feature, force, stiffness, max_negative_deviation, max_positive_deviation, enabled_axis, is_adaptive):
     force_node_id = node_rpc_server.createnewforcenode()
     node_rpc_server.fromjson(force_node_id, json_force_node(force, max_negative_deviation, max_positive_deviation, stiffness, enabled_axis, 1, is_adaptive))
     return force_node_id
   end
-  
+
   ###################################################################################
   #
   # TRAJECTORY UTILITIES
   #
   ###################################################################################
-  
+
   def dot_product(v1, v2):
     return [v1]*transpose(v2)
   end
-  
+
   def get_symmetric_poses_from_middle(p1, p2, middle_pose, distance):
     distance_p1_middle = point_dist(p1, middle_pose)
     alpha = (distance / 2) / distance_p1_middle
     start_pose = interpolate_pose(middle_pose, p1, alpha)
     end_pose = interpolate_pose(middle_pose, p2, alpha)
-  
+
     return [start_pose, end_pose]
   end
-  
+
   def translate_to_origin(pose):
     return p[0, 0, 0, pose[3], pose[4], pose[5]]
   end
-  
-  
+
+
   ###################################################################################
   #
   # ROBOTIQ PART PRESENTER
   #
   ###################################################################################
-  
+
   global cnc_part_presenter_index = 0
-  
+
   def rq_pallet_get_poses_from_index(p_corner_1_approach, p_corners, nb_rows, nb_columns, alternate_direction, index):
       row = floor(index / nb_columns)
       column = index % nb_columns
-  
+
       row_alpha = 0
       if(nb_rows > 1):
           row_alpha = row / (nb_rows - 1)
       end
-  
+
       p_row_start = interpolate_pose(p_corners[0], p_corners[3], row_alpha)
       p_row_end = interpolate_pose(p_corners[1], p_corners[2], row_alpha)
-  
+
       column_alpha = 0
       if(nb_columns > 1):
           column_alpha = column / (nb_columns - 1)
       end
-  
+
       if(alternate_direction and (row % 2) and nb_columns > 1):
           pallet_pose = interpolate_pose(p_row_end, p_row_start, column_alpha)
       else:
           pallet_pose = interpolate_pose(p_row_start, p_row_end, column_alpha)
       end
-  
+
       T_1approach_1 = pose_trans(inv(p_corner_1_approach), p_corners[0])
       approach_pose = pose_trans(pallet_pose, inv(T_1approach_1))
-  
+
       return [approach_pose, pallet_pose]
   end
-  
+
   ###################################################################################
   #
   # MOVE DOOR
   #
   ###################################################################################
-  
+
   def rq_setup_door_force_node(reference_frame, force, stiffness):
     feature = 1
     forces = [force,0,0,0,0,0]
@@ -4457,14 +4457,14 @@ def unnamed():
     stiffnesses = [stiffness, 100, 100, 100, 100, 100]
     enabled_axis = [True, False, False, False, False, False]
     is_adaptive = True
-  
+
     force_node_id = rq_setup_machine_tending_force_node(feature, forces, stiffnesses, max_negative_deviation, max_positive_deviation, enabled_axis, is_adaptive)
-  
+
     node_rpc_server.setCustomFixedForceFrame(force_node_id, [reference_frame[3],reference_frame[4],reference_frame[5]])
-  
+
     return force_node_id
   end
-  
+
   def json_rq_moves_node(tcp_speed, tcp_accel):
     json = "{"
     json = concat(json, key_val("offsetType", 0), ",")
@@ -4474,14 +4474,14 @@ def unnamed():
     json = concat(json, key_val("originalreferenceframe", [0, 0, 0, 0, 0, 0]), "}")
     return json
   end
-  
+
   def rq_setup_rqmoves_node(parent_node_id, tcp_speed, tcp_accel):
     rq_moves_node_id = node_rpc_server.createnewrqmoves()
     node_rpc_server.fromjson(rq_moves_node_id, json_rq_moves_node(tcp_speed, tcp_accel))
     node_rpc_server.setparentid(rq_moves_node_id, parent_node_id)
     return rq_moves_node_id
   end
-  
+
   def rq_setup_waypoint_node(pose, joints, is_straight, parent_node_id):
     def json_waypoint_node(pose, joints, is_straight):
       json = "{"
@@ -4490,18 +4490,18 @@ def unnamed():
       json = concat(json, key_val("isStraight", bool_to_str(is_straight)), "}")
       return json
     end
-  
+
     waypoint_node_id = node_rpc_server.createnewwaypointnode()
     node_rpc_server.fromjson(waypoint_node_id, json_waypoint_node(pose, joints, is_straight))
     node_rpc_server.setparentid(waypoint_node_id, parent_node_id)
     node_rpc_server.rqmovesaddwaypoint(parent_node_id, waypoint_node_id)
     return waypoint_node_id
   end
-  
+
   def rq_setup_move_door(reference_frame, start_pose, start_joints, stop_pose, stop_joints, move_force, contact_force, tcp_speed=0.4, tcp_accel=0.4):
-  
+
     stop_pose_in_start_frame = pose_trans(pose_inv(start_pose), stop_pose)
-  
+
     seeks_contact = False
     stiffness = 10
     move_force_node_id = rq_setup_door_force_node(reference_frame, move_force, stiffness)
@@ -4511,42 +4511,42 @@ def unnamed():
     seeks_contact = True
     stiffness = 100
     contact_force_node_id = rq_setup_door_force_node(reference_frame, contact_force, stiffness)
-  
+
     rq_movej_node_id = node_rpc_server.createnewmovejnode()
     node_rpc_server.setparentid(rq_movej_node_id, move_force_node_id)
-  
+
     return [move_force_node_id, rq_moves_node_id, waypoint_open, waypoint_close, contact_force_node_id, rq_movej_node_id]
   end
-  
+
   def rq_move_door(start_pose, start_joints, stop_pose, stop_joints, move_force, contact_force, tcp_speed, tcp_accel, approach_pose, approach_joints, end_reached_threshold=0.001):
-  
+
     reference_frame = list_to_pose(kinematics_rpc_server.reorientP1WithXTowardP2andZApproxP1Z(start_pose, stop_pose))
-  
+
     node_ids = rq_setup_move_door(reference_frame, start_pose, start_joints, stop_pose, stop_joints, move_force, contact_force, tcp_speed, tcp_accel)
-  
+
     move_force_node_id = node_ids[0]
     rq_moves_node_id = node_ids[1]
     start_waypoint_node_id = node_ids[2]
     end_waypoint_node_id = node_ids[3]
     contact_force_node_id = node_ids[4]
     rq_movej_node_id = node_ids[5]
-  
+
     rq_wait_ft_sensor_steady(2000)
     zero_ftsensor()
     sleep(0.1)
-  
+
     path_answer = node_rpc_server.rqmovesinit(rq_moves_node_id)
     verify_path_answer(path_answer)
-  
+
     approach_position_joints = get_inverse_kin(approach_pose, qnear=approach_joints)
     movej(approach_position_joints)
-  
+
     node_rpc_server.movejdefinewaypoint(rq_movej_node_id, get_actual_joint_positions(), 1.0, 1.0)
     node_rpc_server.setparentid(rq_movej_node_id, move_force_node_id)
     reset_node_executor()
     active_and_reset_node(move_force_node_id)
     node_execution_thread = execute_node(rq_movej_node_id, True)
-  
+
     path_answer = node_rpc_server.rqmovesinit(rq_moves_node_id)
     verify_path_answer(path_answer)
     q0 = node_rpc_server.rqmovesgetfirstpoint(rq_moves_node_id)
@@ -4555,15 +4555,15 @@ def unnamed():
     execute_node(rq_movej_node_id)
     execute_node(start_waypoint_node_id)
     execute_node(end_waypoint_node_id)
-  
+
     kill_thread(node_execution_thread)
-  
+
     node_rpc_server.movejdefinewaypoint(rq_movej_node_id, get_actual_joint_positions(), 1.0, 1.0)
     node_rpc_server.setparentid(rq_movej_node_id, contact_force_node_id)
     reset_node_executor()
     active_and_reset_node(contact_force_node_id)
     node_execution_thread = execute_node(rq_movej_node_id, True)
-  
+
     timeout = 20
     while (point_dist(get_actual_tcp_pose(), stop_pose) > end_reached_threshold):
       if (timeout <= 0):
@@ -4574,35 +4574,35 @@ def unnamed():
         timeout = timeout - get_steptime()
       end
     end
-  
+
     kill_thread(node_execution_thread)
-  
+
     approach_pose_in_start_frame = pose_trans(pose_inv(start_pose), approach_pose)
     retract_pose = pose_trans(get_actual_tcp_pose(), approach_pose_in_start_frame)
     movej(retract_pose)
-  
+
     node_rpc_server.deletenode(move_force_node_id)
     node_rpc_server.deletenode(rq_moves_node_id)
     node_rpc_server.deletenode(start_waypoint_node_id)
     node_rpc_server.deletenode(end_waypoint_node_id)
     node_rpc_server.deletenode(contact_force_node_id)
     node_rpc_server.deletenode(rq_movej_node_id)
-  
+
   end
-  
+
   ###################################################################################
   #
   # CNC Insertion
   #
   ###################################################################################
-  
+
   def rq_collet_insertion(contact_pose, insert_pose, inserted_pose):
       movel(contact_pose, a=1.2, v=0.025)
       movel(insert_pose, a=1.2, v=0.025)
-  
+
       zero_ftsensor()
       sleep(0.1)
-  
+
       direction = "Z+"
       stop_force_threshold = 3.0
       max_radius = 5.0
@@ -4615,69 +4615,69 @@ def unnamed():
       max_distance = point_dist(inserted_pose, get_actual_tcp_pose())
       rq_spiral_not_completed = False
       rq_ins_speed_setting = 0.02
-  
+
       rq_insert_spiral_urcap(direction, stop_force_threshold, max_radius, radius_incr, peck_mode, tangential_speed, compliant_insert_force_threshold, spiral_initial_pose_offset_name)
-  
+
       if (rq_spiral_not_completed):
         return False
       end
-  
+
       return True
   end
-  
+
   def rq_push_part(approach_pose, chuck_pose):
       zero_ftsensor()
       sleep(0.1)
-  
+
       # Find pose with z axis pointing in the direction of the insertion
       p1 = translate_to_origin(approach_pose)
       insertion_dir_in_base_frame = pose_trans(p1, pose_trans(pose_inv(approach_pose), chuck_pose))
       ref_frame_pose = list_to_pose(kinematics_rpc_server.poseFromZaxis([insertion_dir_in_base_frame[0], insertion_dir_in_base_frame[1], insertion_dir_in_base_frame[2]]))
-  
+
       surface_found = rq_linear_search_custom_frame("Z+", 10.0, 0.025, 0.1, ref_frame_pose)
-  
+
       if not(surface_found):
           return False
       end
-  
+
       return True
   end
-  
+
   def rq_place_in_chuck(close_chuck_do, open_chuck_do, chuck_approach, chuck_position, chuck_delay):
       rq_open_workholding(close_chuck_do, open_chuck_do)
-  
+
       movel(chuck_approach, a=1.2, v=0.25)
       movel(chuck_position, a=1.2, v=0.25)
-  
+
       rq_close_workholding(close_chuck_do, open_chuck_do)
       sleep(chuck_delay)
   end
-  
+
   def rq_pre_pick_in_chuck(chuck_approach, chuck_position, speed=0.25, accel=1.2):
       movel(chuck_approach, accel, speed)
       movel(chuck_position, accel, speed)
   end
-  
+
   def rq_post_pick_in_chuck(close_chuck_do, open_chuck_do, chuck_approach, chuck_position, chuck_delay, speed=0.25,
   accel=1.2):
       rq_open_workholding(close_chuck_do, open_chuck_do)
       sleep(chuck_delay)
-  
+
       movel(chuck_approach, accel, speed)
   end
-  
+
   def rq_open_workholding(close_do, open_do):
       rq_set_workholding_do(close_do, open_do, False)
   end
-  
+
   def rq_close_workholding(close_do, open_do):
       rq_set_workholding_do(close_do, open_do, True)
   end
-  
+
   def rq_set_workholding_do(close_do, open_do, close_request):
       is_close_do_valid = rq_is_do_valid(close_do)
       is_open_do_valid = rq_is_do_valid(open_do)
-  
+
       if(is_close_do_valid):
           set_standard_digital_out(close_do, close_request)
       end
@@ -4688,32 +4688,32 @@ def unnamed():
           sleep(0.5)
       end
   end
-  
+
   def rq_is_do_valid(do_id):
       return do_id >= 0 and do_id <= 7
   end
-  
+
   def set_cleaning_digital_output(address, state, blow_off_mode, output_type):
      if(blow_off_mode == BLOW_OFF_MODE_SMART_AIR):
        rq_set_output(output_type, address, state)
      end
   end
-  
+
   ###################################################################################
   #
   # PATH GENERATOR 6 POINTS CURVE BUILT WITH 2 POINTS
   #
   ###################################################################################
-  
+
   def execute_half_pipe(pose_1, pose_2,pose_transformation_air_nozzle_to_actual_tcp, depth, length_distance, width, angle, speed, spacing, address, output_type, blow_off_mode, passes):
     path_gen_poses = get_path_generator_6_points_poses(pose_1, pose_2, pose_transformation_air_nozzle_to_actual_tcp, depth, length_distance, width, angle)
     start_pose = p[path_gen_poses[0,0],path_gen_poses[0,1],path_gen_poses[0,2],path_gen_poses[0,3],path_gen_poses[0,4],path_gen_poses[0,5]]
     path_generator_node_id = setup_path_generator_6_points(path_gen_poses, speed, spacing)
     execute_path_generator_6_points(path_generator_node_id, start_pose,  address, output_type, blow_off_mode, passes)
   end
-  
+
   def get_path_generator_6_points_poses(pose_2, pose_5,pose_transformation_air_nozzle_to_actual_tcp, depth=0.01, length=0, width=0.05, angle_deg=0):
-  
+
     def offset_pose(pose, offset, offset_reference_frame, pose_transformation_air_nozzle_to_actual_tcp):
       pose_relative_to_ref_frame = express_pose_A_relative_to_pose_B(pose, offset_reference_frame)
       ref_frame_with_offset = pose_trans(offset_reference_frame, offset)
@@ -4721,40 +4721,40 @@ def unnamed():
       pose_with_offset_for_actual_tcp = pose_trans(pose_with_offset, pose_transformation_air_nozzle_to_actual_tcp)
       return pose_to_list(pose_with_offset_for_actual_tcp)
     end
-  
+
     if(length > 0):
       middle_pose = interpolate_pose(pose_2, pose_5, 0.5)
-  
+
       poses = get_symmetric_poses_from_middle(pose_2, pose_5, middle_pose, length)
       pose_2 = poses[0]
       pose_5 = poses[1]
     end
-  
+
     path_ref_frame = list_to_pose(kinematics_rpc_server.reorientP1WithXTowardP2andZApproxP1Z(pose_2, pose_5))
-  
+
     offset1 = pose_add(p[0,0,0,0,d2r(angle_deg),0], p[0, width,-depth,-d2r(angle_deg),0,0])
     offset2 = pose_add(p[0,0,0,0,d2r(angle_deg),0], p[0,     0,     0,              0,0,0])
     offset3 = pose_add(p[0,0,0,0,d2r(angle_deg),0], p[0,-width,-depth, d2r(angle_deg),0,0])
-  
+
     pose_1_array = offset_pose(pose_2, offset1, path_ref_frame, pose_transformation_air_nozzle_to_actual_tcp)
     pose_2_array = offset_pose(pose_2, offset2, path_ref_frame, pose_transformation_air_nozzle_to_actual_tcp)
     pose_3_array = offset_pose(pose_2, offset3, path_ref_frame, pose_transformation_air_nozzle_to_actual_tcp)
-  
+
     pose_4_array = offset_pose(pose_5, offset1, path_ref_frame, pose_transformation_air_nozzle_to_actual_tcp)
     pose_5_array = offset_pose(pose_5, offset2, path_ref_frame, pose_transformation_air_nozzle_to_actual_tcp)
     pose_6_array = offset_pose(pose_5, offset3, path_ref_frame, pose_transformation_air_nozzle_to_actual_tcp)
-  
+
     return [pose_1_array, pose_2_array, pose_3_array, pose_4_array, pose_5_array, pose_6_array]
   end
-  
+
   def setup_path_generator_6_points(pose_list, tcp_speed=0.1, spacing=0.02):
-  
+
     def json_path_generator_node(pose_list, tcp_speed, spacing):
-  
+
       SIX_POINTS_CURVE = 3
       OFFSET_TYPE_NONE = 0
       FORCE_OPPOSITE_SIDE = 2
-  
+
       json = "{"
       json = concat(json, key_val("tcpSpeed", tcp_speed), ",")
       json = concat(json, key_val("poses", pose_list), ",")
@@ -4764,18 +4764,18 @@ def unnamed():
       json = concat(json, key_val("pathType", SIX_POINTS_CURVE), ",")
       json = concat(json, key_val("offsetType",OFFSET_TYPE_NONE), ",")
       json = concat(json, key_val("endingMode", FORCE_OPPOSITE_SIDE), "}")
-  
+
       return json
     end
-  
+
     rq_path_generator_parent_id = 0
     path_generator_node_id = node_rpc_server.createPathGeneratorNode()
     node_rpc_server.fromjson(path_generator_node_id, json_path_generator_node(pose_list, tcp_speed, spacing))
     node_rpc_server.setparentid(path_generator_node_id, rq_path_generator_parent_id)
-  
+
     return path_generator_node_id
   end
-  
+
   def execute_path_generator_6_points(path_generator_node_id, pose_1, address = INVALID_OUTPUT_ADDRESS, output_type = MODBUS_TYPE, blow_off_mode = BLOW_OFF_MODE_NO_AIR, passes = 1):
     index = 0
     while (index < passes):
@@ -4790,69 +4790,69 @@ def unnamed():
     end
     node_rpc_server.deletenode(path_generator_node_id)
   end
-  
+
   ###################################################################################
   #
   # Straight line trajectory
   #
   ###################################################################################
-  
+
   def execute_straight_line(p1, p2,pose_transformation_air_nozzle_to_actual_tcp, accel=1.2, speed=0.25, distance = 0, angles = [0, 0, 0], address = INVALID_OUTPUT_ADDRESS, output_type = MODBUS_TYPE, blow_off_mode = BLOW_OFF_MODE_NO_AIR, passes = 1):
     offset_for_angles = p[0, 0, 0, d2r(angles[0]), d2r(angles[1]), d2r(angles[2])]
     p1 = pose_trans(p1, offset_for_angles)
     p2 = pose_trans(p2, offset_for_angles)
-  
+
     # apply transformation to take into account that the actual tcp offset is not the same as the one that was used when the waypoints were saved:
     p1 = pose_trans(p1, pose_transformation_air_nozzle_to_actual_tcp)
     p2 = pose_trans(p2, pose_transformation_air_nozzle_to_actual_tcp)
     global air_output_adress = address
-  
+
     qActual = get_actual_joint_positions()
     CleanPathId = node_rpc_server.createnewcleaningpathnode(p1, p2, qActual, passes, distance, accel, speed, blow_off_mode)
-  
+
     reset_node_executor()
     if output_type == MODBUS_TYPE:
       air_thread = run modbusAirControlThread()
     elif output_type == STANDARD_TYPE:
       air_thread = run standardAirControlThread()
     end
-  
+
     node_execution_thread = execute_node(CleanPathId, True)
     rq_continue_node_execution = False
-  
+
     join node_execution_thread
     node_rpc_server.deletenode(CleanPathId)
     if output_type == MODBUS_TYPE or output_type == STANDARD_TYPE :
       kill air_thread
     end
   end
-  
+
   ###################################################################################
   #
   # Cross trajectory
   #
   ###################################################################################
-  
+
   def find_cross_trajectory_poses(p1, p2, height=0, width=0, p1_angles = [0, 0, 0], p2_angles = [0, 0, 0], p3_angles = [0, 0, 0], p4_angles = [0, 0, 0]):
     def find_side_poses(p0, p1):
       def find_side_pose(p0,p1,angle):
         p1_T_p0 = pose_trans(pose_inv(p0), p1)
         rotated_p0_by_90_degrees = pose_trans(p0, p[0, 0, 0, 0, 0, d2r(angle)])
-  
+
         side_pose = pose_trans(rotated_p0_by_90_degrees, p1_T_p0)
         side_pose[3] = p0[3]
         side_pose[4] = p0[4]
         side_pose[5] = p0[5]
-  
+
         return side_pose
       end
-  
+
       p3= find_side_pose(p0, p1, 90)
       p4 = find_side_pose(p0, p1, 270)
-  
+
       return [p3, p4]
     end
-  
+
     def get_start_and_end_poses_based_on_distance(p1, p2, middle_pose, distance):
       if(distance == 0):
         start_pose = p1
@@ -4864,7 +4864,7 @@ def unnamed():
       end
       return [start_pose, end_pose]
     end
-  
+
     def get_side_poses_based_on_distance(p1, p2, middle_pose, width):
       if(width == 0):
         side_poses = find_side_poses(middle_pose, p1)
@@ -4872,44 +4872,44 @@ def unnamed():
         poses = get_symmetric_poses_from_middle(p1, p2, middle_pose, width)
         side_poses = find_side_poses(middle_pose, poses[0])
       end
-  
+
       return side_poses
     end
-  
+
     def get_angle_offset(angles):
       return  p[0, 0, 0, d2r(angles[0]), d2r(angles[1]), d2r(angles[2])]
     end
-  
+
     middle_pose = interpolate_pose(p1, p2, 0.5)
-  
+
     start_and_end_poses = get_start_and_end_poses_based_on_distance(p1, p2, middle_pose, height)
     side_poses = get_side_poses_based_on_distance(p1, p2, middle_pose, width)
-  
+
     p1_offset = get_angle_offset(p1_angles)
     p2_offset = get_angle_offset(p2_angles)
     p3_offset = get_angle_offset(p3_angles)
     p4_offset = get_angle_offset(p4_angles)
-  
+
     start_and_end_poses[0] = pose_trans(start_and_end_poses[0], p1_offset)
     start_and_end_poses[1] = pose_trans(start_and_end_poses[1], p2_offset)
     side_poses[0] = pose_trans(side_poses[0], p3_offset)
     side_poses[1] = pose_trans(side_poses[1], p4_offset)
-  
+
     return [middle_pose, start_and_end_poses[0], start_and_end_poses[1], side_poses[0], side_poses[1]]
   end
-  
+
   def execute_cross_trajectory(p1, p2,pose_transformation_air_nozzle_to_actual_tcp, height=0, width=0, p1_angles = [0, 0, 0], p2_angles = [0, 0, 0], p3_angles = [0, 0, 0], p4_angles = [0, 0, 0], accel=1.2, speed=0.25,  address = INVALID_OUTPUT_ADDRESS, output_type = MODBUS_TYPE, blow_off_mode = BLOW_OFF_MODE_NO_AIR, passes = 1):
-  
+
     cross_poses = find_cross_trajectory_poses(p1, p2, height, width, p1_angles, p2_angles, p3_angles, p4_angles)
-  
+
     p0 = pose_trans(cross_poses[0], pose_transformation_air_nozzle_to_actual_tcp)
     p1 = pose_trans(cross_poses[1], pose_transformation_air_nozzle_to_actual_tcp)
     p2 = pose_trans(cross_poses[2], pose_transformation_air_nozzle_to_actual_tcp)
     p3 = pose_trans(cross_poses[3], pose_transformation_air_nozzle_to_actual_tcp)
     p4 = pose_trans(cross_poses[4], pose_transformation_air_nozzle_to_actual_tcp)
-  
+
    index = 0
-  
+
    while (index < passes):
      movej(get_inverse_kin(p0))
      set_cleaning_digital_output(address, True, blow_off_mode, output_type)
@@ -4922,59 +4922,59 @@ def unnamed():
      index = index + 1
    end
   end
-  
+
   def execute_waypoint_cross_trajectory(starting_pose, finishing_pose, accel=1.2, speed=0.25):
    movej(get_inverse_kin(starting_pose))
    movel(finishing_pose, accel, speed)
   end
-  
+
   ###################################################################################
   #
   # Fermat spiral trajectory
   #
   ###################################################################################
-  
+
   def execute_fermat_spiral(start_pose, end_pose,pose_transformation_air_nozzle_to_actual_tcp, max_radius = 0, angle = 0, number_of_turns = 1, speed = 0.25,address = INVALID_OUTPUT_ADDRESS, output_type = MODBUS_TYPE, blow_off_mode = BLOW_OFF_MODE_NO_AIR, passes = 1):
     def find_middle(start_pose, end_pose):
       alpha = 0.5
       return interpolate_pose(start_pose, end_pose, alpha)
     end
-  
+
     def find_next_theta(spiral_constant, theta, speed):
       denom = spiral_constant * sqrt(1/(4*theta) + theta)
       theta_dot = speed / denom
       theta = theta + theta_dot * rq_controller_time_step
       return theta
     end
-  
+
     def find_spiral_pose(theta, spiral_plane, center_pose, angle, spiral_constant, pose_transformation_air_nozzle_to_actual_tcp):
       local r = spiral_constant * sqrt(theta)
       local x = r * cos(theta)
       local y = r * sin(theta)
-  
+
       local p2 = pose_trans(spiral_plane, p[x,y,0,0,0,0])
       local p3 = p[p2[0], p2[1], p2[2], center_pose[3], center_pose[4], center_pose[5]]
       local p4 = pose_trans(p3, pose_transformation_air_nozzle_to_actual_tcp)
       local p5 = pose_trans(p4, p[0, 0, 0, -d2r(angle)*cos(theta), -d2r(angle)*sin(theta), 0])
       return p5
     end
-  
+
     def execute_outer_to_inner_spiral(start_pose, middle_pose, spiral_plane, pose_transformation_air_nozzle_to_actual_tcp, max_angle, angle, spiral_constant_nominal, speed, address, output_type, blow_off_mode):
       local theta = max_angle
       local max_r = point_dist(start_pose, middle_pose)
       local spiral_constant = -1 * spiral_constant_nominal
       local r = max_r
       local is_first_pose = True
-  
+
       while (norm((r)) <= max_r):
         theta = find_next_theta(spiral_constant, theta, speed)
         if(theta < 0):
           break
         end
-  
+
         r = spiral_constant * sqrt(theta)
         next_pose = find_spiral_pose(theta, spiral_plane, middle_pose, angle, spiral_constant, pose_transformation_air_nozzle_to_actual_tcp)
-  
+
         if (is_first_pose):
           movej(get_inverse_kin(next_pose))
           set_cleaning_digital_output(address, True, blow_off_mode, output_type)
@@ -4984,12 +4984,12 @@ def unnamed():
         end
       end
     end
-  
+
     def execute_inner_to_outer_spiral(start_pose, middle_pose, spiral_plane, pose_transformation_air_nozzle_to_actual_tcp, angle, spiral_constant, speed):
       local theta = 0.0001
       local max_r = point_dist(start_pose, middle_pose)
       local r = 0
-  
+
       while (norm(r) <= max_r):
         theta = find_next_theta(spiral_constant, theta, speed)
         r = spiral_constant * sqrt(theta)
@@ -4997,21 +4997,21 @@ def unnamed():
         servoj(get_inverse_kin(next_pose), t = rq_controller_time_step)
       end
     end
-  
+
     max_angle = d2r(number_of_turns * 360)
     middle_pose = find_middle(start_pose, end_pose)
-  
+
     if(max_radius > 0):
       poses = get_symmetric_poses_from_middle(start_pose, end_pose, middle_pose, max_radius * 2)
       start_pose = poses[0]
       end_pose = poses[1]
     end
-  
+
     SPIRAL_CONSTANT = (point_dist(middle_pose, start_pose)) / sqrt(max_angle)
-  
+
     spiral_plane = list_to_pose(kinematics_rpc_server.reorientP1WithXTowardP2andZApproxP1Z(middle_pose, end_pose))
-  
-  
+
+
     index = 0
     while(index < passes):
       execute_outer_to_inner_spiral(start_pose, middle_pose, spiral_plane,pose_transformation_air_nozzle_to_actual_tcp, max_angle, angle, SPIRAL_CONSTANT, speed, address, output_type, blow_off_mode)
@@ -5020,7 +5020,7 @@ def unnamed():
       index = index + 1
     end
   end
-  
+
   ###################################################################################
   #
   # ROBOTIQ VISE INSERTION
@@ -5033,7 +5033,7 @@ def unnamed():
   #   chosen as the ones not aligned with the gravity.
   ###################################################################################
   def insert_in_vise(start_pose, end_pose, number_of_touch=3, forces=[10, 20, 20], invert_axis=False, move_to_end_pose=False):
-  
+
     def list_by_scalar_multiply_(l1, scalar):
       result = l1
       i=0
@@ -5043,7 +5043,7 @@ def unnamed():
       end
       return result
     end
-  
+
     def find_gravity_direction(acceleration_direction, threshold):
       result = [False, False, False]
       i = 0
@@ -5053,7 +5053,7 @@ def unnamed():
       end
       return result
     end
-  
+
     def get_axis(index, direction):
       axis = "XYZ"
       if direction < 0:
@@ -5066,7 +5066,7 @@ def unnamed():
       end
       return str_cat(str_sub(axis, index, 1), sign)
     end
-  
+
     def direction_to_index(str):
       if "X" == str_sub(str, 0, 1):
         return 0
@@ -5079,7 +5079,7 @@ def unnamed():
         halt
       end
     end
-  
+
     def find_touch_direction(mask, direction):
       i = 0
       result = [0, 0, 0]
@@ -5091,7 +5091,7 @@ def unnamed():
       end
       return result
     end
-  
+
     def find_touch_direction_str(mask, direction):
       i = 0
       result = ""
@@ -5103,7 +5103,7 @@ def unnamed():
       end
       return result
     end
-  
+
     def invert(list):
       result = list
       i = 0
@@ -5113,7 +5113,7 @@ def unnamed():
       end
       return result
     end
-  
+
     def assert_that_the_first_touch_is_aligned_with_an_axis(first_touch_direction_mask):
       i = 0
       counter = 0
@@ -5123,13 +5123,13 @@ def unnamed():
         end
         i = i + 1
       end
-  
+
       if counter != 1:
         popup("One of the TCP axes must be perpendicular to the floor while loading the part in the vise.")
         halt
       end
     end
-  
+
     def setup_nodes(forces, number_of_touch, first_touch_direction_mask, direction, second_direction_str, third_direction_str):
       def max_deviation_from(forces, enabled_axis):
         i = 0
@@ -5150,7 +5150,7 @@ def unnamed():
         end
         return deviation
       end
-  
+
       def min_deviation_from(forces, enabled_axis):
         i = 0
         deviation = [0, 0, 0, 0, 0, 0]
@@ -5170,7 +5170,7 @@ def unnamed():
         end
         return deviation
       end
-  
+
       def stiffness_from(forces):
         i = 0
         stiffness = [0, 0, 0, 100, 100, 100]
@@ -5184,7 +5184,7 @@ def unnamed():
         end
         return stiffness
       end
-  
+
       def compute_final_forces(forces, number_of_touch, first_touch_direction_mask, direction, second_direction_str, third_direction_str):
         final_forces = [0, 0, 0]
         if number_of_touch > 0:
@@ -5207,7 +5207,7 @@ def unnamed():
         end
         return final_forces
       end
-  
+
       def compute_enabled_axis(first_touch_direction_mask):
         enabled_axis = [True, True, True, False, False, False]
         i = 0
@@ -5218,21 +5218,21 @@ def unnamed():
           i = i + 1
         end
         enabled_axis[i + 3] = True
-  
+
         return enabled_axis
       end
-  
+
       final_forces = compute_final_forces(forces, number_of_touch, first_touch_direction_mask, direction, second_direction_str, third_direction_str)
       enabled_axis = compute_enabled_axis(first_touch_direction_mask)
-  
+
       force_node_id = rq_setup_machine_tending_force_node(1, [final_forces[0], final_forces[1], final_forces[2], 0, 0, 0], stiffness_from
       (final_forces), min_deviation_from(final_forces, enabled_axis), max_deviation_from(final_forces, enabled_axis), rq_bool_array_to_string(enabled_axis), "false")
       movej_node_id = node_rpc_server.createnewmovejnode()
       node_rpc_server.setparentid(movej_node_id, force_node_id)
-  
+
       return [force_node_id, movej_node_id]
     end
-  
+
     def average_tool_acceleration_reading(n_samples, delay):
       n = n_samples
       reading = [0, 0, 0]
@@ -5243,41 +5243,41 @@ def unnamed():
       end
       return reading/n_samples
     end
-  
+
     def linear_search_toward_gravity(force):
       # maybe add a stopj here to prevent acceleration reading to be influenced by robot movement
       flange_accel = average_tool_acceleration_reading(10, 0.1) # measured accel is oriented in gravity oposite direction
       flange_accel_pose = p[-flange_accel[0], -flange_accel[1], -flange_accel[2], 0, 0,0]
       p1 = translate_to_origin(get_actual_tool_flange_pose())
       gravity_dir_in_base_frame = pose_trans(p1, flange_accel_pose)
-  
+
       # Find pose with z axis pointing in gravity direction:
       ref_frame_pose = list_to_pose(kinematics_rpc_server.poseFromZaxis([gravity_dir_in_base_frame[0], gravity_dir_in_base_frame[1], gravity_dir_in_base_frame[2]]))
       speed = 0.01
       abs_max_distance = 0.05
-  
+
       surface_found = rq_linear_search_custom_frame("Z+", force, speed, abs_max_distance, ref_frame_pose)
       return surface_found
     end
-  
+
     #### Actual insert_in_vise method ####
     movel(start_pose)
     zero_ftsensor()
-  
+
     # 1. Use accelerometer reading to find touches directions:
     ACCELERATION_THRESHOLD = 8
     flange_accel = average_tool_acceleration_reading(10, 0.1)
     tcp_accel = pose_trans(pose_inv(get_tcp_offset()), p[flange_accel[0], flange_accel[1], flange_accel[2], 0, 0, 0])
     first_touch_direction_mask = find_gravity_direction(tcp_accel, ACCELERATION_THRESHOLD)
     assert_that_the_first_touch_is_aligned_with_an_axis(first_touch_direction_mask)
-  
+
     direction_transform = pose_trans(pose_inv(start_pose), end_pose)
     direction = [direction_transform[0], direction_transform[1], direction_transform[2]]
     direction_sign = [direction[0]/norm(direction[0]), direction[1]/norm(direction[1]), direction[2]/norm(direction[2])]
-  
+
     touch_direction_str = find_touch_direction_str(invert(first_touch_direction_mask), direction_sign)
     touch_direction = find_touch_direction(invert(first_touch_direction_mask), direction_sign)
-  
+
     if invert_axis:
       second_direction_str = str_sub(touch_direction_str, 0, 2)
       third_direction_str = str_sub(touch_direction_str, 2, 4)
@@ -5285,13 +5285,13 @@ def unnamed():
       second_direction_str = str_sub(touch_direction_str, 2, 4)
       third_direction_str = str_sub(touch_direction_str, 0, 2)
     end
-  
+
     end_pose_orientation = translate_to_origin(end_pose)
-  
+
     # 2. Prepare nodes:
     rq_cnc_insertion_node_ids = setup_nodes(forces, number_of_touch, first_touch_direction_mask, direction_sign, second_direction_str, third_direction_str)
     feature_tool = 1
-  
+
     # 3. Perform touches:
     if number_of_touch > 0:
       surface_found = linear_search_toward_gravity(forces[0])
@@ -5317,12 +5317,12 @@ def unnamed():
         return UNDEFINED_THREAD_ID
       end
     end
-  
+
     # 4. Move to end position:
     if not move_to_end_pose:
       end_pose = get_actual_tcp_pose()
     end
-  
+
     node_rpc_server.movejdefinewaypoint(rq_cnc_insertion_node_ids[1], get_actual_joint_positions(), 1.0, 1.0)
     reset_node_executor()
     active_and_reset_node(rq_cnc_insertion_node_ids[0])
@@ -5332,7 +5332,7 @@ def unnamed():
     sleep(1)
     return node_execution_thread
   end
-  
+
   ###################################################################################
   # AIR OUTPUT CONTROL
   ###################################################################################
@@ -5343,7 +5343,7 @@ def unnamed():
       sleep(rq_controller_time_step)
     end
   end
-  
+
   thread standardAirControlThread():
     while (True):
       rq_air_value = read_input_boolean_register(101)
@@ -5358,7 +5358,7 @@ def unnamed():
       set_standard_digital_out(address, value)
     end
   end
-  
+
   def rq_digital_output_action(action, output_type, address, time_on=1, time_off=0.5, delay_after=0):
     if action == "PUSH_AND_HOLD":
       rq_set_output(output_type, address, True)
@@ -5384,12 +5384,12 @@ def unnamed():
     json = concat(json, key_val("kinematicParametersRatio", ratio), "}")
     return json
   end
-  
+
   def execute_move_along_trail(trail_node_id, joint_positions, kinematic_parameters_ratio):
     node_rpc_server.fromjson(trail_node_id, json_kinematic_parameters_ratio(kinematic_parameters_ratio))
     roadmap_state = node_rpc_server.initRoadmap(trail_node_id, joint_positions)
     path_time = roadmap_state[0]
-  
+
     if(path_time > 0.0):
       reset_node_executor()
       node_execution_thread = execute_node(trail_node_id, True)

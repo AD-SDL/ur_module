@@ -3,7 +3,7 @@
 from copy import deepcopy
 from time import sleep
 
-from pipette_driver import PipetteDriver
+from .pipette_driver import PipetteDriver
 
 
 class TricontinentPipetteController:
