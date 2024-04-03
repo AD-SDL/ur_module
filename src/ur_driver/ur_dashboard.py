@@ -30,6 +30,8 @@ class UR_DASHBOARD:
         self.remote_control_status = None
 
         self.connect()
+        if self.connection_error:
+            raise Exception("Can't connect to dashboard")
         self.initialize()
 
     def connect(self) -> None:
