@@ -89,7 +89,7 @@ class UR:
         self.ref_frame = [0, 0, 0, 0, 0, 0]
         self.robot_current_joint_angles = None
         self.get_movement_state()
-        # TODO: get the information of what is the current tool attached to UR. Maybe keep the UR unattached after the tools were used? Run a senity check at the beginning to findout if a tool is connected
+        # TODO: get the information of what is the current tool attached to UR. Run a senity check at the beginning to findout if a tool is connected
 
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.
@@ -182,6 +182,18 @@ class UR:
         self.home(home)
         wingman_tool.place_tool()
         self.home(home)
+
+    def set_digital_io(self, channel: int = None, value: bool = None) -> None:
+        """Sets digital I/O outputs to open an close the channel. This helps controlling the external tools
+
+        Args
+            channel (int): Channel number
+            value (bool): False for close, True for open
+        """
+        if not channel or not value:
+            print("Channel or value is not specified")
+            return
+        self.ur_connection.set_digital_out(channel, value)
 
     def gripper_transfer(
         self,
