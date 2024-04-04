@@ -373,6 +373,21 @@ def do_action(
                     action_log=f"Run rup program {program_name}",
                 )
 
+            elif action_handle == "set_digital_io":
+                channel = action_vars.get("channel", None)
+                value = action_vars.get("value", None)
+
+                if not channel:  # Return Fail
+                    pass
+
+                ur.set_digital_io(channel=channel, value=value)
+
+                state = ModuleStatus.IDLE
+                return StepResponse(
+                    action_response=StepStatus.SUCCEEDED,
+                    action_msg="",
+                    action_log=f"Digital IO, channel {channel} set for {value}",
+                )
             else:
                 state = ModuleStatus.IDLE
                 return StepResponse(
