@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `ur_module` repository is a comprehensive package that includes a UR driver and a ROS node for Universal Robots (UR). This module is designed to provide a robust and flexible interface for controlling UR robots, offering a variety of control options for different use cases. The repository supports initialization via the UR dashboard, motion control using URx, and end-effector management.
+The `ur_module` repository is a comprehensive package that includes a UR driver and a REST node for Universal Robots (UR). This module is designed to provide a robust and flexible interface for controlling UR robots, offering a variety of control interfaces for different use cases. The repository supports initialization via the UR dashboard, motion control using URx, and end-effector management.
 
 ## Features
 
@@ -54,9 +54,9 @@ Support for a variety of end-tools, including communication protocols such as TC
 
 The repository includes AI camera support for real-time object detection and recognition. The detected target locations can be seamlessly transitioned to the UR robot for further action.
 
-## ROS Node
+## REST Node
 
-The role of the ROS node in this repository is to establish communication between UR robots and the higher-level system of WEI (Whatever Environment Interface). This node acts as a bridge, enabling seamless integration of UR robots into a broader robotic ecosystem.
+The role of the REST node in this repository is to establish communication between UR robots and the higher-level system of WEI (Workflow Execution Interface). This node acts as a bridge, enabling seamless integration of UR robots into a broader robotic ecosystem.
 
 ## Installation
 
