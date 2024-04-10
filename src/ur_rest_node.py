@@ -3,15 +3,20 @@
 import json
 from argparse import ArgumentParser, Namespace
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from ur_driver.ur import UR
 from wei.core.data_classes import (
+    ModuleAbout,
+    ModuleAction,
+    ModuleActionArg,
     ModuleStatus,
     StepResponse,
     StepStatus,
 )
+from wei.helpers import extract_version
 
 global ur, state
 
@@ -22,7 +27,7 @@ def parse_args() -> Namespace:
     Returns (ArgumentParser): Parsed arguments
     """
     parser = ArgumentParser()
-    parser.add_argument("--name", type=str, default="ur_module", help="Module name")
+    parser.add_argument("--name", type=str, default="UR arms", help="Module name")
     parser.add_argument(
         "--host", type=str, default="0.0.0.0", help="Host IP/Domain Name"
     )
@@ -91,17 +96,105 @@ async def about():
     global ur, state
 
     args = parse_args()
-    description = {
-        "name": args.name,
-        "type": "ur_arm",
-        "actions": {
-            "status": state,
-            "pick_tool": "home, tool_loc, docking_axis, payload, tool_name",
-            "place_tool": "home, tool_loc, docking_axis, payload, tool_name",
-            "gripper_transfer": "home, source, target, source_approach_axis, target_approach_axis, source_approach_distance, target_approach_distance, gripper_open, gripper_close",
-        },
-    }
-    return JSONResponse(content={"About": description})
+    # description = {
+    #     "name": args.name,
+    #     "type": "ur_arm",
+    #     "actions": {
+    #         "status": state,
+    #         "pick_tool": "home, tool_loc, docking_axis, payload, tool_name",
+    #         "place_tool": "home, tool_loc, docking_axis, payload, tool_name",
+    #         "gripper_transfer": "home, source, target, source_approach_axis, target_approach_axis, source_approach_distance, target_approach_distance, gripper_open, gripper_close",
+    #     },
+    # }
+    about = ModuleAbout(
+        name=args.name,
+        model="UR3, UR5, UR16,",
+        description="UR robots are 6 degress of freedom manipulators. Different models of these robots allow to carry heavier payload and reach longer distances. This robot is mainly used in pick and place jobs",
+        interface="wei_rest_node",
+        version=extract_version(Path(__file__).parent.parent / "pyproject.toml"),
+        actions=[
+            ModuleAction(
+                name="transfer",
+                description="This action transfers a plate from a source robot location to a target robot location.",
+                args=[
+                    ModuleActionArg(
+                        name="source",
+                        description="Source location in the workcell for pf400 to grab plate from.",
+                        type="str",
+                        required=True,
+                    ),
+                    ModuleActionArg(
+                        name="target",
+                        description="Transfer location in the workcell for pf400 to transfer plate to.",
+                        type="str",
+                        required=True,
+                    ),
+                    ModuleActionArg(
+                        name="source_plate_rotation",
+                        description="Plate rotation for source location in the workcell.",
+                        type="str",
+                        required=True,
+                    ),
+                    ModuleActionArg(
+                        name="target_plate_rotation",
+                        description="Plate rotation for target location in the workcell.",
+                        type="str",
+                        required=True,
+                    ),
+                ],
+            ),
+            ModuleAction(
+                name="remove_lid",
+                description="This action removes the lid off of a plate",
+                args=[
+                    ModuleActionArg(
+                        name="target",
+                        description="Target location in the workcell that the plate is currently at.",
+                        type="str",
+                        required=True,
+                    ),
+                    ModuleActionArg(
+                        name="lid_height",
+                        description="Lid height of the target plate.",
+                        type="str",
+                        required=True,
+                    ),
+                    ModuleActionArg(
+                        name="target_plate_rotation",
+                        description="Rotation of plate at target location in the workcell.",
+                        type="str",
+                        required=True,
+                    ),
+                ],
+            ),
+            ModuleAction(
+                name="replace_lid",
+                description="This action places a lid on a plate with no lid.",
+                args=[
+                    ModuleActionArg(
+                        name="target",
+                        description="Target location in workcell that plate is currently at.",
+                        type="str",
+                        required=True,
+                    ),
+                    ModuleActionArg(
+                        name="lid_height",
+                        description="Lid height of the target plate.",
+                        type="str",
+                        required=True,
+                    ),
+                    ModuleActionArg(
+                        name="target_plate_rotation",
+                        description="Rotation of plate at target location in the workcell.",
+                        type="str",
+                        required=True,
+                    ),
+                ],
+            ),
+        ],
+        resource_pools=[],
+    )
+    return JSONResponse(content=about.model_dump(mode="json"))
 
 
 @app.get("/resources")
