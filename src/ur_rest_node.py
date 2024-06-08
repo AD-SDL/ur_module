@@ -90,8 +90,8 @@ def gripper_transfer(
     home: Annotated[List[float], "Home location"],
     source: Annotated[List[float], "Location to transfer sample from"],
     target: Annotated[List[float], "Location to transfer sample to"],
-    source_approach_axis: Annotated[str, "Source location approach axis, (XYZ)"],
-    target_approach_axis: Annotated[str, "Source location approach axis, (XYZ)"],
+    source_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
+    target_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
     source_approach_distance: Annotated[float, "Approach distance in meters"],
     target_approach_distance: Annotated[float, "Approach distance in meters"],
     gripper_open: Annotated[int, "Set a max value for the gripper open state"],
@@ -115,6 +115,43 @@ def gripper_transfer(
         gripper_open=gripper_open,
         gripper_close=gripper_close,
     )
+
+    return StepResponse.step_succeeded(
+        "Gripper transfer completed from {source} to {target}"
+    )
+
+
+@rest_module.action(
+    name="pick_tool",
+    description="Picks up a tool using the provided tool location",
+)
+def pick_tool(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    tool_loc: Annotated[List[float], "Home location"],
+    docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
+    payload: Annotated[float, "Tool payload"],
+    tool_name: Annotated[str, "Tool name)"],
+) -> StepResponse:
+    """Pick a tool with the UR"""
+    # NOT COMPLETE
+    # if not source or target or home:  # Return Fail
+    #     return StepResponse(
+    #         StepStatus.FAILED, "", "Source, target and home locations must be provided"
+    #     )
+
+    # state.ur.gripper_transfer(
+    #     home=home,
+    #     source=source,
+    #     target=target,
+    #     source_approach_distance=source_approach_distance,
+    #     target_approach_distance=target_approach_distance,
+    #     source_approach_axis=source_approach_axis,
+    #     target_approach_axis=target_approach_axis,
+    #     gripper_open=gripper_open,
+    #     gripper_close=gripper_close,
+    # )
 
     return StepResponse(StepStatus.SUCCEEDED, "plate moved", None)
 
