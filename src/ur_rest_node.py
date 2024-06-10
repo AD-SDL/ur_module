@@ -22,17 +22,6 @@ rest_module.arg_parser.add_argument(
     "--ur_ip", type=str, help="IP address of the UR robot", default="164.54.116.129"
 )
 
-# Are the below arguments needed?
-rest_module.arg_parser.add_argument(
-    "--port", type=str, default="3011", help="Port for REST API"
-)
-rest_module.arg_parser.add_argument(
-    "--name", type=str, default="UR arms", help="Module name"
-)
-rest_module.arg_parser.add_argument(
-    "--host", type=str, default="0.0.0.0", help="Host IP/Domain Name"
-)
-
 
 @rest_module.startup()
 def ur_startup(state: State):
@@ -67,8 +56,8 @@ def state(state: State):
     """Returns the current state of the UR module"""
 
     if (
-        not (state.status == "BUSY")
-        or (state.status == "ERROR")
+        not (state.status == ModuleStatus.BUSY)
+        or (state.status == ModuleStatus.ERROR)
         or (
             state.action_start
             and (
@@ -135,11 +124,11 @@ def pick_tool(
     tool_name: Annotated[str, "Tool name)"],
 ) -> StepResponse:
     """Pick a tool with the UR"""
-    # NOT COMPLETE
-    # if not source or target or home:  # Return Fail
-    #     return StepResponse(
-    #         StepStatus.FAILED, "", "Source, target and home locations must be provided"
-    #     )
+
+    if not tool_loc or not home:  # Return Fail
+        return StepResponse(
+            StepStatus.FAILED, "", "Source, target and home locations must be provided"
+        )
 
     # state.ur.gripper_transfer(
     #     home=home,
