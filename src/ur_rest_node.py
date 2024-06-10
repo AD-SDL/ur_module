@@ -88,7 +88,7 @@ def gripper_transfer(
 ) -> StepResponse:
     """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
 
-    if not source or target or home:  # Return Fail
+    if not source or not target or not home:  # Return Fail
         return StepResponse(
             StepStatus.FAILED, "", "Source, target and home locations must be provided"
         )
@@ -106,7 +106,7 @@ def gripper_transfer(
     )
 
     return StepResponse.step_succeeded(
-        "Gripper transfer completed from {source} to {target}"
+        f"Gripper transfer completed from {source} to {target}"
     )
 
 
@@ -130,19 +130,15 @@ def pick_tool(
             StepStatus.FAILED, "", "Source, target and home locations must be provided"
         )
 
-    # state.ur.gripper_transfer(
-    #     home=home,
-    #     source=source,
-    #     target=target,
-    #     source_approach_distance=source_approach_distance,
-    #     target_approach_distance=target_approach_distance,
-    #     source_approach_axis=source_approach_axis,
-    #     target_approach_axis=target_approach_axis,
-    #     gripper_open=gripper_open,
-    #     gripper_close=gripper_close,
-    # )
+    state.ur.pick_tool(
+        home=home,
+        tool_loc=tool_loc,
+        docking_axis=docking_axis,
+        payload=payload,
+        tool_name=tool_name,
+    )
 
-    return StepResponse(StepStatus.SUCCEEDED, "plate moved", None)
+    return StepResponse.step_succeeded(f"Pick tool {tool_name} from {tool_loc}")
 
 
 rest_module.start()
