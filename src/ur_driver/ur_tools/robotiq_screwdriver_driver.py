@@ -10,7 +10,10 @@ class RobotiqScrewdriver:
     """
 
     def __init__(
-        self, hostname: str = None, port: int = 30020, socket_timeout: float = 2.0
+        self,
+        hostname: str = None,
+        port: int = 30020,
+        socket_timeout: float = 2.0,
     ) -> None:
         """
         Constructor for the RobotiqScrewdriver class.
@@ -237,7 +240,11 @@ class RobotiqScrewdriver:
         self.connection.execute_command("rq_screw_vacuum_off()")
 
     def drive_clockwise(
-        self, mode: int = 1, torque: int = 1, angle: int = 360, rpm: int = 100
+        self,
+        mode: int = 1,
+        torque: int = 1,
+        angle: int = 360,
+        rpm: int = 100,
     ) -> None:
         """
         Turns the bit of the Screwdriver in clock wise direction around by a number of degrees or until a specific torque value is reached.
@@ -264,12 +271,21 @@ class RobotiqScrewdriver:
 
         self.connection.execute_command(
             "rq_screw_turn({},{},{},{},{},{})".format(
-                mode, torque, angle, rpm, direction, slave_id
+                mode,
+                torque,
+                angle,
+                rpm,
+                direction,
+                slave_id,
             )
         )
 
     def drive_counter_clockwise(
-        self, mode: int = 1, torque: int = 1, angle: int = 360, rpm: int = 100
+        self,
+        mode: int = 1,
+        torque: int = 1,
+        angle: int = 360,
+        rpm: int = 100,
     ) -> None:
         """
         Turns the bit of the Screwdriver in counter clock wise direction around by a number of degrees or until a specific torque value is reached.
@@ -294,7 +310,12 @@ class RobotiqScrewdriver:
 
         self.connection.execute_command(
             "rq_screw_turn({},{},{},{},{},{})".format(
-                mode, torque, angle, rpm, direction, slave_id
+                mode,
+                torque,
+                angle,
+                rpm,
+                direction,
+                slave_id,
             )
         )
 

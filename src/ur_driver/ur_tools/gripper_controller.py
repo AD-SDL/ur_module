@@ -9,7 +9,12 @@ from .robotiq_gripper_driver import RobotiqGripper
 class FingerGripperController:
     """Controls Robotiq Finger Grippers"""
 
-    def __init__(self, hostname: str = "146.137.240.38", port: int = 63352, ur=None):
+    def __init__(
+        self,
+        hostname: str = "146.137.240.38",
+        port: int = 63352,
+        ur=None,
+    ):
         """
         Constructor for the FingerGripperController class.
 
@@ -94,7 +99,10 @@ class FingerGripperController:
         self.ur.movej(home, self.acceleration, self.velocity)
 
     def open_gripper(
-        self, pose: float = None, speed: float = None, force: float = None
+        self,
+        pose: float = None,
+        speed: float = None,
+        force: float = None,
     ) -> None:
         """Opens the gripper using pose, speed and force variables"""
         if pose:
@@ -105,12 +113,17 @@ class FingerGripperController:
             self.gripper_speed = speed
 
         self.gripper.move_and_wait_for_pos(
-            self.gripper_open, self.gripper_speed, self.gripper_force
+            self.gripper_open,
+            self.gripper_speed,
+            self.gripper_force,
         )
         sleep(0.5)
 
     def close_gripper(
-        self, pose: float = None, speed: float = None, force: float = None
+        self,
+        pose: float = None,
+        speed: float = None,
+        force: float = None,
     ) -> None:
         """Closes the gripper using pose, speed and force variables"""
         if pose:
@@ -121,7 +134,9 @@ class FingerGripperController:
             self.gripper_speed = speed
 
         self.gripper.move_and_wait_for_pos(
-            self.gripper_close, self.gripper_speed, self.gripper_force
+            self.gripper_close,
+            self.gripper_speed,
+            self.gripper_force,
         )
         sleep(0.5)
 
@@ -244,7 +259,10 @@ class VacuumGripperController:
     """Robotiq Vacuum Gripper Controller"""
 
     def __init__(
-        self, IP: str = "146.137.240.38", PORT: int = 29999, gripper: bool = False
+        self,
+        IP: str = "146.137.240.38",
+        PORT: int = 29999,
+        gripper: bool = False,
     ):
         """Constructor for VacummGripperController"""
         super().__init__(IP=IP, PORT=PORT)

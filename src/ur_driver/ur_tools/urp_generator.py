@@ -43,7 +43,11 @@ class URPGenerator:
         self.add_line("")
         self.add_line("end")
 
-    def add_pick_and_place(self, pick_location: str = None, place_location: str = None):
+    def add_pick_and_place(
+        self,
+        pick_location: str = None,
+        place_location: str = None,
+    ):
         """Adds the necessary lines for pick and place jobs into the URP program
 
         Args:
@@ -71,7 +75,11 @@ class URPGenerator:
         self.add_line("")
         self.add_line("end")
 
-    def add_drive_screw(self, torque: float = None, rotation_speed: float = None):
+    def add_drive_screw(
+        self,
+        torque: float = None,
+        rotation_speed: float = None,
+    ):
         """Adds the necessary lines for driving the screwdriver into the URP program
 
         Args:

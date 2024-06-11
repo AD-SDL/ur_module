@@ -61,7 +61,12 @@ class RobotiqGripper:
         self._min_force = 0
         self._max_force = 255
 
-    def connect(self, hostname: str, port: int, socket_timeout: float = 2.0) -> None:
+    def connect(
+        self,
+        hostname: str,
+        port: int,
+        socket_timeout: float = 2.0,
+    ) -> None:
         """Connects to a gripper at the given address.
         :param hostname: Hostname or ip.
         :param port: Port.

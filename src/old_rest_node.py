@@ -27,13 +27,29 @@ def parse_args() -> Namespace:
     Returns (ArgumentParser): Parsed arguments
     """
     parser = ArgumentParser()
-    parser.add_argument("--name", type=str, default="UR arms", help="Module name")
     parser.add_argument(
-        "--host", type=str, default="0.0.0.0", help="Host IP/Domain Name"
+        "--name",
+        type=str,
+        default="UR arms",
+        help="Module name",
     )
-    parser.add_argument("--port", type=str, default="3011", help="Port for REST API")
     parser.add_argument(
-        "--ur_ip", type=str, default="164.54.116.129", help="IP address of the UR robot"
+        "--host",
+        type=str,
+        default="0.0.0.0",
+        help="Host IP/Domain Name",
+    )
+    parser.add_argument(
+        "--port",
+        type=str,
+        default="3011",
+        help="Port for REST API",
+    )
+    parser.add_argument(
+        "--ur_ip",
+        type=str,
+        default="164.54.116.129",
+        help="IP address of the UR robot",
     )
     return parser.parse_args()
 

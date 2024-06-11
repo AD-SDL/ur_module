@@ -247,7 +247,7 @@ def pick_and_flip_object(
     gripper_open: Annotated[int, "Set a max value for the gripper open state"],
     gripper_close: Annotated[int, "Set a min value for the gripper close state"],
 ) -> StepResponse:
-    """Picks and flips an object 180 degresswith UR"""
+    """Picks and flips an object 180 degress with UR"""
 
     state.ur.pick_and_flip_object(
         home=home,
@@ -259,9 +259,6 @@ def pick_and_flip_object(
     )
 
     return StepResponse.step_succeeded(f"Object is flipped 180 degrees at {target}")
-
-
-######################
 
 
 @rest_module.action(
@@ -280,7 +277,7 @@ def remove_cap(
     gripper_open: Annotated[int, "Set a max value for the gripper open state"],
     gripper_close: Annotated[int, "Set a min value for the gripper close state"],
 ) -> StepResponse:
-    """Picks and flips an object 180 degresswith UR"""
+    """Remove caps from sample vials with UR"""
 
     state.ur.remove_cap(
         home=home,
@@ -293,6 +290,69 @@ def remove_cap(
     return StepResponse.step_succeeded(
         f"Sample vial cap is removed from {source} and placed {target}"
     )
+
+
+@rest_module.action(
+    name="place_cap",
+    description="Places caps back to sample vials",
+)
+def place_cap(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Vail cap initial location"],
+    target: Annotated[List[float], "The vail location where the cap will installed"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Places caps back to sample vials with UR"""
+
+    state.ur.place_cap(
+        home=home,
+        source=source,
+        target=target,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
+
+    return StepResponse.step_succeeded(f"Sample vial cap is placed back to {target}")
+
+
+@rest_module.action(
+    name="run_urp_program",
+    description="Runs an URP program on the UR",
+)
+def run_urp_program(
+    state: State,
+    action: ActionRequest,
+    transfer_file_path=Annotated[str, "Transfer file path"],
+    program_name=Annotated[str, "Program name"],
+) -> StepResponse:
+    """Run an URP program on the UR"""
+
+    state.ur.run_urp_program(
+        transfer_file_path=transfer_file_path,
+        program_name=program_name,
+    )
+
+    return StepResponse.step_succeeded(f"URP program {program_name} has been completed")
+
+
+@rest_module.action(
+    name="set_digital_io",
+    description="Sets a channel IO output on the UR",
+)
+def set_digital_io(
+    state: State,
+    action: ActionRequest,
+    channel=Annotated[int, "Channel number"],
+    value=Annotated[bool, "True/False"],
+) -> StepResponse:
+    """Sets a channel IO output on the UR"""
+
+    state._state.set_digital_io(channel=channel, value=value)
+
+    return StepResponse.step_succeeded(f"Channel {channel} is set to {value}")
 
 
 rest_module.start()

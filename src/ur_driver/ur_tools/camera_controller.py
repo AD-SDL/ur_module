@@ -83,17 +83,27 @@ class CameraController:
             self.pipeline = realsense.pipeline()
             config = realsense.config()
             config.enable_stream(
-                realsense.stream.color, 640, 480, realsense.format.rgb8, 30
+                realsense.stream.color,
+                640,
+                480,
+                realsense.format.rgb8,
+                30,
             )
             config.enable_stream(
-                realsense.stream.depth, 640, 480, realsense.format.z16, 30
+                realsense.stream.depth,
+                640,
+                480,
+                realsense.format.z16,
+                30,
             )
             self.pipeline.start(config)
         except realsense.error as e:
             print(f"RealSense error {e.get_failed_function()}: {e.get_failed_args()}")
             print(f"{e.get_description()}")
 
-    def capture_image(self) -> Tuple[np.array, "realsense.frame", "realsense.frame"]:
+    def capture_image(
+        self,
+    ) -> Tuple[np.array, "realsense.frame", "realsense.frame"]:
         """
         Capture a new image from the camera.
 
@@ -196,7 +206,10 @@ class CameraController:
         return object_xy
 
     def _calculate_object_reference_frame(
-        self, depth_frame: "realsense.frame", center_x: int, center_y: int
+        self,
+        depth_frame: "realsense.frame",
+        center_x: int,
+        center_y: int,
     ):
         """
         Get the object reference frame from the depth frame and center of the bounding box.
@@ -211,7 +224,9 @@ class CameraController:
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
         # Use the depth value and the center of the bounding box to get the 3D coordinates of the object
         self.object_reference_frame = realsense.rs2_deproject_pixel_to_point(
-            depth_intrin, [center_x, center_y], self.object_distance
+            depth_intrin,
+            [center_x, center_y],
+            self.object_distance,
         )
 
     @staticmethod
@@ -232,7 +247,11 @@ class CameraController:
         distance: float,
     ) -> None:
         cv2.rectangle(
-            img, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 255, 0), 2
+            img,
+            (int(xmin), int(ymin)),
+            (int(xmax), int(ymax)),
+            (0, 255, 0),
+            2,
         )
         cv2.putText(
             img,
@@ -260,7 +279,9 @@ class CameraController:
         if trans_z != 0:
             # Move the robot's tool (e.g. a gripper) to the object
             self.ur_connection.translate_tool(
-                [-trans_x, -trans_y, move_z], acc=self.MOVE_ACC, vel=self.MOVE_VEL
+                [-trans_x, -trans_y, move_z],
+                acc=self.MOVE_ACC,
+                vel=self.MOVE_VEL,
             )
 
     def _detect_object_coordinates(self, img: np.array, depth_frame: "realsense.frame"):
@@ -403,10 +424,14 @@ class CameraController:
 
         while rotate:
             rotation_matrix = cv2.getRotationMatrix2D(
-                (img.shape[1] // 2, img.shape[0] // 2), image_rotation_angle, 1.0
+                (img.shape[1] // 2, img.shape[0] // 2),
+                image_rotation_angle,
+                1.0,
             )
             rotated_img = cv2.warpAffine(
-                img, rotation_matrix, (img.shape[1], img.shape[0])
+                img,
+                rotation_matrix,
+                (img.shape[1], img.shape[0]),
             )
 
             boxes, classes = self._get_object_predictions(rotated_img)
@@ -456,11 +481,15 @@ class CameraController:
 
         self.ur_connection.translate_tool([0.02, 0.09, 0], 1, 0.2)
         self.ur_connection.translate_tool(
-            [0, 0, self.object_reference_frame[2] - 0.16], 1, 0.2
+            [0, 0, self.object_reference_frame[2] - 0.16],
+            1,
+            0.2,
         )
         self.gripper.move_and_wait_for_pos(160, 150, 100)
         self.ur_connection.translate_tool(
-            [0, 0, -(self.object_reference_frame[2] - 0.2)], 1, 0.2
+            [0, 0, -(self.object_reference_frame[2] - 0.2)],
+            1,
+            0.2,
         )
 
         waypoint = [
@@ -515,11 +544,15 @@ class CameraController:
                     self.move_to_object(move_z=0.01)
                 elif self.object_reference_frame[2] < 0.31:
                     self.ur_connection.translate_tool(
-                        [0.02, 0.09, 0.25], self.MOVE_ACC, self.MOVE_VEL
+                        [0.02, 0.09, 0.25],
+                        self.MOVE_ACC,
+                        self.MOVE_VEL,
                     )
                     self.gripper.move_and_wait_for_pos(160, 150, 100)
                     self.ur_connection.translate_tool(
-                        [0, 0, -0.25], self.MOVE_ACC, self.MOVE_VEL
+                        [0, 0, -0.25],
+                        self.MOVE_ACC,
+                        self.MOVE_VEL,
                     )
                     object_grasped = True
             else:
@@ -624,7 +657,10 @@ def main():
 
         if object_xy:
             controller.calculate_object_alignment(object_xy)
-            print("OBJECT_POINT: ", controller.object_reference_frame)
+            print(
+                "OBJECT_POINT: ",
+                controller.object_reference_frame,
+            )
 
     controller.move_over_object(controller.object_reference_frame)
     sleep(5)

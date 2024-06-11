@@ -10,7 +10,12 @@ from .robotiq_screwdriver_driver import RobotiqScrewdriver
 class ScrewdriverController:
     """This class is designed to control Robotiq Screwdriver tools and UR driver to perform screwdriwing tasks"""
 
-    def __init__(self, hostname: str = None, ur=None, ur_dashboard=None):
+    def __init__(
+        self,
+        hostname: str = None,
+        ur=None,
+        ur_dashboard=None,
+    ):
         """Constracter of the ScrewdriverController class which initializes a connection with the Robotiq Screwdriver tool and UR robot interfaces"""
         # TODO: Make sure interpreter urp program exsists on the polyscope then start the program using the UR Dashboard.
         # TODO: Import screwdriver driver and handle all the motions as well as screwdriving jobs here
@@ -51,7 +56,8 @@ class ScrewdriverController:
         response = self.ur_dashboard.load_program(iterpreter_program)
         if "File not found" in response:
             self.ur_dashboard.transfer_program(
-                local_path=self.interpreter_urp, ur_path=iterpreter_program
+                local_path=self.interpreter_urp,
+                ur_path=iterpreter_program,
             )
             response = self.ur_dashboard.load_program(iterpreter_program)
         self.ur_dashboard.run_program()

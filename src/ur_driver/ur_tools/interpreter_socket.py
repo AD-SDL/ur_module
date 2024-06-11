@@ -76,7 +76,10 @@ class InterpreterSocket:
         # parse reply, raise exception if command is discarded
         reply = self.STATE_REPLY_PATTERN.match(self.response)
         if reply.group(1) == "discard":
-            raise Exception("Interpreter discarded message", self.response)
+            raise Exception(
+                "Interpreter discarded message",
+                self.response,
+            )
         return int(reply.group(2))
 
     def clear(self):

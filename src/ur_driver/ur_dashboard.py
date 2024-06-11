@@ -15,7 +15,11 @@ class UR_DASHBOARD:
     Each command should be terminated by a `\n` also called a newline.
     """
 
-    def __init__(self, hostname: str = "146.137.240.38", PORT: int = 29999) -> None:
+    def __init__(
+        self,
+        hostname: str = "146.137.240.38",
+        PORT: int = 29999,
+    ) -> None:
         """Constructor for the UR dashboard class.
         :param hostname: Hostname or ip.
         :param port: Port.
@@ -52,7 +56,11 @@ class UR_DASHBOARD:
         """Close the socket"""
         self.connection.close()
 
-    def send_command(self, command: str = None, response_delay: float = 0.1) -> str:
+    def send_command(
+        self,
+        command: str = None,
+        response_delay: float = 0.1,
+    ) -> str:
         """Constructs a command to send over the Dashboard socket
         Args
             command (str): Robot command.
@@ -293,7 +301,12 @@ class UR_DASHBOARD:
                 hostname=self.hostname,
                 username=user_name,
                 password=user_password,
-                disabled_algorithms={"pubkeys": ["rsa-sha2-256", "rsa-sha2-512"]},
+                disabled_algorithms={
+                    "pubkeys": [
+                        "rsa-sha2-256",
+                        "rsa-sha2-512",
+                    ]
+                },
             )
             with SCPClient(ssh_client.get_transport()) as scp:
                 scp.put(local_path, remote_path)
