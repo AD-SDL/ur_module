@@ -31,9 +31,7 @@ class RobotiqScrewdriver:
         Creates an interpreter socket connection
         """
         try:
-            self.connection = InterpreterSocket(
-                hostname=self.hostname, timeout=self.timeout
-            )
+            self.connection = InterpreterSocket(hostname=self.hostname, timeout=self.timeout)
             self.connection.connect()
         except Exception as err:
             print("Failed to connect to interpreter socket! " + err)
@@ -110,9 +108,7 @@ class RobotiqScrewdriver:
         Return (str): TRUE = A screw is detected by the screw detection sensor of the Screw Feeder.
 
         """
-        self.connection.execute_command(
-            "rq_is_feeder_screw_ready({})".format(inputNumber)
-        )
+        self.connection.execute_command("rq_is_feeder_screw_ready({})".format(inputNumber))
         return self.connection.response
 
     def is_feeder_status_ok(self, inputNumber: int = 1) -> str:
@@ -124,9 +120,7 @@ class RobotiqScrewdriver:
         Return (str): TRUE = The Screw Feeder is turned on and detects no errors.
 
         """
-        self.connection.execute_command(
-            "rq_is_feeder_status_ok({})".format(inputNumber)
-        )
+        self.connection.execute_command("rq_is_feeder_status_ok({})".format(inputNumber))
         return self.connection.response
 
     def is_restricted_before_angle(self) -> str:
@@ -264,9 +258,7 @@ class RobotiqScrewdriver:
             rpm (int): (unit: RPM) Desired rotation speed of the screwdriver. Must be between 1 and 500 RPM
 
         """
-        direction = (
-            True  # TRUE = RQ_DIRECTION_CW for a clockwise rotation of the Screwdriver.
-        )
+        direction = True  # TRUE = RQ_DIRECTION_CW for a clockwise rotation of the Screwdriver.
         slave_id = 9  # Only slave ID 9 is supported by the Screwdriver.
 
         self.connection.execute_command(
@@ -329,9 +321,7 @@ class RobotiqScrewdriver:
                     Desired rotation speed of the screwdriver. Must be between 1 and 500 RPM
         """
         direction = False  # FALSE = RQ_DIRECTION_CCW (default) for a counter-clockwise rotation of the Screwdriver
-        self.connection.execute_command(
-            "rq_auto_unscrew({}, {})".format(direction, rpm)
-        )
+        self.connection.execute_command("rq_auto_unscrew({}, {})".format(direction, rpm))
 
     def auto_screw(self, rpm: int = 100) -> None:
         """
@@ -341,12 +331,8 @@ class RobotiqScrewdriver:
         Args:
             rpm (int): (unit: RPM) Desired rotation speed of the screwdriver. Must be between 1 and 500 RPM
         """
-        direction = (
-            True  # TRUE = RQ_DIRECTION_CW for a clockwise rotation of the Screwdriver
-        )
-        self.connection.execute_command(
-            "rq_auto_unscrew({}, {})".format(direction, rpm)
-        )
+        direction = True  # TRUE = RQ_DIRECTION_CW for a clockwise rotation of the Screwdriver
+        self.connection.execute_command("rq_auto_unscrew({}, {})".format(direction, rpm))
 
 
 if __name__ == "__main__":

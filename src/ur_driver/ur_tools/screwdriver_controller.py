@@ -27,9 +27,7 @@ class ScrewdriverController:
         current_dir = os.getcwd()
         index = current_dir.find("ur_module")
         parent_dir = current_dir[: index + 10]
-        self.interpreter_urp = (
-            parent_dir + "/ur_driver/scripts/urp_programs/interpreter_mode.urp"
-        )
+        self.interpreter_urp = parent_dir + "/ur_driver/scripts/urp_programs/interpreter_mode.urp"
 
         if not ur:
             raise Exception("Failed to receive UR connection!")
@@ -39,9 +37,7 @@ class ScrewdriverController:
             self.ur.set_payload(3)
 
         try:
-            self.screwdriver = RobotiqScrewdriver(
-                hostname=self.hostname, socket_timeout=5
-            )
+            self.screwdriver = RobotiqScrewdriver(hostname=self.hostname, socket_timeout=5)
             self.screwdriver.connect()
         except Exception as err:
             print(err)

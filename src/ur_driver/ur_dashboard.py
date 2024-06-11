@@ -42,9 +42,7 @@ class UR_DASHBOARD:
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(
-                5
-            )  # Socket will wait 5 seconds till it recieves the response
+            self.connection.settimeout(5)  # Socket will wait 5 seconds till it recieves the response
             self.connection.connect((self.hostname, self.port))
 
         except socket.error as err:
@@ -318,12 +316,7 @@ class UR_DASHBOARD:
             print("SCP error: " + scp_err)
 
         else:
-            print(
-                "UR program "
-                + local_path
-                + " is transferred to UR onboard "
-                + remote_path
-            )
+            print("UR program " + local_path + " is transferred to UR onboard " + remote_path)
 
         finally:
             scp.close()

@@ -148,9 +148,7 @@ class CameraController:
         return boxes, classes
 
     # This function needs to be implemented:
-    def object_is_within_threshold(
-        self, object_point: Tuple[float, float, float]
-    ) -> bool:
+    def object_is_within_threshold(self, object_point: Tuple[float, float, float]) -> bool:
         """
         Determines whether the object is within a certain distance threshold for picking up.
 
@@ -230,9 +228,7 @@ class CameraController:
         )
 
     @staticmethod
-    def _calculate_box_center(
-        xmin: float, xmax: float, ymin: float, ymax: float
-    ) -> Tuple[int, int]:
+    def _calculate_box_center(xmin: float, xmax: float, ymin: float, ymax: float) -> Tuple[int, int]:
         return int((xmin + xmax) / 2), int((ymin + ymax) / 2)
 
     @staticmethod
@@ -317,9 +313,7 @@ class CameraController:
                 self._calculate_object_reference_frame(depth_frame, center_x, center_y)
                 break
         else:
-            raise Exception(
-                f"Target object {self.target_object} not found in the frame."
-            )
+            raise Exception(f"Target object {self.target_object} not found in the frame.")
 
     def calculate_object_alignment(self) -> None:
         """
@@ -444,10 +438,7 @@ class CameraController:
                 if current_frame_area < smallest_frame_area:
                     smallest_frame_area = current_frame_area
                     robot_rotation_angle = image_rotation_angle
-                elif (
-                    image_rotation_angle > 45
-                    and smallest_frame_area < current_frame_area
-                ):
+                elif image_rotation_angle > 45 and smallest_frame_area < current_frame_area:
                     rotate = False  # if the smallest frame area is found, stop the while loop
                     break
             image_rotation_angle += 1

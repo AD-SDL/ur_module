@@ -15,9 +15,7 @@ class TestWEI_Base(unittest.TestCase):
         """Basic setup for WEI's pytest tests"""
         super().__init__(*args, **kwargs)
         self.root_dir = Path(__file__).resolve().parent.parent
-        self.workcell_file = self.root_dir / Path(
-            "tests/workcell_defs/test_workcell.yaml"
-        )
+        self.workcell_file = self.root_dir / Path("tests/workcell_defs/test_workcell.yaml")
         self.workcell = WorkcellData.from_yaml(self.workcell_file)
         self.server_host = self.workcell.config.server_host
         self.server_port = self.workcell.config.server_port

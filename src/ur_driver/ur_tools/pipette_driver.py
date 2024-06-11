@@ -488,9 +488,7 @@ class PipetteDriver:
             else:
                 val = str(value)
             cmd += f"{variable}{val}"
-        cmd += (
-            "R\r"  # R for execution and new line is required for the command to finish
-        )
+        cmd += "R\r"  # R for execution and new line is required for the command to finish
         # atomic commands send/rcv
         status, val, data = self.query(cmd)
         errcheck, notbusy = self._status_check(status)
