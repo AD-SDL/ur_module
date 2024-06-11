@@ -1,6 +1,5 @@
 """REST-based node for UR robots"""
 
-import datetime
 import traceback
 from typing import List
 
@@ -18,16 +17,15 @@ rest_module = RESTModule(
     description="A node to control the ur plate moving robot",
     model="ur",
 )
-rest_module.arg_parser.add_argument(
-    "--ur_ip", type=str, help="IP address of the UR robot", default="164.54.116.129"
-)
+rest_module.arg_parser.add_argument("--ur_ip", type=str, help="IP address of the UR robot", default="164.54.116.129")
 
 
 @rest_module.startup()
 def ur_startup(state: State):
     """UR startup handler."""
     try:
-        state.ur = UR(state.ur_ip)
+        state.ur = UR("127.0.0.1")
+        # state.ur = True
         state.status = ModuleStatus.IDLE
     except Exception:
         state.status = ModuleStatus.ERROR
@@ -55,18 +53,10 @@ def check_state(state: State):
 def state(state: State):
     """Returns the current state of the UR module"""
 
-    if (
-        not (state.status == ModuleStatus.BUSY)
-        or (state.status == ModuleStatus.ERROR)
-        or (
-            state.action_start
-            and (
-                datetime.datetime.now() - state.action_start > datetime.timedelta(0, 2)
-            )
-        )
-    ):
+    if not (state.status == ModuleStatus.BUSY) or not (state.status == ModuleStatus.ERROR):
         check_state(state)
-    return JSONResponse(content={"State": state})
+
+    return JSONResponse(content={"State": state.status, "error": state.error})
 
 
 @rest_module.action(
@@ -89,9 +79,7 @@ def gripper_transfer(
     """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
 
     if not source or not target or not home:  # Return Fail
-        return StepResponse(
-            StepStatus.FAILED, "", "Source, target and home locations must be provided"
-        )
+        return StepResponse(StepStatus.FAILED, "", "Source, target and home locations must be provided")
 
     state.ur.gripper_transfer(
         home=home,
@@ -104,10 +92,7 @@ def gripper_transfer(
         gripper_open=gripper_open,
         gripper_close=gripper_close,
     )
-
-    return StepResponse.step_succeeded(
-        f"Gripper transfer completed from {source} to {target}"
-    )
+    return StepResponse.step_succeeded(f"Gripper transfer completed from {source} to {target}")
 
 
 @rest_module.action(
@@ -126,9 +111,7 @@ def pick_tool(
     """Pick a tool with the UR"""
 
     if not tool_loc or not home:  # Return Fail
-        return StepResponse(
-            StepStatus.FAILED, "", "tool_loc and home locations must be provided"
-        )
+        return StepResponse(StepStatus.FAILED, "", "tool_loc and home locations must be provided")
 
     state.ur.pick_tool(
         home=home,
@@ -142,8 +125,7 @@ def pick_tool(
 
 
 @rest_module.action(
-    name="Place_tool",
-    description="Places the attached tool back to the provided tool docking location",
+    name="Place_tool", description="Places the attached tool back to the provided tool docking location"
 )
 def place_tool(
     state: State,
@@ -198,9 +180,7 @@ def gripper_screw_transfer(
         gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(
-        f"Srewdriving is completed in between {screw_loc} and {target}"
-    )
+    return StepResponse.step_succeeded(f"Srewdriving is completed in between {screw_loc} and {target}")
 
 
 @rest_module.action(
@@ -228,9 +208,7 @@ def pipette_transfer(
         volume=volume,
     )
 
-    return StepResponse.step_succeeded(
-        f"Pipette trasnfer is completed in between {source} and {target}"
-    )
+    return StepResponse.step_succeeded(f"Pipette trasnfer is completed in between {source} and {target}")
 
 
 @rest_module.action(
@@ -287,9 +265,7 @@ def remove_cap(
         gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(
-        f"Sample vial cap is removed from {source} and placed {target}"
-    )
+    return StepResponse.step_succeeded(f"Sample vial cap is removed from {source} and placed {target}")
 
 
 @rest_module.action(
