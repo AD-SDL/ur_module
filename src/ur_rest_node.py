@@ -127,7 +127,7 @@ def pick_tool(
 
     if not tool_loc or not home:  # Return Fail
         return StepResponse(
-            StepStatus.FAILED, "", "Source, target and home locations must be provided"
+            StepStatus.FAILED, "", "tool_loc and home locations must be provided"
         )
 
     state.ur.pick_tool(
@@ -138,7 +138,144 @@ def pick_tool(
         tool_name=tool_name,
     )
 
-    return StepResponse.step_succeeded(f"Pick tool {tool_name} from {tool_loc}")
+    return StepResponse.step_succeeded(
+        f"Pick tool {tool_name} from {tool_loc} completed"
+    )
+
+
+@rest_module.action(
+    name="Place_tool",
+    description="Places the attached tool back to the provided tool docking location",
+)
+def place_tool(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    tool_loc: Annotated[List[float], "Home location"],
+    docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
+    tool_name: Annotated[str, "Tool name)"],
+) -> StepResponse:
+    """Place a tool with the UR"""
+
+    if not tool_loc or not home:  # Return Fail
+        return StepResponse(
+            StepStatus.FAILED, "", "Source, target and home locations must be provided"
+        )
+
+    state.ur.place_tool(
+        home=home,
+        tool_loc=tool_loc,
+        docking_axis=docking_axis,
+        tool_name=tool_name,
+    )
+
+    return StepResponse.step_succeeded(
+        f"Place tool {tool_name} tool {tool_loc} completed"
+    )
+
+
+@rest_module.action(
+    name="gripper_screw_transfer",
+    description="Places the attached tool back to the provided tool docking location",
+)
+def gripper_screw_transfer(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    screwdriver_loc: Annotated[List[float], "Screwdriver location"],
+    screw_loc: Annotated[List[float], "Screw location"],
+    screw_time: Annotated[int, "Srew time in seconds"],
+    target: Annotated[List[float], "Target location"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Make a screwdriving transfer using Robotiq gripper and custom screwdriving bits with UR"""
+
+    if not home or not screwdriver_loc or not screw_loc or not target:
+        return StepResponse(
+            StepStatus.FAILED,
+            "",
+            "screwdriver_loc, screw_loc and home locations must be provided",
+        )
+    state.ur.gripper_screw_transfer(
+        home=home,
+        screwdriver_loc=screwdriver_loc,
+        screw_loc=screw_loc,
+        screw_time=screw_time,
+        target=target,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
+
+    return StepResponse.step_succeeded(
+        f"Srewdriving is completed in between {screw_loc} and {target}"
+    )
+
+
+######################
+
+
+@rest_module.action(
+    name="pipette_transfer",
+    description="Make a pipette transfer to trasnfer liquids in between two locations",
+)
+def pipette_transfer(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Location to transfer sample from"],
+    target: Annotated[List[float], "Location to transfer sample to"],
+    tip_loc=Annotated[List[float], "New tip location"],
+    tip_trash=Annotated[List[float], "Tip trash location"],
+    volume=Annotated[float, "Set a volume in micro liters"],
+) -> StepResponse:
+    """Make a pipette transfer for the difined valume with UR"""
+
+    state._state.pipette_transfer(
+        home=home,
+        tip_loc=tip_loc,
+        tip_trash=tip_trash,
+        source=source,
+        target=target,
+        volume=volume,
+    )
+
+    return StepResponse.step_succeeded(
+        f"Pipette trasnfer is completed in between {source} and {target}"
+    )
+
+
+######################
+
+
+@rest_module.action(
+    name="pick_and_flip_object",
+    description="Make a pipette transfer to trasnfer liquids in between two locations",
+)
+def pick_and_flip_object(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Location to transfer sample from"],
+    target: Annotated[List[float], "Location to transfer sample to"],
+    tip_loc=Annotated[List[float], "New tip location"],
+    tip_trash=Annotated[List[float], "Tip trash location"],
+    volume=Annotated[float, "Set a volume in micro liters"],
+) -> StepResponse:
+    """Make a pipette transfer for the difined valume with UR"""
+
+    state._state.pipette_transfer(
+        home=home,
+        tip_loc=tip_loc,
+        tip_trash=tip_trash,
+        source=source,
+        target=target,
+        volume=volume,
+    )
+
+    return StepResponse.step_succeeded(
+        f"Pipette trasnfer is completed in between {source} and {target}"
+    )
 
 
 rest_module.start()
