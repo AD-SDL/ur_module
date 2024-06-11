@@ -118,7 +118,7 @@ def pick_tool(
     state: State,
     action: ActionRequest,
     home: Annotated[List[float], "Home location"],
-    tool_loc: Annotated[List[float], "Home location"],
+    tool_loc: Annotated[List[float], "Tool location"],
     docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
     payload: Annotated[float, "Tool payload"],
     tool_name: Annotated[str, "Tool name)"],
@@ -138,9 +138,7 @@ def pick_tool(
         tool_name=tool_name,
     )
 
-    return StepResponse.step_succeeded(
-        f"Pick tool {tool_name} from {tool_loc} completed"
-    )
+    return StepResponse.step_succeeded(f"Tool {tool_name} is picked up from {tool_loc}")
 
 
 @rest_module.action(
@@ -151,27 +149,20 @@ def place_tool(
     state: State,
     action: ActionRequest,
     home: Annotated[List[float], "Home location"],
-    tool_loc: Annotated[List[float], "Home location"],
+    tool_docking: Annotated[List[float], "Tool docking location"],
     docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
     tool_name: Annotated[str, "Tool name)"],
 ) -> StepResponse:
     """Place a tool with the UR"""
 
-    if not tool_loc or not home:  # Return Fail
-        return StepResponse(
-            StepStatus.FAILED, "", "Source, target and home locations must be provided"
-        )
-
     state.ur.place_tool(
         home=home,
-        tool_loc=tool_loc,
+        tool_loc=tool_docking,
         docking_axis=docking_axis,
         tool_name=tool_name,
     )
 
-    return StepResponse.step_succeeded(
-        f"Place tool {tool_name} tool {tool_loc} completed"
-    )
+    return StepResponse.step_succeeded(f"Tool {tool_name} is placed at {tool_docking}")
 
 
 @rest_module.action(
@@ -185,7 +176,7 @@ def gripper_screw_transfer(
     screwdriver_loc: Annotated[List[float], "Screwdriver location"],
     screw_loc: Annotated[List[float], "Screw location"],
     screw_time: Annotated[int, "Srew time in seconds"],
-    target: Annotated[List[float], "Target location"],
+    target: Annotated[List[float], "Location where the srewdriving will be performed"],
     gripper_open: Annotated[int, "Set a max value for the gripper open state"],
     gripper_close: Annotated[int, "Set a min value for the gripper close state"],
 ) -> StepResponse:
@@ -223,8 +214,8 @@ def pipette_transfer(
     state: State,
     action: ActionRequest,
     home: Annotated[List[float], "Home location"],
-    source: Annotated[List[float], "Location to transfer sample from"],
-    target: Annotated[List[float], "Location to transfer sample to"],
+    source: Annotated[List[float], "Initial location of the sample"],
+    target: Annotated[List[float], "Target location of the sample"],
     tip_loc=Annotated[List[float], "New tip location"],
     tip_trash=Annotated[List[float], "Tip trash location"],
     volume=Annotated[float, "Set a volume in micro liters"],
@@ -256,8 +247,8 @@ def pick_and_flip_object(
     state: State,
     action: ActionRequest,
     home: Annotated[List[float], "Home location"],
-    target: Annotated[List[float], "Location to transfer sample to"],
-    approach_axis: Annotated[str, "Target location approach axis, (X/Y/Z)"],
+    target: Annotated[List[float], "Location of the object"],
+    approach_axis: Annotated[str, "Approach axis, (X/Y/Z)"],
     target_approach_distance: Annotated[float, "Approach distance in meters"],
     gripper_open: Annotated[int, "Set a max value for the gripper open state"],
     gripper_close: Annotated[int, "Set a min value for the gripper close state"],
@@ -274,6 +265,40 @@ def pick_and_flip_object(
     )
 
     return StepResponse.step_succeeded(f"Object is flipped 180 degrees at {target}")
+
+
+######################
+
+
+@rest_module.action(
+    name="remove_cap",
+    description="Removes caps from sample vials",
+)
+def remove_cap(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Location of the vial cap"],
+    target: Annotated[
+        List[float],
+        "Location of where the cap will be placed after it is removed from the vail",
+    ],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Picks and flips an object 180 degresswith UR"""
+
+    state.ur.remove_cap(
+        home=home,
+        source=source,
+        target=target,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
+
+    return StepResponse.step_succeeded(
+        f"Sample vial cap is removed from {source} and placed {target}"
+    )
 
 
 rest_module.start()
