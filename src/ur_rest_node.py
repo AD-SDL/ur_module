@@ -167,7 +167,7 @@ def place_tool(
 
 @rest_module.action(
     name="gripper_screw_transfer",
-    description="Places the attached tool back to the provided tool docking location",
+    description="PPerforms a srew transfer using the Robotiq gripper and custom srewfring bits",
 )
 def gripper_screw_transfer(
     state: State,
@@ -203,12 +203,9 @@ def gripper_screw_transfer(
     )
 
 
-######################
-
-
 @rest_module.action(
     name="pipette_transfer",
-    description="Make a pipette transfer to trasnfer liquids in between two locations",
+    description="Make a pipette transfer to transfer sample liquids in between two locations",
 )
 def pipette_transfer(
     state: State,
@@ -234,9 +231,6 @@ def pipette_transfer(
     return StepResponse.step_succeeded(
         f"Pipette trasnfer is completed in between {source} and {target}"
     )
-
-
-######################
 
 
 @rest_module.action(
