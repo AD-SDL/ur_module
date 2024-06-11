@@ -250,32 +250,30 @@ def pipette_transfer(
 
 @rest_module.action(
     name="pick_and_flip_object",
-    description="Make a pipette transfer to trasnfer liquids in between two locations",
+    description="Picks and flips an object 180 degress",
 )
 def pick_and_flip_object(
     state: State,
     action: ActionRequest,
     home: Annotated[List[float], "Home location"],
-    source: Annotated[List[float], "Location to transfer sample from"],
     target: Annotated[List[float], "Location to transfer sample to"],
-    tip_loc=Annotated[List[float], "New tip location"],
-    tip_trash=Annotated[List[float], "Tip trash location"],
-    volume=Annotated[float, "Set a volume in micro liters"],
+    approach_axis: Annotated[str, "Target location approach axis, (X/Y/Z)"],
+    target_approach_distance: Annotated[float, "Approach distance in meters"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
 ) -> StepResponse:
-    """Make a pipette transfer for the difined valume with UR"""
+    """Picks and flips an object 180 degresswith UR"""
 
-    state._state.pipette_transfer(
+    state.ur.pick_and_flip_object(
         home=home,
-        tip_loc=tip_loc,
-        tip_trash=tip_trash,
-        source=source,
         target=target,
-        volume=volume,
+        approach_axis=approach_axis,
+        target_approach_distance=target_approach_distance,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(
-        f"Pipette trasnfer is completed in between {source} and {target}"
-    )
+    return StepResponse.step_succeeded(f"Object is flipped 180 degrees at {target}")
 
 
 rest_module.start()
