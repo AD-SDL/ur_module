@@ -1,5 +1,6 @@
 """REST-based node for UR robots"""
 
+import datetime
 import traceback
 from typing import List
 
@@ -24,12 +25,14 @@ rest_module.arg_parser.add_argument("--ur_ip", type=str, help="IP address of the
 def ur_startup(state: State):
     """UR startup handler."""
     try:
-        state.ur = UR("127.0.0.1")
+        print("LOOOOOOKKKKKK HEEEEERRRRREEE:" + state.ur_ip)
+        state.ur = UR(hostname=state.ur_ip)
         # state.ur = True
         state.status = ModuleStatus.IDLE
     except Exception:
         state.status = ModuleStatus.ERROR
         traceback.print_exc()
+        print("CONNECTION FAILED")
     else:
         print("UR online")
     yield
@@ -52,11 +55,14 @@ def check_state(state: State):
 @rest_module.state_handler()
 def state(state: State):
     """Returns the current state of the UR module"""
-
-    if not (state.status == ModuleStatus.BUSY) or not (state.status == ModuleStatus.ERROR):
+    print("LOOOOKKKK" + state.status)
+    print(state.status)
+    if state.status not in [ModuleStatus.BUSY, ModuleStatus.ERROR, ModuleStatus.INIT, None] or (
+        state.action_start and (datetime.datetime.now() - state.action_start > datetime.timedelta(0, 2))
+    ):
         check_state(state)
-
-    return JSONResponse(content={"State": state.status, "error": state.error})
+        # state.status = ModuleStatus.IDLE
+        return JSONResponse(content={"status": state.status, "error": state.error})
 
 
 @rest_module.action(

@@ -85,12 +85,12 @@ class UR:
         self.ref_frame = [0, 0, 0, 0, 0, 0]
         self.robot_current_joint_angles = None
 
-        if not self.hostname == "127.0.0.1":
-            self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname, PORT=self.PORT)
-            self.ur = Connection(hostname=self.hostname)
-            self.ur_connection = self.ur.connection
-            self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
-            self.get_movement_state()
+        # if not self.hostname == "127.0.0.1":
+        self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname, PORT=self.PORT)
+        self.ur = Connection(hostname=self.hostname)
+        self.ur_connection = self.ur.connection
+        self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
+        self.get_movement_state()
         # else:
         # TODO: Use simulation mode for local IP
 
@@ -657,9 +657,9 @@ class UR:
 if __name__ == "__main__":
     """Tests"""
 
-    pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot3 = UR(hostname="164.54.116.129")  # UR3
+    # pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    # pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    # robot3 = UR(hostname="164.54.116.129")  # UR3
     robot5 = UR(hostname="164.54.116.109")  # UR5
 
     home = [
@@ -863,5 +863,5 @@ if __name__ == "__main__":
     # robot5.gripper_transfer(home = ur5_home, source = ur5_cell_holder, target = ur5_measurement_unit, source_approach_axis="z", target_approach_axis="z",source_approach_distance=0.15, target_approach_distance=0.15, gripper_open = 190, gripper_close = 240)
     # robot5.place_tool(home= ur5_home,tool_loc=ur5_handE)
 
-    robot3.ur.disconnect_ur()
+    # robot3.ur.disconnect_ur()
     robot5.ur.disconnect_ur()
