@@ -36,6 +36,7 @@ class UR_DASHBOARD:
         self.connect()
         if self.connection_error:
             raise Exception("Can't connect to dashboard")
+        sleep(3)
         self.initialize()
 
     def connect(self) -> None:
@@ -400,20 +401,3 @@ if __name__ == "__main__":
     # robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
     # robot.load_program("/programs/katerina.urp")
     # robot.run_program()
-
-    """
-    Bug: Output error message breaks the client state check, causing the client to retry connection
-
-    [ur5_client-1] [INFO] [1685573134.289546521] [ur5_client.UR5_Client_Node]: {'program_name': 'chemspeed2tecan'}
-    [ur5_client-1] [INFO] [1685573134.290071438] [ur5_client.UR5_Client_Node]: None
-    [ur5_client-1] [INFO] [1685573134.290490743] [ur5_client.UR5_Client_Node]: chemspeed2tecan
-    [ur5_client-1] << NONE
-    [ur5_client-1] File not found: /programs/chemspeed2tecan
-    [ur5_client-1] << Safetystatus: NORMAL
-    [ur5_client-1] << Robotmode: RUNNING
-    [ur5_client-1] ['Robotmode:', 'RUNNING']
-    [ur5_client-1] << true
-    [ur5_client-1] [ERROR] [1685573134.745633959] [ur5_client.UR5_Client_Node]: list index out of range
-    [ur5_client-1] [ERROR] [1685573134.746134932] [ur5_client.UR5_Client_Node]: State: ERROR
-    [ur5_client-1] [ERROR] [1685573134.746477735] [ur5_client.UR5_Client_Node]: Robot_Mode: RUNNING Safety_Status: RUNNING
-    """

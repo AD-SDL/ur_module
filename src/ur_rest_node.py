@@ -26,6 +26,7 @@ def ur_startup(state: State):
     """UR startup handler."""
     try:
         print("LOOOOOOKKKKKK HEEEEERRRRREEE:" + state.ur_ip)
+        state.ur = None
         state.ur = UR(hostname=state.ur_ip)
         # state.ur = True
         state.status = ModuleStatus.IDLE
@@ -35,10 +36,6 @@ def ur_startup(state: State):
         print("CONNECTION FAILED")
     else:
         print("UR online")
-    yield
-
-    # Do any cleanup here
-    pass
 
 
 def check_state(state: State):
