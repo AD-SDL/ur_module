@@ -2,6 +2,7 @@
 
 import datetime
 import traceback
+from pathlib import Path
 from typing import List
 
 from fastapi.datastructures import State
@@ -11,21 +12,26 @@ from ur_driver.ur import UR
 from wei.modules.rest_module import RESTModule
 from wei.types.module_types import ModuleStatus
 from wei.types.step_types import ActionRequest, StepResponse, StepStatus
+from wei.utils import extract_version
 
 rest_module = RESTModule(
     name="ur_node",
-    version="0.0.1",
+    version=extract_version(Path(__file__).parent.parent / "pyproject.toml"),
     description="A node to control the ur plate moving robot",
     model="ur",
 )
-rest_module.arg_parser.add_argument("--ur_ip", type=str, help="IP address of the UR robot", default="164.54.116.129")
+rest_module.arg_parser.add_argument(
+    "--ur_ip",
+    type=str,
+    default="164.54.116.129",
+    help="Hostname or IP address to connect to UR",
+)
 
 
 @rest_module.startup()
 def ur_startup(state: State):
     """UR startup handler."""
     try:
-        print("LOOOOOOKKKKKK HEEEEERRRRREEE:" + state.ur_ip)
         state.ur = None
         state.ur = UR(hostname=state.ur_ip)
         # state.ur = True
@@ -52,8 +58,6 @@ def check_state(state: State):
 @rest_module.state_handler()
 def state(state: State):
     """Returns the current state of the UR module"""
-    print("LOOOOKKKK" + state.status)
-    print(state.status)
     if state.status not in [ModuleStatus.BUSY, ModuleStatus.ERROR, ModuleStatus.INIT, None] or (
         state.action_start and (datetime.datetime.now() - state.action_start > datetime.timedelta(0, 2))
     ):
