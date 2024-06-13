@@ -1,6 +1,7 @@
 """Base module tests."""
 
 import unittest
+from unittest.mock import patch
 
 
 class TestModule_Base(unittest.TestCase):
@@ -12,6 +13,7 @@ class TestModule_Base(unittest.TestCase):
 class TestImports(TestModule_Base):
     """Test the imports of the module are working correctly"""
 
+    @patch("sys.argv", ["test", "--ur_ip", "127.0.0.1"])
     def test_driver_import(self):
         """Test the driver and rest node imports"""
         import ur_driver
