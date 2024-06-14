@@ -6,11 +6,10 @@ from pathlib import Path
 from typing import List
 
 from fastapi.datastructures import State
-from fastapi.responses import JSONResponse
 from typing_extensions import Annotated
 from ur_driver.ur import UR
 from wei.modules.rest_module import RESTModule
-from wei.types.module_types import ModuleStatus
+from wei.types.module_types import ModuleState, ModuleStatus
 from wei.types.step_types import ActionRequest, StepResponse, StepStatus
 from wei.utils import extract_version
 
@@ -34,7 +33,6 @@ def ur_startup(state: State):
     try:
         state.ur = None
         state.ur = UR(hostname=state.ur_ip)
-        # state.ur = True
         state.status = ModuleStatus.IDLE
     except Exception:
         state.status = ModuleStatus.ERROR
@@ -44,26 +42,21 @@ def ur_startup(state: State):
         print("UR online")
 
 
-def check_state(state: State):
-    """Gets robot status by checking robot dashboard status messages."""
-    state.ur.ur_dashboard.get_overall_robot_status()
-    if "NORMAL" not in state.ur.ur_dashboard.safety_status:
-        state.status = ModuleStatus.ERROR
-    elif state.ur.get_movement_state() == "BUSY":
-        state.status = ModuleStatus.BUSY
-    else:
-        state.status = ModuleStatus.IDLE
-
-
 @rest_module.state_handler()
 def state(state: State):
     """Returns the current state of the UR module"""
     if state.status not in [ModuleStatus.BUSY, ModuleStatus.ERROR, ModuleStatus.INIT, None] or (
         state.action_start and (datetime.datetime.now() - state.action_start > datetime.timedelta(0, 2))
     ):
-        check_state(state)
-        # state.status = ModuleStatus.IDLE
-        return JSONResponse(content={"status": state.status, "error": state.error})
+        # * Gets robot status by checking robot dashboard status messages.
+        state.ur.ur_dashboard.get_overall_robot_status()
+        if "NORMAL" not in state.ur.ur_dashboard.safety_status:
+            state.status = ModuleStatus.ERROR
+        elif state.ur.get_movement_state() == "BUSY":
+            state.status = ModuleStatus.BUSY
+        else:
+            state.status = ModuleStatus.IDLE
+    return ModuleState(status=state.status, error="")
 
 
 @rest_module.action(
@@ -156,7 +149,7 @@ def place_tool(
 
 @rest_module.action(
     name="gripper_screw_transfer",
-    description="PPerforms a srew transfer using the Robotiq gripper and custom srewfring bits",
+    description="Performs a screw transfer using the Robotiq gripper and custom screwdriving bits",
 )
 def gripper_screw_transfer(
     state: State,
@@ -187,7 +180,7 @@ def gripper_screw_transfer(
         gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(f"Srewdriving is completed in between {screw_loc} and {target}")
+    return StepResponse.step_succeeded(f"Screwdriving is completed in between {screw_loc} and {target}")
 
 
 @rest_module.action(
@@ -204,7 +197,7 @@ def pipette_transfer(
     tip_trash=Annotated[List[float], "Tip trash location"],
     volume=Annotated[float, "Set a volume in micro liters"],
 ) -> StepResponse:
-    """Make a pipette transfer for the difined valume with UR"""
+    """Make a pipette transfer for the defined volume with UR"""
 
     state._state.pipette_transfer(
         home=home,
@@ -215,12 +208,12 @@ def pipette_transfer(
         volume=volume,
     )
 
-    return StepResponse.step_succeeded(f"Pipette trasnfer is completed in between {source} and {target}")
+    return StepResponse.step_succeeded(f"Pipette transfer is completed in between {source} and {target}")
 
 
 @rest_module.action(
     name="pick_and_flip_object",
-    description="Picks and flips an object 180 degress",
+    description="Picks and flips an object 180 degrees",
 )
 def pick_and_flip_object(
     state: State,
@@ -232,7 +225,7 @@ def pick_and_flip_object(
     gripper_open: Annotated[int, "Set a max value for the gripper open state"],
     gripper_close: Annotated[int, "Set a min value for the gripper close state"],
 ) -> StepResponse:
-    """Picks and flips an object 180 degress with UR"""
+    """Picks and flips an object 180 degrees with UR"""
 
     state.ur.pick_and_flip_object(
         home=home,
@@ -338,4 +331,5 @@ def set_digital_io(
     return StepResponse.step_succeeded(f"Channel {channel} is set to {value}")
 
 
-rest_module.start()
+if __name__ == "__main__":
+    rest_module.start()

@@ -11,6 +11,8 @@ services:
     env_file: .env
     environment:
       - PYTHONUNBUFFERED=1 # Fix weird bug with empty logging
+      - USER_ID=${USER_ID:-1000}
+      - GROUP_ID=${GROUP_ID:-1000}
     volumes:
       - ./tests/workcell_defs:/workcell_defs
       - ${WEI_DATA_DIR}:/home/app/.wei
@@ -26,7 +28,9 @@ services:
       - ${WEI_DATA_DIR}:/home/app/.wei
     env_file: .env
     environment:
-     - PYTHONUNBUFFERED=1 # Fix weird bug wßith empty logging
+      - PYTHONUNBUFFERED=1 # Fix weird bug with empty logging
+      - USER_ID=${USER_ID:-1000}
+      - GROUP_ID=${GROUP_ID:-1000}
     command: python3 -m wei.engine --workcell /workcell_defs/${WORKCELL_FILENAME}
     depends_on:
       - wei_redis

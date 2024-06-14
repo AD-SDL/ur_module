@@ -32,7 +32,7 @@ class TestWEI_Base(unittest.TestCase):
         start_time = time.time()
         while True:
             try:
-                if requests.get(self.url + "/wc/state").status_code == 200:
+                if requests.get(self.url + "/up").status_code == 200:
                     break
             except Exception:
                 pass
