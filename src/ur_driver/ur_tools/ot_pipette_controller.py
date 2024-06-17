@@ -254,9 +254,21 @@ class OTPipetteController:
 
         print("Picking up the pipette...")
         sleep(1)
-        self.ur.movel(self.pipette_above, self.accel_mss, speed_ms, 0, 0)
+        self.ur.movel(
+            self.pipette_above,
+            self.accel_mss,
+            speed_ms,
+            0,
+            0,
+        )
         sleep(2)
-        self.ur.movel(self.pipette_approach, self.accel_mss, speed_ms, 0, 0)
+        self.ur.movel(
+            self.pipette_approach,
+            self.accel_mss,
+            speed_ms,
+            0,
+            0,
+        )
         speed_ms = 0.01
         sleep(1)
         self.ur.movel(self.pipette_loc, self.accel_mss, speed_ms, 0, 0)
@@ -269,9 +281,21 @@ class OTPipetteController:
         """
         sleep(5.0)
         speed_ms = 0.1
-        self.ur.movel(self.pipette_approach, self.accel_mss, speed_ms, 0, 0)
+        self.ur.movel(
+            self.pipette_approach,
+            self.accel_mss,
+            speed_ms,
+            0,
+            0,
+        )
         sleep(1)
-        self.ur.movel(self.pipette_above, self.accel_mss, speed_ms, 0, 0)
+        self.ur.movel(
+            self.pipette_above,
+            self.accel_mss,
+            speed_ms,
+            0,
+            0,
+        )
         sleep(2)
         print("Pipette successfully picked up")
 
@@ -288,10 +312,22 @@ class OTPipetteController:
         print("Picking up the first pipette tip...")
         speed_ms = 0.100
 
-        self.ur.movel(tip_above, self.accel_radss, self.speed_rads, 0, 0)
+        self.ur.movel(
+            tip_above,
+            self.accel_radss,
+            self.speed_rads,
+            0,
+            0,
+        )
         sleep(2)
         speed_ms = 0.01
-        self.ur.movel(tip_approach, self.accel_radss, self.speed_rads, 0, 0)
+        self.ur.movel(
+            tip_approach,
+            self.accel_radss,
+            self.speed_rads,
+            0,
+            0,
+        )
         sleep(2)
         self.ur.movel(tip_loc, self.accel_mss, speed_ms, 0, 0)
         sleep(3)
@@ -319,7 +355,13 @@ class OTPipetteController:
         well_above = well_loc
         well_above[2] += 0.05
 
-        self.ur.movel(sample_above, self.accel_mss, self.speed_ms, 0, 0)
+        self.ur.movel(
+            sample_above,
+            self.accel_mss,
+            self.speed_ms,
+            0,
+            0,
+        )
         sleep(2)
         self.ur.movel(sample_loc, self.accel_mss, speed_ms, 0, 0)
         sleep(2)
@@ -423,13 +465,31 @@ class OTPipetteController:
 
         print("Droping tip to the trash bin...")
         # Move to the trash bin location
-        self.ur.movel(self.trash_bin_above, self.accel_mss, self.speed_ms, 0, 0)
+        self.ur.movel(
+            self.trash_bin_above,
+            self.accel_mss,
+            self.speed_ms,
+            0,
+            0,
+        )
         sleep(2)
-        self.ur.movel(self.trash_bin, self.accel_mss, self.speed_ms, 0, 0)
+        self.ur.movel(
+            self.trash_bin,
+            self.accel_mss,
+            self.speed_ms,
+            0,
+            0,
+        )
         sleep(2)
         self.eject_tip()
         sleep(1)
-        self.ur.movel(self.trash_bin_above, self.accel_mss, self.speed_ms, 0, 0)
+        self.ur.movel(
+            self.trash_bin_above,
+            self.accel_mss,
+            self.speed_ms,
+            0,
+            0,
+        )
         sleep(2)
 
     def eject_tip(self):
@@ -449,7 +509,13 @@ class OTPipetteController:
         print("Empting tip...")
         speed_ms = 0.5
         # Moving the robot to the empty tube location
-        self.ur.movel(self.empty_tube_above, self.accel_mss, self.speed_ms, 0, 0)
+        self.ur.movel(
+            self.empty_tube_above,
+            self.accel_mss,
+            self.speed_ms,
+            0,
+            0,
+        )
         sleep(2)
         speed_ms = 0.1
         self.ur.movel(self.empty_tube, self.accel_mss, speed_ms, 0, 0)
@@ -460,5 +526,11 @@ class OTPipetteController:
             self.dispense_pipette()
             sleep(1)
 
-        self.ur.movel(self.empty_tube_above, self.accel_mss, speed_ms, 0, 0)
+        self.ur.movel(
+            self.empty_tube_above,
+            self.accel_mss,
+            speed_ms,
+            0,
+            0,
+        )
         sleep(1)

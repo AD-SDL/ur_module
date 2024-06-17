@@ -426,7 +426,10 @@ class PipetteDriver:
         return self._set_var("A", newpos)
 
     def connect(
-        self, hostname: str = HOST, port: int = 54321, socket_timeout: float = 1
+        self,
+        hostname: str = HOST,
+        port: int = 54321,
+        socket_timeout: float = 1,
     ) -> None:
         """Connects to a pipette at the given address"""
         if hasattr(self, hostname):
@@ -453,7 +456,9 @@ class PipetteDriver:
             print("Connection has never been made. Err: " + err)
 
     def var_test(
-        self, var_dict: OrderedDict[str, Union[int, float]], wait: bool = True
+        self,
+        var_dict: OrderedDict[str, Union[int, float]],
+        wait: bool = True,
     ):
         """Tests the variables given
 
@@ -465,7 +470,10 @@ class PipetteDriver:
             print(f"{variable}{str(value)}.")
 
     def _set_vars(
-        self, var_dict: OrderedDict[str, Union[str, int, float]], timeout=10, wait=True
+        self,
+        var_dict: OrderedDict[str, Union[str, int, float]],
+        timeout=10,
+        wait=True,
     ):
         """set variables or parameters.
         :param var_dict: Dictionary of variables to set (variable_name, value).
@@ -480,9 +488,7 @@ class PipetteDriver:
             else:
                 val = str(value)
             cmd += f"{variable}{val}"
-        cmd += (
-            "R\r"  # R for execution and new line is required for the command to finish
-        )
+        cmd += "R\r"  # R for execution and new line is required for the command to finish
         # atomic commands send/rcv
         status, val, data = self.query(cmd)
         errcheck, notbusy = self._status_check(status)
@@ -614,7 +620,11 @@ class PipetteDriver:
         return self._set_var(command, value=value, timeout=timeout, wait=wait)
 
     def _set_var(
-        self, variable: str, value: Union[str, int, float], timeout=10, wait=True
+        self,
+        variable: str,
+        value: Union[str, int, float],
+        timeout=10,
+        wait=True,
     ):
         """set a single variable.
         :param variable: Variable to set.
@@ -623,7 +633,9 @@ class PipetteDriver:
         have been effective.
         """
         return self._set_vars(
-            OrderedDict([(variable, value)]), timeout=timeout, wait=wait
+            OrderedDict([(variable, value)]),
+            timeout=timeout,
+            wait=wait,
         )
 
     def _get_var(self, variable: str, trial=3, isfloat=True):

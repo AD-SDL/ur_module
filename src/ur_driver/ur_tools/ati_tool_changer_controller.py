@@ -61,7 +61,10 @@ class ATIToolChangerController:
             print("Locking the tool changer...")
             self.tool_changer.put(1)
         except Exception as err:
-            print("Error accured while locking the tool changer: ", err)
+            print(
+                "Error accured while locking the tool changer: ",
+                err,
+            )
 
     def unlock_tool_changer(self):
         """
@@ -73,4 +76,7 @@ class ATIToolChangerController:
             print("Unlocking the tool changer...")
             self.tool_changer.put(0)
         except Exception as err:
-            print("Error accured while unlocking the tool changer: ", err)
+            print(
+                "Error accured while unlocking the tool changer: ",
+                err,
+            )

@@ -9,7 +9,6 @@ config:
 
 #List of all components accessible in this workcell
 modules:
-
   - name: ur_module
     model: Universal Robot UR5e
     interface: wei_rest_node

@@ -131,7 +131,11 @@ class TricontinentPipetteController:
         sample_aspirate_above = deepcopy(sample_aspirate)
         sample_aspirate_above[2] += 0.05
 
-        self.ur.movel(sample_aspirate_above, self.accel_mss, self.speed_ms)
+        self.ur.movel(
+            sample_aspirate_above,
+            self.accel_mss,
+            self.speed_ms,
+        )
         self.ur.movel(sample_aspirate, self.accel_mss, speed_ms)
 
         # ASPIRATE FIRST SAMPLE
@@ -143,13 +147,21 @@ class TricontinentPipetteController:
 
         sample_dispense_above = deepcopy(sample_dispense)
         sample_dispense_above[2] += 0.02
-        self.ur.movel(sample_dispense_above, self.accel_mss, self.speed_ms)
+        self.ur.movel(
+            sample_dispense_above,
+            self.accel_mss,
+            self.speed_ms,
+        )
         self.ur.movel(sample_dispense, self.accel_mss, speed_ms)
 
         # DISPENSE FIRST SAMPLE
         self.pipette.dispense(vol=vol)
         sleep(5)
-        self.ur.movel(sample_dispense_above, self.accel_mss, self.speed_ms)
+        self.ur.movel(
+            sample_dispense_above,
+            self.accel_mss,
+            self.speed_ms,
+        )
         self.ur.movej(home, 1, 1)
 
     def create_droplet(self, droplet_loc):

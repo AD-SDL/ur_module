@@ -1,512 +1,326 @@
-"""REST-based client for the Liconic"""
+"""REST-based node for UR robots"""
 
-import json
-from argparse import ArgumentParser, Namespace
-from contextlib import asynccontextmanager
+import datetime
 from pathlib import Path
+from typing import List
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.datastructures import State
+from typing_extensions import Annotated
 from ur_driver.ur import UR
-from wei.core.data_classes import (
-    ModuleAbout,
-    ModuleAction,
-    ModuleActionArg,
-    ModuleStatus,
-    StepResponse,
-    StepStatus,
+from wei.modules.rest_module import RESTModule
+from wei.types.module_types import ModuleState, ModuleStatus
+from wei.types.step_types import ActionRequest, StepResponse, StepStatus
+from wei.utils import extract_version
+
+rest_module = RESTModule(
+    name="ur_node",
+    version=extract_version(Path(__file__).parent.parent / "pyproject.toml"),
+    description="A node to control the ur plate moving robot",
+    model="ur",
 )
-from wei.helpers import extract_version
-
-global ur, state
-
-
-def parse_args() -> Namespace:
-    """Parses CLI args for the REST server
-
-    Returns (ArgumentParser): Parsed arguments
-    """
-    parser = ArgumentParser()
-    parser.add_argument("--name", type=str, default="UR arms", help="Module name")
-    parser.add_argument(
-        "--host", type=str, default="0.0.0.0", help="Host IP/Domain Name"
-    )
-    parser.add_argument("--port", type=str, default="3011", help="Port for REST API")
-    parser.add_argument(
-        "--ur_ip", type=str, default="164.54.116.129", help="IP address of the UR robot"
-    )
-    return parser.parse_args()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Initial run function for the app, initializes the state
-    Parameters
-    ----------
-    app : FastApi
-       The REST API app being initialized
-
-    Returns
-    -------
-    None
-    """
-
-    global ur, state
-    try:
-        args = parse_args()
-        # Do any instrument configuration here
-        state = ModuleStatus.IDLE
-        ur = UR(args.ur_ip)
-    except Exception as err:
-        print(err)
-        state = ModuleStatus.ERROR
-
-    # Yield control to the application
-    yield
-
-    # Do any cleanup here
-    pass
-
-
-app = FastAPI(
-    lifespan=lifespan,
+rest_module.arg_parser.add_argument(
+    "--ur_ip",
+    type=str,
+    default="164.54.116.129",
+    help="Hostname or IP address to connect to UR",
 )
 
 
-@app.get("/state")
-def get_state():
-    """Returns the current state of the module"""
-    global ur, state
+@rest_module.startup()
+def ur_startup(state: State):
+    """UR startup handler."""
+    state.ur = UR(hostname=state.ur_ip)
+    print("UR online")
 
-    if state not in [ModuleStatus.BUSY, ModuleStatus.ERROR]:
-        ur.ur_dashboard.get_overall_robot_status()
-        if "NORMAL" not in ur.ur_dashboard.safety_status:
-            state = ModuleStatus.ERROR
-        elif ur.get_movement_state() == "BUSY":
-            state = ModuleStatus.BUSY
+
+@rest_module.state_handler()
+def state(state: State):
+    """Returns the current state of the UR module"""
+    if state.status not in [ModuleStatus.BUSY, ModuleStatus.ERROR, ModuleStatus.INIT, None] or (
+        state.action_start and (datetime.datetime.now() - state.action_start > datetime.timedelta(0, 2))
+    ):
+        # * Gets robot status by checking robot dashboard status messages.
+        state.ur.ur_dashboard.get_overall_robot_status()
+        if "NORMAL" not in state.ur.ur_dashboard.safety_status:
+            state.status = ModuleStatus.ERROR
+        elif state.ur.get_movement_state() == "BUSY":
+            state.status = ModuleStatus.BUSY
         else:
-            state = ModuleStatus.IDLE
-
-    return JSONResponse(content={"State": state})
-
-
-@app.get("/about")
-async def about():
-    """Returns a description of the actions and resources the module supports"""
-    global ur, state
-
-    args = parse_args()
-    # description = {
-    #     "name": args.name,
-    #     "type": "ur_arm",
-    #     "actions": {
-    #         "status": state,
-    #         "pick_tool": "home, tool_loc, docking_axis, payload, tool_name",
-    #         "place_tool": "home, tool_loc, docking_axis, payload, tool_name",
-    #         "gripper_transfer": "home, source, target, source_approach_axis, target_approach_axis, source_approach_distance, target_approach_distance, gripper_open, gripper_close",
-    #     },
-    # }
-    about = ModuleAbout(
-        name=args.name,
-        model="UR3, UR5, UR16,",
-        description="UR robots are 6 degress of freedom manipulators. Different models of these robots allow to carry heavier payload and reach longer distances. This robot is mainly used in pick and place jobs",
-        interface="wei_rest_node",
-        version=extract_version(Path(__file__).parent.parent / "pyproject.toml"),
-        actions=[
-            ModuleAction(
-                name="transfer",
-                description="This action transfers a plate from a source robot location to a target robot location.",
-                args=[
-                    ModuleActionArg(
-                        name="source",
-                        description="Source location in the workcell for pf400 to grab plate from.",
-                        type="str",
-                        required=True,
-                    ),
-                    ModuleActionArg(
-                        name="target",
-                        description="Transfer location in the workcell for pf400 to transfer plate to.",
-                        type="str",
-                        required=True,
-                    ),
-                    ModuleActionArg(
-                        name="source_plate_rotation",
-                        description="Plate rotation for source location in the workcell.",
-                        type="str",
-                        required=True,
-                    ),
-                    ModuleActionArg(
-                        name="target_plate_rotation",
-                        description="Plate rotation for target location in the workcell.",
-                        type="str",
-                        required=True,
-                    ),
-                ],
-            ),
-            ModuleAction(
-                name="remove_lid",
-                description="This action removes the lid off of a plate",
-                args=[
-                    ModuleActionArg(
-                        name="target",
-                        description="Target location in the workcell that the plate is currently at.",
-                        type="str",
-                        required=True,
-                    ),
-                    ModuleActionArg(
-                        name="lid_height",
-                        description="Lid height of the target plate.",
-                        type="str",
-                        required=True,
-                    ),
-                    ModuleActionArg(
-                        name="target_plate_rotation",
-                        description="Rotation of plate at target location in the workcell.",
-                        type="str",
-                        required=True,
-                    ),
-                ],
-            ),
-            ModuleAction(
-                name="replace_lid",
-                description="This action places a lid on a plate with no lid.",
-                args=[
-                    ModuleActionArg(
-                        name="target",
-                        description="Target location in workcell that plate is currently at.",
-                        type="str",
-                        required=True,
-                    ),
-                    ModuleActionArg(
-                        name="lid_height",
-                        description="Lid height of the target plate.",
-                        type="str",
-                        required=True,
-                    ),
-                    ModuleActionArg(
-                        name="target_plate_rotation",
-                        description="Rotation of plate at target location in the workcell.",
-                        type="str",
-                        required=True,
-                    ),
-                ],
-            ),
-        ],
-        resource_pools=[],
-    )
-    return JSONResponse(content=about.model_dump(mode="json"))
+            state.status = ModuleStatus.IDLE
+    return ModuleState(status=state.status, error="")
 
 
-@app.get("/resources")
-async def resources():
-    """Returns the current resources available to the module"""
-    global state
-    return JSONResponse(content={"Resources": "TEST"})
-
-
-@app.post("/action")
-def do_action(
-    action_handle: str,  # The action to be performed
-    action_vars: str,  # Any arguments necessary to run that action
+@rest_module.action(
+    name="gripper_transfer",
+    description="Execute a transfer in between source and target locations using Robotiq grippers",
+)
+def gripper_transfer(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Location to transfer sample from"],
+    target: Annotated[List[float], "Location to transfer sample to"],
+    source_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
+    target_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
+    source_approach_distance: Annotated[float, "Approach distance in meters"],
+    target_approach_distance: Annotated[float, "Approach distance in meters"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
 ) -> StepResponse:
-    """Runs the actions that are recieved
-    Args
-        action_handle (str): Action command
-        action_vars (str): Action variable
+    """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
 
-    Returns (StepResponse): Response after action execution
-    """
-    global ur, state
-    step_response = StepResponse(action_response=StepStatus.IDLE)
+    if not source or not target or not home:  # Return Fail
+        return StepResponse(StepStatus.FAILED, "", "Source, target and home locations must be provided")
 
-    if state == ModuleStatus.BUSY:
-        step_response.action_response = StepStatus.FAILED
-        step_response.action_log = "Module is busy"
-    else:
-        try:
-            state = ModuleStatus.BUSY
-            action_vars = json.loads(action_vars)
+    state.ur.gripper_transfer(
+        home=home,
+        source=source,
+        target=target,
+        source_approach_distance=source_approach_distance,
+        target_approach_distance=target_approach_distance,
+        source_approach_axis=source_approach_axis,
+        target_approach_axis=target_approach_axis,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
+    return StepResponse.step_succeeded(f"Gripper transfer completed from {source} to {target}")
 
-            if action_handle == "gripper_transfer":
-                home = action_vars.get("home", None)
-                source = action_vars.get("source", None)
-                target = action_vars.get("target", None)
-                source_approach_axis = action_vars.get("source_approach_axis", None)
-                target_approach_axis = action_vars.get("target_approach_axis", None)
-                source_approach_distance = action_vars.get(
-                    "source_approach_distance", None
-                )
-                target_approach_distance = action_vars.get(
-                    "target_approach_distance", None
-                )
-                gripper_open = action_vars.get("gripper_open", None)
-                gripper_close = action_vars.get("gripper_close", None)
 
-                if not source or target or home:  # Return Fail
-                    pass
+@rest_module.action(
+    name="pick_tool",
+    description="Picks up a tool using the provided tool location",
+)
+def pick_tool(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    tool_loc: Annotated[List[float], "Tool location"],
+    docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
+    payload: Annotated[float, "Tool payload"],
+    tool_name: Annotated[str, "Tool name)"],
+) -> StepResponse:
+    """Pick a tool with the UR"""
 
-                ur.gripper_transfer(
-                    home=home,
-                    source=source,
-                    target=target,
-                    source_approach_distance=source_approach_distance,
-                    target_approach_distance=target_approach_distance,
-                    source_approach_axis=source_approach_axis,
-                    target_approach_axis=target_approach_axis,
-                    gripper_open=gripper_open,
-                    gripper_close=gripper_close,
-                )
+    if not tool_loc or not home:  # Return Fail
+        return StepResponse(StepStatus.FAILED, "", "tool_loc and home locations must be provided")
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Gripper transfer from {source} to {target}",
-                )
+    state.ur.pick_tool(
+        home=home,
+        tool_loc=tool_loc,
+        docking_axis=docking_axis,
+        payload=payload,
+        tool_name=tool_name,
+    )
 
-            elif action_handle == "pick_tool":
-                home = action_vars.get("home", None)
-                tool_loc = action_vars.get("tool_loc", None)
-                payload = action_vars.get("payload", None)
-                docking_axis = action_vars.get("docking_axis", None)
-                tool_name = action_vars.get("tool_name", None)
+    return StepResponse.step_succeeded(f"Tool {tool_name} is picked up from {tool_loc}")
 
-                if not home or tool_loc:  # Return Fail
-                    pass
 
-                ur.pick_tool(
-                    home=home,
-                    tool_loc=tool_loc,
-                    docking_axis=docking_axis,
-                    payload=payload,
-                    tool_name=tool_name,
-                )
+@rest_module.action(
+    name="Place_tool", description="Places the attached tool back to the provided tool docking location"
+)
+def place_tool(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    tool_docking: Annotated[List[float], "Tool docking location"],
+    docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
+    tool_name: Annotated[str, "Tool name)"],
+) -> StepResponse:
+    """Place a tool with the UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Pick tool {tool_name} from {tool_loc}",
-                )
+    state.ur.place_tool(
+        home=home,
+        tool_loc=tool_docking,
+        docking_axis=docking_axis,
+        tool_name=tool_name,
+    )
 
-            elif action_handle == "place_tool":
-                home = action_vars.get("home", None)
-                tool_loc = action_vars.get("tool_loc", None)
-                docking_axis = action_vars.get("docking_axis", None)
-                tool_name = action_vars.get("tool_name", None)
+    return StepResponse.step_succeeded(f"Tool {tool_name} is placed at {tool_docking}")
 
-                if not home or tool_loc:  # Return Fail
-                    pass
 
-                ur.place_tool(
-                    home=home,
-                    tool_loc=tool_loc,
-                    docking_axis=docking_axis,
-                    tool_name=tool_name,
-                )
+@rest_module.action(
+    name="gripper_screw_transfer",
+    description="Performs a screw transfer using the Robotiq gripper and custom screwdriving bits",
+)
+def gripper_screw_transfer(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    screwdriver_loc: Annotated[List[float], "Screwdriver location"],
+    screw_loc: Annotated[List[float], "Screw location"],
+    screw_time: Annotated[int, "Srew time in seconds"],
+    target: Annotated[List[float], "Location where the srewdriving will be performed"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Make a screwdriving transfer using Robotiq gripper and custom screwdriving bits with UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Place tool {tool_name} from {tool_loc}",
-                )
+    if not home or not screwdriver_loc or not screw_loc or not target:
+        return StepResponse(
+            StepStatus.FAILED,
+            "",
+            "screwdriver_loc, screw_loc and home locations must be provided",
+        )
+    state.ur.gripper_screw_transfer(
+        home=home,
+        screwdriver_loc=screwdriver_loc,
+        screw_loc=screw_loc,
+        screw_time=screw_time,
+        target=target,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
 
-            elif action_handle == "gripper_screw_transfer":
-                home = action_vars.get("home", None)
-                screwdriver_loc = action_vars.get("screwdriver_loc", None)
-                screw_loc = action_vars.get("screw_loc", None)
-                screw_time = action_vars.get("screw_time", None)
-                target = action_vars.get("target", None)
-                gripper_open = action_vars.get("gripper_open", None)
-                gripper_close = action_vars.get("gripper_close", None)
+    return StepResponse.step_succeeded(f"Screwdriving is completed in between {screw_loc} and {target}")
 
-                if not home or screwdriver_loc or screw_loc or target:  # Return Fail
-                    pass
 
-                ur.gripper_screw_transfer(
-                    home=home,
-                    screwdriver_loc=screwdriver_loc,
-                    screw_loc=screw_loc,
-                    screw_time=screw_time,
-                    target=target,
-                    gripper_open=gripper_open,
-                    gripper_close=gripper_close,
-                )
+@rest_module.action(
+    name="pipette_transfer",
+    description="Make a pipette transfer to transfer sample liquids in between two locations",
+)
+def pipette_transfer(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Initial location of the sample"],
+    target: Annotated[List[float], "Target location of the sample"],
+    tip_loc=Annotated[List[float], "New tip location"],
+    tip_trash=Annotated[List[float], "Tip trash location"],
+    volume=Annotated[float, "Set a volume in micro liters"],
+) -> StepResponse:
+    """Make a pipette transfer for the defined volume with UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Gripper screw transfer to {target}",
-                )
+    state._state.pipette_transfer(
+        home=home,
+        tip_loc=tip_loc,
+        tip_trash=tip_trash,
+        source=source,
+        target=target,
+        volume=volume,
+    )
 
-            elif action_handle == "pipette_transfer":
-                home = action_vars.get("home", None)
-                tip_loc = action_vars.get("tip_loc", None)
-                tip_trash = action_vars.get("tip_trash", None)
-                source = action_vars.get("source", None)
-                target = action_vars.get("target", None)
-                volume = action_vars.get("volume", None)
+    return StepResponse.step_succeeded(f"Pipette transfer is completed in between {source} and {target}")
 
-                if not home or tip_loc or source or target:  # Return Fail
-                    pass
 
-                ur.pipette_transfer(
-                    home=home,
-                    tip_loc=tip_loc,
-                    tip_trash=tip_trash,
-                    source=source,
-                    target=target,
-                    volume=volume,
-                )
+@rest_module.action(
+    name="pick_and_flip_object",
+    description="Picks and flips an object 180 degrees",
+)
+def pick_and_flip_object(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    target: Annotated[List[float], "Location of the object"],
+    approach_axis: Annotated[str, "Approach axis, (X/Y/Z)"],
+    target_approach_distance: Annotated[float, "Approach distance in meters"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Picks and flips an object 180 degrees with UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Pipette transfer to {target}, volume {volume}",
-                )
+    state.ur.pick_and_flip_object(
+        home=home,
+        target=target,
+        approach_axis=approach_axis,
+        target_approach_distance=target_approach_distance,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
 
-            elif action_handle == "pick_and_flip_object":
-                home = action_vars.get("home", None)
-                target = action_vars.get("target", None)
-                approach_axis = action_vars.get("approach_axis", None)
-                target_approach_distance = action_vars.get(
-                    "target_approach_distance", None
-                )
-                gripper_open = action_vars.get("gripper_open", None)
-                gripper_close = action_vars.get("gripper_close", None)
+    return StepResponse.step_succeeded(f"Object is flipped 180 degrees at {target}")
 
-                if not home or target:  # Return Fail
-                    pass
 
-                ur.pick_and_flip_object(
-                    home=home,
-                    target=target,
-                    approach_axis=approach_axis,
-                    target_approach_distance=target_approach_distance,
-                    gripper_open=gripper_open,
-                    gripper_close=gripper_close,
-                )
+@rest_module.action(
+    name="remove_cap",
+    description="Removes caps from sample vials",
+)
+def remove_cap(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Location of the vial cap"],
+    target: Annotated[
+        List[float],
+        "Location of where the cap will be placed after it is removed from the vail",
+    ],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Remove caps from sample vials with UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Pick and flip object at {target}",
-                )
+    state.ur.remove_cap(
+        home=home,
+        source=source,
+        target=target,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
 
-            elif action_handle == "remove_cap":
-                home = action_vars.get("home", None)
-                source = action_vars.get("source", None)
-                target = action_vars.get("target", None)
-                gripper_open = action_vars.get("gripper_open", None)
-                gripper_close = action_vars.get("gripper_close", None)
+    return StepResponse.step_succeeded(f"Sample vial cap is removed from {source} and placed {target}")
 
-                if not home or source or target:  # Return Fail
-                    pass
 
-                ur.remove_cap(
-                    home=home,
-                    source=source,
-                    target=target,
-                    gripper_open=gripper_open,
-                    gripper_close=gripper_close,
-                )
+@rest_module.action(
+    name="place_cap",
+    description="Places caps back to sample vials",
+)
+def place_cap(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Vail cap initial location"],
+    target: Annotated[List[float], "The vail location where the cap will installed"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Places caps back to sample vials with UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Remove cap at {target}",
-                )
+    state.ur.place_cap(
+        home=home,
+        source=source,
+        target=target,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
 
-            elif action_handle == "place_cap":
-                home = action_vars.get("home", None)
-                source = action_vars.get("source", None)
-                target = action_vars.get("target", None)
-                gripper_open = action_vars.get("gripper_open", None)
-                gripper_close = action_vars.get("gripper_close", None)
+    return StepResponse.step_succeeded(f"Sample vial cap is placed back to {target}")
 
-                if not home or source or target:  # Return Fail
-                    pass
 
-                ur.place_cap(
-                    home=home,
-                    source=source,
-                    target=target,
-                    gripper_open=gripper_open,
-                    gripper_close=gripper_close,
-                )
+@rest_module.action(
+    name="run_urp_program",
+    description="Runs a URP program on the UR",
+)
+def run_urp_program(
+    state: State,
+    action: ActionRequest,
+    transfer_file_path=Annotated[str, "Transfer file path"],
+    program_name=Annotated[str, "Program name"],
+) -> StepResponse:
+    """Run an URP program on the UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Place cap at {target}",
-                )
+    state.ur.run_urp_program(
+        transfer_file_path=transfer_file_path,
+        program_name=program_name,
+    )
 
-            elif action_handle == "run_urp_program":
-                transfer_file_path = action_vars.get("transfer_file_path", None)
-                program_name = action_vars.get("program_name", None)
+    return StepResponse.step_succeeded(f"URP program {program_name} has been completed")
 
-                if not program_name:  # Return Fail
-                    pass
 
-                ur.run_urp_program(
-                    transfer_file_path=transfer_file_path,
-                    program_name=program_name,
-                )
+@rest_module.action(
+    name="set_digital_io",
+    description="Sets a channel IO output on the UR",
+)
+def set_digital_io(
+    state: State,
+    action: ActionRequest,
+    channel=Annotated[int, "Channel number"],
+    value=Annotated[bool, "True/False"],
+) -> StepResponse:
+    """Sets a channel IO output on the UR"""
 
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Run rup program {program_name}",
-                )
+    state._state.set_digital_io(channel=channel, value=value)
 
-            elif action_handle == "set_digital_io":
-                channel = action_vars.get("channel", None)
-                value = action_vars.get("value", None)
-
-                if not channel:  # Return Fail
-                    pass
-
-                ur.set_digital_io(channel=channel, value=value)
-
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.SUCCEEDED,
-                    action_msg="",
-                    action_log=f"Digital IO, channel {channel} set for {value}",
-                )
-            else:
-                state = ModuleStatus.IDLE
-                return StepResponse(
-                    action_response=StepStatus.FAILED,
-                    action_msg="False",
-                    action_log=f"Action {action_handle} not supported",
-                )
-        except Exception as e:
-            print(str(e))
-            state = ModuleStatus.ERROR
-            step_response.action_response = StepStatus.FAILED
-            step_response.action_log = str(e)
-        else:
-            state = ModuleStatus.IDLE
-    return step_response
+    return StepResponse.step_succeeded(f"Channel {channel} is set to {value}")
 
 
 if __name__ == "__main__":
-    """Tests"""
-    import uvicorn
-
-    args = parse_args()
-
-    uvicorn.run(
-        "ur_rest_node:app",
-        host=args.host,
-        port=int(args.port),
-        reload=True,
-    )
+    rest_module.start()

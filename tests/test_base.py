@@ -12,6 +12,7 @@ class TestModule_Base(unittest.TestCase):
 class TestImports(TestModule_Base):
     """Test the imports of the module are working correctly"""
 
+    # @patch("sys.argv", ["test", "--ur_ip", "164.54.116.129"])
     def test_driver_import(self):
         """Test the driver and rest node imports"""
         import ur_driver

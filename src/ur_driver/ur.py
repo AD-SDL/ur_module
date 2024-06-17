@@ -9,14 +9,10 @@ from time import sleep
 from urx import Robot
 
 from ur_driver.ur_dashboard import UR_DASHBOARD
-from ur_driver.ur_tools.gripper_controller import (
-    FingerGripperController,
-)
+from ur_driver.ur_tools.gripper_controller import FingerGripperController
 from ur_driver.ur_tools.ot_pipette_controller import OTPipetteController
 from ur_driver.ur_tools.screwdriver_controller import ScrewdriverController
-from ur_driver.ur_tools.tricontinent_pipette_controller import (
-    TricontinentPipetteController,
-)
+from ur_driver.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
 from ur_driver.ur_tools.wm_tool_changer_controller import WMToolChangerController
 
 
@@ -75,10 +71,6 @@ class UR:
 
         self.hostname = hostname
         self.PORT = PORT
-        self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname, PORT=self.PORT)
-        self.ur = Connection(hostname=self.hostname)
-        self.ur_connection = self.ur.connection
-        self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.acceleration = 0.5
         self.velocity = 0.5
         self.speed_ms = 0.750
@@ -88,8 +80,17 @@ class UR:
         self.blend_radius_m = 0.001
         self.ref_frame = [0, 0, 0, 0, 0, 0]
         self.robot_current_joint_angles = None
+
+        # if not self.hostname == "127.0.0.1":
+        self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname, PORT=self.PORT)
+        self.ur = Connection(hostname=self.hostname)
+        self.ur_connection = self.ur.connection
+        self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.get_movement_state()
-        # TODO: get the information of what is the current tool attached to UR. Run a senity check at the beginning to findout if a tool is connected
+        # else:
+        # TODO: Use simulation mode for local IP
+
+        # TODO: get the information of what is the current tool attached to UR. Run a sanity check at the beginning to find out if a tool is connected
 
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.
@@ -97,9 +98,7 @@ class UR:
                      BUSY if robot is moving
         """
         current_location = self.ur_connection.getj()
-        current_location = [
-            "%.2f" % value for value in current_location
-        ]  # rounding to 3 digits
+        current_location = ["%.2f" % value for value in current_location]  # rounding to 3 digits
         # print(current_location)
         if self.robot_current_joint_angles == current_location:
             movement_state = "READY"
@@ -223,16 +222,12 @@ class UR:
         """
 
         if not source or not target:
-            raise Exception(
-                "Please provide both the source and target loactions to make a transfer"
-            )
+            raise Exception("Please provide both the source and target locations to make a transfer")
 
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(
-                hostname=self.hostname, ur=self.ur_connection
-            )
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
             gripper_controller.connect_gripper()
 
             if gripper_open:
@@ -276,7 +271,7 @@ class UR:
             target(list): Target location
             screwdriver_loc (list): Location of the screwdriving bit
             screw_loc (list): Location where the screwdriving will be performed
-            screw_time (float): Screwdriving durition
+            screw_time (float): Screwdriving duration
             gripper_open (int): Gripper max open value (0-255)
             gripper_close (int): Gripper min close value (0-255)
 
@@ -285,9 +280,7 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(
-                hostname=self.hostname, ur=self.ur_connection
-            )
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
             gripper_controller.connect_gripper()
 
             if gripper_open:
@@ -365,9 +358,7 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(
-                hostname=self.hostname, ur=self.ur_connection
-            )
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
             gripper_controller.connect_gripper()
             if gripper_open:
                 gripper_controller.gripper_open = gripper_open
@@ -419,9 +410,7 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(
-                hostname=self.hostname, ur=self.ur_connection
-            )
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
             gripper_controller.connect_gripper()
             if gripper_open:
                 gripper_controller.gripper_open = gripper_open
@@ -476,9 +465,7 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(
-                hostname=self.hostname, ur=self.ur_connection
-            )
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
             gripper_controller.connect_gripper()
 
             if gripper_open:
@@ -572,9 +559,7 @@ class UR:
             volume (int): Pipette transfer volume. Unit number of steps. Each step is 1 mL
         """
         if not tip_loc or not source:
-            raise Exception(
-                "Please provide both the source and target loactions to make a transfer"
-            )
+            raise Exception("Please provide both the source and target loactions to make a transfer")
 
         try:
             pipette = TricontinentPipetteController(
@@ -583,9 +568,7 @@ class UR:
             pipette.connect_pipette()
             pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
-            pipette.transfer_sample(
-                home=home, sample_aspirate=source, sample_dispense=target, vol=volume
-            )
+            pipette.transfer_sample(home=home, sample_aspirate=source, sample_dispense=target, vol=volume)
             pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
@@ -609,9 +592,7 @@ class UR:
             droplet_loc (list): Location where the droplet will be hung
             tip_trash (list): Pipette tip trash location
         """
-        pipette = OTPipetteController(
-            ur_connection=self.ur_connection, IP=self.hostname
-        )
+        pipette = OTPipetteController(ur_connection=self.ur_connection, IP=self.hostname)
         pipette.connect_pipette()
 
         self.home(home)
@@ -638,9 +619,7 @@ class UR:
         ur_program_path = "/programs/" + program_name
 
         if transfer_file_path:
-            self.ur_dashboard.transfer_program(
-                local_path=transfer_file_path, remote_path=ur_program_path
-            )
+            self.ur_dashboard.transfer_program(local_path=transfer_file_path, remote_path=ur_program_path)
             sleep(2)
 
         self.ur_dashboard.load_program(program_path=ur_program_path)
@@ -674,8 +653,8 @@ class UR:
 if __name__ == "__main__":
     """Tests"""
 
-    pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    # pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
+    # pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot3 = UR(hostname="164.54.116.129")  # UR3
     robot5 = UR(hostname="164.54.116.109")  # UR5
 
@@ -880,5 +859,5 @@ if __name__ == "__main__":
     # robot5.gripper_transfer(home = ur5_home, source = ur5_cell_holder, target = ur5_measurement_unit, source_approach_axis="z", target_approach_axis="z",source_approach_distance=0.15, target_approach_distance=0.15, gripper_open = 190, gripper_close = 240)
     # robot5.place_tool(home= ur5_home,tool_loc=ur5_handE)
 
-    robot3.ur.disconnect_ur()
+    # robot3.ur.disconnect_ur()
     robot5.ur.disconnect_ur()

@@ -127,13 +127,19 @@ class WMToolChangerController:
         try:
             print("Picking up the tool...")
             self.ur.movel(
-                self.tool_above, self.robot_fast_acceleration, self.robot_fast_velocity
+                self.tool_above,
+                self.robot_fast_acceleration,
+                self.robot_fast_velocity,
             )
             self.ur.movel(
-                self.location, self.robot_slow_acceleration, self.robot_slow_velocity
+                self.location,
+                self.robot_slow_acceleration,
+                self.robot_slow_velocity,
             )
             self.ur.movel(
-                self.tool_front, self.robot_slow_acceleration, self.robot_slow_velocity
+                self.tool_front,
+                self.robot_slow_acceleration,
+                self.robot_slow_velocity,
             )
             self.ur.movel(
                 self.tool_front_above,
@@ -142,7 +148,10 @@ class WMToolChangerController:
             )
 
         except Exception as err:
-            print("Error accured while picking up the tool changer: ", err)
+            print(
+                "Error accured while picking up the tool changer: ",
+                err,
+            )
 
     def place_tool(self):
         """Places the currently attached tool back to the initial tool location"""
@@ -154,16 +163,25 @@ class WMToolChangerController:
                 self.robot_fast_velocity,
             )
             self.ur.movel(
-                self.tool_front, self.robot_fast_acceleration, self.robot_fast_velocity
+                self.tool_front,
+                self.robot_fast_acceleration,
+                self.robot_fast_velocity,
             )
             self.ur.movel(
-                self.location, self.robot_slow_acceleration, self.robot_slow_velocity
+                self.location,
+                self.robot_slow_acceleration,
+                self.robot_slow_velocity,
             )
             self.ur.movel(
-                self.tool_above, self.robot_slow_acceleration, self.robot_slow_velocity
+                self.tool_above,
+                self.robot_slow_acceleration,
+                self.robot_slow_velocity,
             )
         except Exception as err:
-            print("Error accured while placing the tool: ", err)
+            print(
+                "Error accured while placing the tool: ",
+                err,
+            )
 
     def discover_tool(self):
         """Discover if a tool is currently attached and which tool it is."""
