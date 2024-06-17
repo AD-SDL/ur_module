@@ -29,6 +29,7 @@ rest_module.arg_parser.add_argument(
 @rest_module.startup()
 def ur_startup(state: State):
     """UR startup handler."""
+    state.ur = None
     state.ur = UR(hostname=state.ur_ip)
     print("UR online")
 
