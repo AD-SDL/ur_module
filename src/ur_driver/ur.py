@@ -9,14 +9,10 @@ from time import sleep
 from urx import Robot
 
 from ur_driver.ur_dashboard import UR_DASHBOARD
-from ur_driver.ur_tools.gripper_controller import (
-    FingerGripperController,
-)
+from ur_driver.ur_tools.gripper_controller import FingerGripperController
 from ur_driver.ur_tools.ot_pipette_controller import OTPipetteController
 from ur_driver.ur_tools.screwdriver_controller import ScrewdriverController
-from ur_driver.ur_tools.tricontinent_pipette_controller import (
-    TricontinentPipetteController,
-)
+from ur_driver.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
 from ur_driver.ur_tools.wm_tool_changer_controller import WMToolChangerController
 
 
@@ -94,7 +90,7 @@ class UR:
         # else:
         # TODO: Use simulation mode for local IP
 
-        # TODO: get the information of what is the current tool attached to UR. Run a senity check at the beginning to findout if a tool is connected
+        # TODO: get the information of what is the current tool attached to UR. Run a sanity check at the beginning to find out if a tool is connected
 
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.
@@ -226,7 +222,7 @@ class UR:
         """
 
         if not source or not target:
-            raise Exception("Please provide both the source and target loactions to make a transfer")
+            raise Exception("Please provide both the source and target locations to make a transfer")
 
         self.home(home)
 
@@ -275,7 +271,7 @@ class UR:
             target(list): Target location
             screwdriver_loc (list): Location of the screwdriving bit
             screw_loc (list): Location where the screwdriving will be performed
-            screw_time (float): Screwdriving durition
+            screw_time (float): Screwdriving duration
             gripper_open (int): Gripper max open value (0-255)
             gripper_close (int): Gripper min close value (0-255)
 

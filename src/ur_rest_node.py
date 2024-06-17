@@ -1,7 +1,6 @@
 """REST-based node for UR robots"""
 
 import datetime
-import traceback
 from pathlib import Path
 from typing import List
 
@@ -30,16 +29,8 @@ rest_module.arg_parser.add_argument(
 @rest_module.startup()
 def ur_startup(state: State):
     """UR startup handler."""
-    try:
-        state.ur = None
-        state.ur = UR(hostname=state.ur_ip)
-        state.status = ModuleStatus.IDLE
-    except Exception:
-        state.status = ModuleStatus.ERROR
-        traceback.print_exc()
-        print("CONNECTION FAILED")
-    else:
-        print("UR online")
+    state.ur = UR(hostname=state.ur_ip)
+    print("UR online")
 
 
 @rest_module.state_handler()
@@ -296,7 +287,7 @@ def place_cap(
 
 @rest_module.action(
     name="run_urp_program",
-    description="Runs an URP program on the UR",
+    description="Runs a URP program on the UR",
 )
 def run_urp_program(
     state: State,

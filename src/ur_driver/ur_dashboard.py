@@ -9,8 +9,8 @@ from scp import SCPClient, SCPException
 
 class UR_DASHBOARD:
     """
-    This is a python interface to communicate the UR Dashboard server.
-    UR can be controlled from remote by sending simple commands to the GUI over a TCP/IP socket.
+    This is a python interface to communicate with the UR Dashboard server.
+    The UR can be controlled remotely by sending simple commands to the GUI over a TCP/IP socket.
     The server is running on port 29999 on the robots IP address.
     Each command should be terminated by a `\n` also called a newline.
     """
@@ -43,7 +43,7 @@ class UR_DASHBOARD:
         """Create a socket"""
         try:
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(5)  # Socket will wait 5 seconds till it recieves the response
+            self.connection.settimeout(5)  # Socket will wait 5 seconds till it receives the response
             self.connection.connect((self.hostname, self.port))
 
         except socket.error as err:
