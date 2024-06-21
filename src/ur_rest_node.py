@@ -318,7 +318,7 @@ def set_digital_io(
 ) -> StepResponse:
     """Sets a channel IO output on the UR"""
 
-    state._state.set_digital_io(channel=channel, value=value)
+    state.ur.set_digital_io(channel=channel, value=value)
 
     return StepResponse.step_succeeded(f"Channel {channel} is set to {value}")
 
