@@ -3,7 +3,7 @@
 
 import socket
 from copy import deepcopy
-from math import radians
+from math import radians, trunc
 from time import sleep
 
 from urx import Robot
@@ -580,6 +580,7 @@ class UR:
         """Runs the LS CAT transfer program which is a series of linear motions as well as control of the custom pneumatic gripper
         
         """
+
         dewer_loc = []
         safe_approach_location = [] # This a location that is used enter the meaasurment unit safely
 
@@ -587,10 +588,10 @@ class UR:
         current_location = self.ur_connection.getl()
         if round(current_location,2) != round(dewer_loc,2):
             self.home(home)
+            # Move to source beginning (inside the dewer)
+            self.ur_connection.movel(dewer_loc, 0.5,0.5)
         #Make sure gripper is in open condition
         self.io_channel(channel=io_channel, value = False)
-        # Move to source beginning (inside the dewer)
-        self.ur_connection.movel(dewer_loc, 0.5,0.5)
         # Move on top of source
         source_above_goal = deepcopy(source)
         source_above_goal[axis] += 0.04
