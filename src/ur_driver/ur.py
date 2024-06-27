@@ -575,6 +575,56 @@ class UR:
         except Exception as err:
             print(err)
 
+    def LS_CAT_transfer(self, home:list = None, source:list = None, target:list = None io_channel:int = 0):
+
+        """Runs the LS CAT transfer program which is a series of linear motions as well as control of the custom pneumatic gripper
+        
+        """
+        dewer_loc = []
+        safe_approach_location = [] # This a location that is used enter the meaasurment unit safely
+
+        ### Pick a pin
+        current_location = self.ur_connection.getl()
+        if round(current_location,2) != round(dewer_loc,2):
+            self.home(home)
+        #Make sure gripper is in open condition
+        self.io_channel(channel=io_channel, value = False)
+        # Move to source beginning (inside the dewer)
+        self.ur_connection.movel(dewer_loc, 0.5,0.5)
+        # Move on top of source
+        source_above_goal = deepcopy(source)
+        source_above_goal[axis] += 0.04
+        self.ur_connection.movel(source_above_goal,0.5,0.5)
+        # Move to source
+        self.ur_connection.movel(source,0.1,0.1)
+        # pick the pin
+        self.io_channel(channel=io_channel, value = True)
+        # Move back up
+        self.ur_connection.movel(source_above_goal,0.5,0.5)
+        # Move back to dewer
+        self.ur_connection.movel(dewer_loc, 0.5,0.5)
+        # Move back to home
+        self.home(home_location=home)
+
+        ### Place a pin 
+        self.ur_connection(safe_approach_location,0.5,0.5)
+        # Move on top of target
+        target_above_goal = deepcopy(target)
+        target_above_goal[axis] += 0.04
+        self.ur_connection.movel(target_above_goal,0.1,0.1)
+        # Move to target
+        self.ur_connection.movel(target,0.1,0.1)
+        # Place the pin
+        self.io_channel(channel=io_channel, value = False)
+        # Move back up
+        self.ur_connection.movel(target_above_goal,0.1,0.1)
+        # Move back to safe location
+        self.ur_connection.movel(safe_approach_location, 0.5,0.5)
+        # Move back to home
+        self.home(home_location=home)
+        # Move back to dewer
+        self.ur_connection.movel(dewer_loc, 0.5,0.5)
+
     def run_droplet(
         self,
         home: list = None,
