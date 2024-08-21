@@ -17,7 +17,7 @@ class UR_DASHBOARD:
 
     def __init__(
         self,
-        hostname: str = "146.137.240.38",
+        hostname: str = "164.54.116.129",
         PORT: int = 29999,
     ) -> None:
         """Constructor for the UR dashboard class.

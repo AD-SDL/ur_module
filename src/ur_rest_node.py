@@ -1,6 +1,5 @@
 """REST-based node for UR robots"""
 
-import datetime
 from pathlib import Path
 from typing import List
 
@@ -37,9 +36,7 @@ def ur_startup(state: State):
 @rest_module.state_handler()
 def state(state: State):
     """Returns the current state of the UR module"""
-    if state.status not in [ModuleStatus.BUSY, ModuleStatus.ERROR, ModuleStatus.INIT, None] or (
-        state.action_start and (datetime.datetime.now() - state.action_start > datetime.timedelta(0, 2))
-    ):
+    if state.status not in [ModuleStatus.BUSY, ModuleStatus.ERROR, ModuleStatus.INIT, None]:
         # * Gets robot status by checking robot dashboard status messages.
         state.ur.ur_dashboard.get_overall_robot_status()
         if "NORMAL" not in state.ur.ur_dashboard.safety_status:

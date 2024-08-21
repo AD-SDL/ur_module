@@ -58,19 +58,15 @@ class UR:
     robot motion using URx, and the management of robot end-effectors such as grippers, screwdrivers, electronic pipettes, and cameras."
     """
 
-    def __init__(self, hostname: str = None, PORT: int = 29999):
+    def __init__(self, hostname: str = None):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
-        :param port: Port.
         """
 
         if not hostname:
             raise TypeError("Hostname cannot be None Type!")
 
-        # super().__init__(hostname=hostname, PORT=PORT)
-
         self.hostname = hostname
-        self.PORT = PORT
         self.acceleration = 0.5
         self.velocity = 0.5
         self.speed_ms = 0.750
@@ -82,7 +78,7 @@ class UR:
         self.robot_current_joint_angles = None
 
         # if not self.hostname == "127.0.0.1":
-        self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname, PORT=self.PORT)
+        self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
         self.ur = Connection(hostname=self.hostname)
         self.ur_connection = self.ur.connection
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
@@ -189,7 +185,7 @@ class UR:
             channel (int): Channel number
             value (bool): False for close, True for open
         """
-        if not channel or not value:
+        if channel is None or value is None:
             print("Channel or value is not specified")
             return
         self.ur_connection.set_digital_out(channel, value)
@@ -656,7 +652,7 @@ if __name__ == "__main__":
     # pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     # pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot3 = UR(hostname="164.54.116.129")  # UR3
-    robot5 = UR(hostname="164.54.116.109")  # UR5
+    # robot5 = UR(hostname="164.54.116.109")  # UR5
 
     home = [
         0.5431541204452515,
@@ -860,4 +856,4 @@ if __name__ == "__main__":
     # robot5.place_tool(home= ur5_home,tool_loc=ur5_handE)
 
     # robot3.ur.disconnect_ur()
-    robot5.ur.disconnect_ur()
+    robot3.ur.disconnect_ur()
