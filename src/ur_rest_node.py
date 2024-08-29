@@ -68,7 +68,7 @@ def gripper_transfer(
     """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
 
     if not source or not target or not home:  # Return Fail
-        return StepResponse(StepStatus.FAILED, "", "Source, target and home locations must be provided")
+        return StepResponse(StepStatus.FAILED, error="Source, target and home locations must be provided")
 
     state.ur.gripper_transfer(
         home=home,
@@ -81,7 +81,7 @@ def gripper_transfer(
         gripper_open=gripper_open,
         gripper_close=gripper_close,
     )
-    return StepResponse.step_succeeded(f"Gripper transfer completed from {source} to {target}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -100,7 +100,7 @@ def pick_tool(
     """Pick a tool with the UR"""
 
     if not tool_loc or not home:  # Return Fail
-        return StepResponse(StepStatus.FAILED, "", "tool_loc and home locations must be provided")
+        return StepResponse(StepStatus.FAILED, error="tool_loc and home locations must be provided")
 
     state.ur.pick_tool(
         home=home,
@@ -110,7 +110,7 @@ def pick_tool(
         tool_name=tool_name,
     )
 
-    return StepResponse.step_succeeded(f"Tool {tool_name} is picked up from {tool_loc}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -133,7 +133,7 @@ def place_tool(
         tool_name=tool_name,
     )
 
-    return StepResponse.step_succeeded(f"Tool {tool_name} is placed at {tool_docking}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -169,7 +169,7 @@ def gripper_screw_transfer(
         gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(f"Screwdriving is completed in between {screw_loc} and {target}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -197,7 +197,7 @@ def pipette_transfer(
         volume=volume,
     )
 
-    return StepResponse.step_succeeded(f"Pipette transfer is completed in between {source} and {target}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -225,7 +225,7 @@ def pick_and_flip_object(
         gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(f"Object is flipped 180 degrees at {target}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -254,7 +254,7 @@ def remove_cap(
         gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(f"Sample vial cap is removed from {source} and placed {target}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -280,7 +280,7 @@ def place_cap(
         gripper_close=gripper_close,
     )
 
-    return StepResponse.step_succeeded(f"Sample vial cap is placed back to {target}")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -300,7 +300,7 @@ def run_urp_program(
         program_name=program_name,
     )
 
-    return StepResponse.step_succeeded(f"URP program {program_name} has been completed")
+    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -317,7 +317,7 @@ def set_digital_io(
 
     state.ur.set_digital_io(channel=channel, value=value)
 
-    return StepResponse.step_succeeded(f"Channel {channel} is set to {value}")
+    return StepResponse.step_succeeded()
 
 
 if __name__ == "__main__":

@@ -44,9 +44,26 @@ services:
       - ${REDIS_DIR}:/data
     command: redis-server --save 60 1 --loglevel warning
 
+####################
+# PostgreSQL Setup #
+####################
+  wei_postgres:
+    image: postgres:13
+    container_name: wei_postgres
+    environment:
+      POSTGRES_USER: rpl
+      POSTGRES_PASSWORD: rpl
+      POSTGRES_DB: resources
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
 ################
 # Data Storage #
 ################
 volumes:
   diaspora_config:
+    driver: local
+  pgdata:
     driver: local
