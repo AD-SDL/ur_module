@@ -6,14 +6,17 @@ from copy import deepcopy
 from math import radians
 from time import sleep
 
+import numpy as np
 from urx import Robot
 
 from ur_driver.ur_dashboard import UR_DASHBOARD
 from ur_driver.ur_tools.gripper_controller import FingerGripperController
 from ur_driver.ur_tools.ot_pipette_controller import OTPipetteController
 from ur_driver.ur_tools.screwdriver_controller import ScrewdriverController
-from ur_driver.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
-from ur_driver.ur_tools.wm_tool_changer_controller import WMToolChangerController
+from ur_driver.ur_tools.tricontinent_pipette_controller import \
+    TricontinentPipetteController
+from ur_driver.ur_tools.wm_tool_changer_controller import \
+    WMToolChangerController
 
 
 class Connection:
@@ -94,12 +97,13 @@ class UR:
                      BUSY if robot is moving
         """
         current_location = self.ur_connection.getj()
-        current_location = ["%.2f" % value for value in current_location]  # rounding to 3 digits
-        # print(current_location)
-        if self.robot_current_joint_angles == current_location:
+        if self.robot_current_joint_angles is None:
             movement_state = "READY"
         else:
-            movement_state = "BUSY"
+            if np.linalg.norm(np.array(current_location) - np.array(self.robot_current_joint_angles)) < 1e-3:
+                movement_state = "READY"
+            else:
+                movement_state = "BUSY"
 
         self.robot_current_joint_angles = current_location
 

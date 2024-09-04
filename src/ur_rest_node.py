@@ -1,15 +1,17 @@
 """REST-based node for UR robots"""
 
+import json
 from pathlib import Path
 from typing import List
 
 from fastapi.datastructures import State
 from typing_extensions import Annotated
-from ur_driver.ur import UR
 from wei.modules.rest_module import RESTModule
 from wei.types.module_types import ModuleState, ModuleStatus
 from wei.types.step_types import ActionRequest, StepResponse, StepStatus
 from wei.utils import extract_version
+
+from ur_driver.ur import UR
 
 rest_module = RESTModule(
     name="ur_node",
@@ -32,11 +34,17 @@ def ur_startup(state: State):
     state.ur = UR(hostname=state.ur_ip)
     print("UR online")
 
+@rest_module.shutdown()
+def ur_shutdown(state: State):
+    """UR shutdown handler."""
+    state.ur.ur_connection.disconnect_ur()
+    print("UR offline")
+
 
 @rest_module.state_handler()
 def state(state: State):
     """Returns the current state of the UR module"""
-    if state.status not in [ModuleStatus.BUSY, ModuleStatus.ERROR, ModuleStatus.INIT, None]:
+    if state.status not in [ModuleStatus.ERROR, ModuleStatus.INIT, None]:
         # * Gets robot status by checking robot dashboard status messages.
         state.ur.ur_dashboard.get_overall_robot_status()
         if "NORMAL" not in state.ur.ur_dashboard.safety_status:
@@ -47,6 +55,19 @@ def state(state: State):
             state.status = ModuleStatus.IDLE
     return ModuleState(status=state.status, error="")
 
+@rest_module.action()
+def movej(
+    state: State,
+    action: ActionRequest,
+    joints: Annotated[List[float], "Joint positions to move to"],
+    a: Annotated[float, "Acceleration"] = 0.6,
+    v: Annotated[float, "Velocity"] = 0.6,
+) -> StepResponse:
+    """Move the robot to a joint position"""
+    joints = json.loads(joints)
+    print(joints)
+    state.ur.ur_connection.movej(joints, a, v)
+    return StepResponse.step_succeeded()
 
 @rest_module.action(
     name="gripper_transfer",

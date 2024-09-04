@@ -1,6 +1,6 @@
 [project]
 name = "ur_module"
-version = "0.2.0"
+version = "0.3.0"
 description = "Software for automatting a UR robot"
 authors = [
     {name = "Ryan D. Lewis", email="ryan.lewis@anl.gov"},
@@ -11,7 +11,7 @@ authors = [
     {name = "Tobias Ginsburg", email = "tginsburg@anl.gov"},
 ]
 dependencies = [
-    "ad_sdl.wei>=0.5.3",
+    "ad_sdl.wei>=0.6.2",
     "fastapi>=0.103.2",
     "uvicorn>=0.21.1",
     "pytest",
@@ -20,6 +20,7 @@ dependencies = [
     "sockets",
     "pyepics",
     "urx@git+https://github.com/Dozgulbas/python-urx.git",
+    "numpy",
 
 ]
 
