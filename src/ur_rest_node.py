@@ -12,6 +12,7 @@ from wei.types.step_types import ActionRequest, StepResponse, StepStatus
 from wei.utils import extract_version
 
 from ur_driver.ur import UR
+from ur_driver.ur_tools.gripper_controller import FingerGripperController
 
 rest_module = RESTModule(
     name="ur_node",
@@ -26,20 +27,21 @@ rest_module.arg_parser.add_argument(
     help="Hostname or IP address to connect to UR",
 )
 
-
 @rest_module.startup()
 def ur_startup(state: State):
     """UR startup handler."""
     state.ur = None
     state.ur = UR(hostname=state.ur_ip)
+    state.gripper = FingerGripperController(hostname=state.ur_ip, ur=state.ur.ur_connection)
+    state.gripper.connect_gripper()
     print("UR online")
 
 @rest_module.shutdown()
 def ur_shutdown(state: State):
     """UR shutdown handler."""
+    state.gripper.disconnect_gripper()
     state.ur.ur_connection.disconnect_ur()
     print("UR offline")
-
 
 @rest_module.state_handler()
 def state(state: State):
@@ -67,6 +69,22 @@ def movej(
     joints = json.loads(joints)
     print(joints)
     state.ur.ur_connection.movej(joints, a, v)
+    return StepResponse.step_succeeded()
+
+@rest_module.action()
+def toggle_gripper(
+    state: State,
+    action: ActionRequest,
+    open: Annotated[bool, "Open?"] = False,
+    close: Annotated[bool, "Close?"] = False,
+) -> StepResponse:
+    """Open or close the robot gripper."""
+    if open:
+        state.gripper.gripper_open = 255
+        state.gripper.gripper_close = 0
+    if close:
+        state.gripper.gripper_open = 0
+        state.gripper.gripper_close = 255
     return StepResponse.step_succeeded()
 
 @rest_module.action(
