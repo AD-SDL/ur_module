@@ -32,14 +32,13 @@ def ur_startup(state: State):
     """UR startup handler."""
     state.ur = None
     state.ur = UR(hostname=state.ur_ip)
-    state.gripper = FingerGripperController(hostname=state.ur_ip, ur=state.ur.ur_connection)
-    state.gripper.connect_gripper()
+    state.ur.gripper.connect_gripper()
     print("UR online")
 
 @rest_module.shutdown()
 def ur_shutdown(state: State):
     """UR shutdown handler."""
-    state.gripper.disconnect_gripper()
+    state.ur.gripper.disconnect_gripper()
     state.ur.ur_connection.disconnect_ur()
     print("UR offline")
 
@@ -80,11 +79,9 @@ def toggle_gripper(
 ) -> StepResponse:
     """Open or close the robot gripper."""
     if open:
-        state.gripper.gripper_open = 255
-        state.gripper.gripper_close = 0
+        state.ur.gripper.open_gripper()
     if close:
-        state.gripper.gripper_open = 0
-        state.gripper.gripper_close = 255
+        state.ur.gripper.close_gripper()
     return StepResponse.step_succeeded()
 
 @rest_module.action(
