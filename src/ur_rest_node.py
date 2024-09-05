@@ -35,6 +35,11 @@ def ur_startup(state: State):
     state.ur = None
     state.ur = UR(hostname=state.ur_ip)
     state.ur.gripper.connect_gripper()
+    state.ur.gripper.gripper.auto_calibrate()
+    state.ur.gripper.gripper_close = state.ur.gripper.gripper._max_position
+    state.ur.gripper.gripper_open = state.ur.gripper.gripper._min_position
+    print("CALIB RESULTS: ", state.ur.gripper.gripper._max_position, state.ur.gripper.gripper._min_position, state.ur.gripper.gripper_close, state.ur.gripper.gripper_open)
+    print("CLOSED/OPEN? + CUR POS: ", state.ur.gripper.gripper.is_closed(), state.ur.gripper.gripper.is_open(), state.ur.gripper.gripper.get_current_position())
     print("UR online")
 
 @rest_module.shutdown()
@@ -80,15 +85,12 @@ def toggle_gripper(
     close: Annotated[bool, "Close?"] = False,
 ) -> StepResponse:
     """Open or close the robot gripper."""
-    state.ur.gripper.gripper.auto_calibrate()
-    state.ur.gripper.gripper_close = state.ur.gripper.gripper._max_position
-    state.ur.gripper.gripper_open = state.ur.gripper.gripper._min_position
-    print("CALIB RESULTS: ", state.ur.gripper.gripper._max_position, state.ur.gripper.gripper._min_position, state.ur.gripper.gripper_close, state.ur.gripper.gripper_open)
-    print("CLOSED/OPEN? + CUR POS: ", state.ur.gripper.gripper.is_closed(), state.ur.gripper.gripper.is_open(), state.ur.gripper.gripper.get_current_position())
-    # if open:
-    #     state.ur.gripper.open_gripper()
-    # if close:
-    #     state.ur.gripper.close_gripper()
+    if open:
+        state.ur.gripper.open_gripper()
+        print("POS: ", state.ur.gripper.gripper.get_current_position())
+    if close:
+        state.ur.gripper.close_gripper()
+        print("POS: ", state.ur.gripper.gripper.get_current_position())
     return StepResponse.step_succeeded()
 
 @rest_module.action(
