@@ -35,6 +35,9 @@ def ur_startup(state: State):
     state.ur = None
     state.ur = UR(hostname=state.ur_ip)
     state.ur.gripper.connect_gripper()
+    state.ur.gripper.gripper.auto_calibrate()
+    state.ur.gripper.gripper_close = state.ur.gripper.gripper._max_position
+    state.ur.gripper.gripper_open = state.ur.gripper.gripper._min_position
     print("UR online")
 
 @rest_module.shutdown()
