@@ -80,7 +80,7 @@ def toggle_gripper(
     close: Annotated[bool, "Close"] = False,
 ) -> StepResponse:
     """Open or close the robot gripper."""
-    state.ur.gripper.auto_calibrate()
+    state.ur.gripper.gripper.auto_calibrate()
     # if open:
     #     state.ur.gripper.open_gripper(pose=0)
     # if close:
