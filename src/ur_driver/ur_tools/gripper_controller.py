@@ -31,10 +31,10 @@ class FingerGripperController:
             self.ur = ur
             # self.ur.set_payload(1.2)# TODO: Check the actual payload
 
-        self.gripper_close = 130  # 0-255 (255 is closed)
+        self.gripper_close = 255  # 0-255 (255 is closed)
         self.gripper_open = 0
-        self.gripper_speed = 150  # 0-255
-        self.gripper_force = 50  # 0-255
+        self.gripper_speed = 255  # 0-255
+        self.gripper_force = 255  # 0-255
 
         self.acceleration = 0.7
         self.velocity = 0.7

@@ -85,7 +85,7 @@ class UR:
         self.ur = Connection(hostname=self.hostname)
         self.ur_connection = self.ur.connection
         self.gripper = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
-        self.gripper.gripper_close = 255
+        self.gripper.gripper_close = 300
         self.gripper.gripper_open = 0
         self.gripper.gripper_speed = 255
         self.gripper.gripper_force = 255
@@ -96,14 +96,6 @@ class UR:
 
         # TODO: get the information of what is the current tool attached to UR. Run a sanity check at the beginning to find out if a tool is connected
 
-    # def test_action(self):
-    #     gripper = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
-    #     gripper.connect_gripper()
-    #     gripper.close_gripper()
-    #     gripper.open_gripper()
-
-    #     gripper.disconnect_gripper()
-    #     return
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.
         Return (str) READY if robot is not moving

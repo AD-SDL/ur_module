@@ -13,6 +13,8 @@ from wei.utils import extract_version
 
 from ur_driver.ur import UR
 from ur_driver.ur_tools.gripper_controller import FingerGripperController
+import random
+import time
 
 rest_module = RESTModule(
     name="ur_node",
@@ -74,14 +76,15 @@ def movej(
 def toggle_gripper(
     state: State,
     action: ActionRequest,
-    open: Annotated[bool, "Open?"] = False,
-    close: Annotated[bool, "Close?"] = False,
+    open: Annotated[bool, "Open"] = False,
+    close: Annotated[bool, "Close"] = False,
 ) -> StepResponse:
     """Open or close the robot gripper."""
-    if open:
-        state.ur.gripper.open_gripper()
-    if close:
-        state.ur.gripper.close_gripper()
+    state.ur.gripper.auto_calibrate()
+    # if open:
+    #     state.ur.gripper.open_gripper(pose=0)
+    # if close:
+    #     state.ur.gripper.close_gripper(pose=255)
     return StepResponse.step_succeeded()
 
 @rest_module.action(
