@@ -76,15 +76,14 @@ def movej(
 def toggle_gripper(
     state: State,
     action: ActionRequest,
-    open: Annotated[bool, "Open"] = False,
-    close: Annotated[bool, "Close"] = False,
+    open: Annotated[bool, "Open?"] = False,
+    close: Annotated[bool, "Close?"] = False,
 ) -> StepResponse:
     """Open or close the robot gripper."""
-    state.ur.gripper.gripper.auto_calibrate()
-    # if open:
-    #     state.ur.gripper.open_gripper(pose=0)
-    # if close:
-    #     state.ur.gripper.close_gripper(pose=255)
+    if open:
+        state.ur.gripper.open_gripper()
+    if close:
+        state.ur.gripper.close_gripper()
     return StepResponse.step_succeeded()
 
 @rest_module.action(

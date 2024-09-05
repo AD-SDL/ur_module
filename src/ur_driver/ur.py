@@ -84,11 +84,14 @@ class UR:
         self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
         self.ur = Connection(hostname=self.hostname)
         self.ur_connection = self.ur.connection
+
         self.gripper = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
-        self.gripper.gripper_close = 300
-        self.gripper.gripper_open = 0
+        self.gripper.gripper.auto_calibrate()
+        self.gripper.gripper_close = self.gripper.gripper._max_position
+        self.gripper.gripper_open = self.gripper.gripper._min_position
         self.gripper.gripper_speed = 255
         self.gripper.gripper_force = 255
+        
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.get_movement_state()
         # else:
