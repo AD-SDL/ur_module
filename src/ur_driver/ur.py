@@ -7,16 +7,13 @@ from math import radians
 from time import sleep
 
 import numpy as np
+from ur_dashboard import UR_DASHBOARD
+from ur_tools.gripper_controller import FingerGripperController
+from ur_tools.ot_pipette_controller import OTPipetteController
+from ur_tools.screwdriver_controller import ScrewdriverController
+from ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
+from ur_tools.wm_tool_changer_controller import WMToolChangerController
 from urx import Robot
-
-from ur_driver.ur_dashboard import UR_DASHBOARD
-from ur_driver.ur_tools.gripper_controller import FingerGripperController
-from ur_driver.ur_tools.ot_pipette_controller import OTPipetteController
-from ur_driver.ur_tools.screwdriver_controller import ScrewdriverController
-from ur_driver.ur_tools.tricontinent_pipette_controller import \
-    TricontinentPipetteController
-from ur_driver.ur_tools.wm_tool_changer_controller import \
-    WMToolChangerController
 
 
 class Connection:
@@ -654,12 +651,14 @@ class UR:
 
         return program_log
 
+
 if __name__ == "__main__":
     """Tests"""
 
     # pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     # pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot3 = UR(hostname="164.54.116.129")  # UR3
+    robot3 = UR(hostname="146.137.240.38")  # UR3
+
     # robot5 = UR(hostname="164.54.116.109")  # UR5
 
     home = [
