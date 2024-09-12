@@ -6,15 +6,11 @@ from typing import List
 
 from fastapi.datastructures import State
 from typing_extensions import Annotated
+from ur_driver.ur import UR
 from wei.modules.rest_module import RESTModule
 from wei.types.module_types import ModuleState, ModuleStatus
 from wei.types.step_types import ActionRequest, StepResponse, StepStatus
 from wei.utils import extract_version
-
-from ur_driver.ur import UR
-from ur_driver.ur_tools.gripper_controller import FingerGripperController
-import random
-import time
 
 rest_module = RESTModule(
     name="ur_node",
@@ -29,25 +25,21 @@ rest_module.arg_parser.add_argument(
     help="Hostname or IP address to connect to UR",
 )
 
+
 @rest_module.startup()
 def ur_startup(state: State):
     """UR startup handler."""
     state.ur = None
     state.ur = UR(hostname=state.ur_ip)
-    state.ur.gripper.connect_gripper()
-    state.ur.gripper.gripper.auto_calibrate()
-    state.ur.gripper.gripper_close = state.ur.gripper.gripper._max_position
-    state.ur.gripper.gripper_open = state.ur.gripper.gripper._min_position
-    print("CALIB RESULTS: ", state.ur.gripper.gripper._max_position, state.ur.gripper.gripper._min_position, state.ur.gripper.gripper_close, state.ur.gripper.gripper_open)
-    print("CLOSED/OPEN? + CUR POS: ", state.ur.gripper.gripper.is_closed(), state.ur.gripper.gripper.is_open(), state.ur.gripper.gripper.get_current_position())
     print("UR online")
+
 
 @rest_module.shutdown()
 def ur_shutdown(state: State):
     """UR shutdown handler."""
-    state.ur.gripper.disconnect_gripper()
     state.ur.ur_connection.disconnect_ur()
     print("UR offline")
+
 
 @rest_module.state_handler()
 def state(state: State):
@@ -63,6 +55,7 @@ def state(state: State):
             state.status = ModuleStatus.IDLE
     return ModuleState(status=state.status, error="")
 
+
 @rest_module.action()
 def movej(
     state: State,
@@ -76,6 +69,7 @@ def movej(
     print(joints)
     state.ur.ur_connection.movej(joints, a, v)
     return StepResponse.step_succeeded()
+
 
 @rest_module.action()
 def toggle_gripper(
@@ -92,6 +86,7 @@ def toggle_gripper(
         state.ur.gripper.close_gripper()
         print("POS: ", state.ur.gripper.gripper.get_current_position())
     return StepResponse.step_succeeded()
+
 
 @rest_module.action(
     name="gripper_transfer",
