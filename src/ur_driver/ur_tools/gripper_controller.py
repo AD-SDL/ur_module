@@ -254,6 +254,64 @@ class FingerGripperController:
         )
         print("Place completed")
 
+    def disconnect_joint(
+        self,
+        home: list = None,
+        joint_location: list = None,
+        approach_axis: str = None,
+        approach_distance: float = None,
+        depth: float = None,
+    ):
+        """Release joint at joint location"""
+
+        if not joint_location:
+            raise Exception("Please provide the joint location")
+
+        if not approach_distance:
+            approach_distance = 0.05
+
+        axis = None
+
+        if not approach_axis or approach_axis.lower() == "z":
+            axis = 2
+        elif approach_axis.lower() == "y":
+            axis = 1
+        elif approach_axis.lower() == "-y":
+            axis = 1
+            approach_distance = -approach_distance
+        elif approach_axis.lower() == "x":
+            axis = 0
+        elif approach_axis.lower() == "-x":
+            axis = 0
+            approach_distance = -approach_distance
+
+        above_goal = deepcopy(joint_location)
+        above_goal[axis] += approach_distance
+
+        below_goal = deepcopy(joint_location)
+        below_goal[axis] -= depth
+
+        self.home_robot(home=home)
+
+        self.open_gripper()
+
+        print("Moving to above joint position")
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print("Moving to joint position")
+        self.ur.movel(joint_location, self.acceleration, self.velocity)
+
+        print("Closing gripper")
+        self.close_gripper()
+
+        print("Moving back to below joint position")
+        self.ur.movel(below_goal, self.acceleration, self.velocity)
+
+        print("Opening gripper")
+        self.open_gripper()
+
+        self.home_robot(home=home)
+
 
 class VacuumGripperController:
     """Robotiq Vacuum Gripper Controller"""

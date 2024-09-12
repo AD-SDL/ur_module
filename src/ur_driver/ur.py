@@ -83,10 +83,6 @@ class UR:
         self.ur = Connection(hostname=self.hostname)
         self.ur_connection = self.ur.connection
 
-        self.gripper = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
-        self.gripper.gripper_speed = 255
-        self.gripper.gripper_force = 255
-
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.get_movement_state()
         # else:
@@ -651,6 +647,60 @@ class UR:
         }
 
         return program_log
+
+    def gripper_disconnect_joint(
+        self,
+        home: list = None,
+        joint_location: list = None,
+        joint_approach_axis: str = None,
+        joint_approach_distance: float = None,
+        depth: float = None,
+        gripper_open: int = None,
+        gripper_close: int = None,
+    ) -> None:
+        """Disconnect joint using the finger gripper. This function uses linear motions to perform the movements.
+
+        Args
+            home (list): Home location
+            joint_location (list): Joint location
+            joint_approach_axis (str): Joint approach axis (X/Y/Z)
+            joint_approach_distance (float): Joint approach distance. Unit meters.
+            depth (float): Distance moved down to disconnect joint. Unit meters.
+            gripper_open (int): Gripper max open value (0-255)
+            gripper_close (int): Gripper min close value (0-255)
+
+        """
+
+        if not joint_location:
+            raise Exception("Please provide the joint location for disconnect.")
+
+        self.home(home)
+
+        try:
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller.connect_gripper()
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.disconnect_joint(
+                home=home,
+                joint_location=joint_location,
+                approach_axis=joint_approach_axis,
+                approach_distance=joint_approach_distance,
+                depth=depth,
+            )
+            print("Finished disconnect")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            print(err)
+
+        finally:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
 
 
 if __name__ == "__main__":

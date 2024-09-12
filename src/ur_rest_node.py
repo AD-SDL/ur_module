@@ -1,6 +1,5 @@
 """REST-based node for UR robots"""
 
-import json
 from pathlib import Path
 from typing import List
 
@@ -54,38 +53,6 @@ def state(state: State):
         else:
             state.status = ModuleStatus.IDLE
     return ModuleState(status=state.status, error="")
-
-
-@rest_module.action()
-def movej(
-    state: State,
-    action: ActionRequest,
-    joints: Annotated[List[float], "Joint positions to move to"],
-    a: Annotated[float, "Acceleration"] = 0.6,
-    v: Annotated[float, "Velocity"] = 0.6,
-) -> StepResponse:
-    """Move the robot to a joint position"""
-    joints = json.loads(joints)
-    print(joints)
-    state.ur.ur_connection.movej(joints, a, v)
-    return StepResponse.step_succeeded()
-
-
-@rest_module.action()
-def toggle_gripper(
-    state: State,
-    action: ActionRequest,
-    open: Annotated[bool, "Open?"] = False,
-    close: Annotated[bool, "Close?"] = False,
-) -> StepResponse:
-    """Open or close the robot gripper."""
-    if open:
-        state.ur.gripper.open_gripper()
-        print("POS: ", state.ur.gripper.gripper.get_current_position())
-    if close:
-        state.ur.gripper.close_gripper()
-        print("POS: ", state.ur.gripper.gripper.get_current_position())
-    return StepResponse.step_succeeded()
 
 
 @rest_module.action(
@@ -357,6 +324,38 @@ def set_digital_io(
 
     state.ur.set_digital_io(channel=channel, value=value)
 
+    return StepResponse.step_succeeded()
+
+
+@rest_module.action(
+    name="gripper_disconnect_joint",
+    description="Disconnect joint at joint location using Robotiq grippers",
+)
+def gripper_disconnect_joint(
+    state: State,
+    action: ActionRequest,
+    home: Annotated[List[float], "Home location"],
+    joint_location: Annotated[List[float], "Topmost location of joint to disconnect"],
+    joint_approach_axis: Annotated[str, "Joint location approach axis, (X/Y/Z)"],
+    joint_approach_distance: Annotated[float, "Approach distance in meters"],
+    depth: Annotated[float, "Distance to slide joint down to disconnect in meters"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Disconnect joint using the finger gripper. This function uses linear motions to perform movements."""
+
+    if not joint_location or not home:  # Return Fail
+        return StepResponse(StepStatus.FAILED, error="Joint and home locations must be provided")
+
+    state.ur.gripper_disconnect_joint(
+        home=home,
+        joint_location=joint_location,
+        joint_approach_distance=joint_approach_distance,
+        joint_approach_axis=joint_approach_axis,
+        depth=depth,
+        gripper_open=gripper_open,
+        gripper_close=gripper_close,
+    )
     return StepResponse.step_succeeded()
 
 
