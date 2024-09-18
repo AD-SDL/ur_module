@@ -6,9 +6,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      tags:
-        - ${IMAGE}:latest
-        - ${IMAGE}:dev
     command: python -m ur_rest_node --port 3011 --ur_ip ${UR_IP}
     env_file: .env
     volumes:
