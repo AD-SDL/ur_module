@@ -7,13 +7,6 @@ from math import radians
 from time import sleep
 
 import numpy as np
-
-# from ur_dashboard import UR_DASHBOARD
-# from ur_tools.gripper_controller import FingerGripperController
-# from ur_tools.ot_pipette_controller import OTPipetteController
-# from ur_tools.screwdriver_controller import ScrewdriverController
-# from ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
-# from ur_tools.wm_tool_changer_controller import WMToolChangerController
 from urx import Robot
 
 from ur_driver.ur_dashboard import UR_DASHBOARD
@@ -682,6 +675,15 @@ class UR:
 
         if not joint_location:
             raise Exception("Please provide the joint location for disconnect.")
+
+        print("home: ", home, type(home))
+        print("joint location: ", joint_location, type(joint_location))
+        print("joint approach axis: ", joint_approach_axis, type(joint_approach_axis))
+        print("joint approach distance: ", joint_approach_distance, type(joint_approach_distance))
+        print("depth: ", depth, type(depth))
+        print("delay: ", delay, type(delay))
+        print("gripper open: ", gripper_open, type(gripper_open))
+        print("gripper close: ", gripper_close, type(gripper_close))
 
         self.home(home)
 

@@ -21,7 +21,7 @@ dependencies = [
     "pyepics",
     "urx@git+https://github.com/Dozgulbas/python-urx.git",
     "numpy",
-
+    "math3d<=3.4.1",
 ]
 
 requires-python = ">=3.8.1"
