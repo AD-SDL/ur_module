@@ -16,6 +16,13 @@ from ur_driver.ur_tools.screwdriver_controller import ScrewdriverController
 from ur_driver.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
 from ur_driver.ur_tools.wm_tool_changer_controller import WMToolChangerController
 
+# from ur_dashboard import UR_DASHBOARD
+# from ur_tools.gripper_controller import FingerGripperController
+# from ur_tools.ot_pipette_controller import OTPipetteController
+# from ur_tools.screwdriver_controller import ScrewdriverController
+# from ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
+# from ur_tools.wm_tool_changer_controller import WMToolChangerController
+
 
 class Connection:
     """Connection to the UR robot to be shared within UR driver"""
@@ -652,11 +659,12 @@ class UR:
         self,
         home: list = None,
         joint_location: list = None,
-        joint_approach_axis: str = None,
+        joint_approach_axis: str = "x",
         joint_approach_distance: float = None,
-        depth: float = None,
-        gripper_open: int = None,
-        gripper_close: int = None,
+        depth: float = 0.008,
+        delay: float = 1.0,
+        gripper_open: int = 0,
+        gripper_close: int = 255,
     ) -> None:
         """Disconnect joint using the finger gripper. This function uses linear motions to perform the movements.
 
@@ -666,6 +674,7 @@ class UR:
             joint_approach_axis (str): Joint approach axis (X/Y/Z)
             joint_approach_distance (float): Joint approach distance. Unit meters.
             depth (float): Distance moved down to disconnect joint. Unit meters.
+            delay (float) : Seconds to pause before disconnecting joint.
             gripper_open (int): Gripper max open value (0-255)
             gripper_close (int): Gripper min close value (0-255)
 
@@ -681,9 +690,9 @@ class UR:
             gripper_controller.connect_gripper()
 
             if gripper_open:
-                gripper_controller.gripper_open = gripper_open
+                gripper_controller.gripper_open = int(gripper_open)
             if gripper_close:
-                gripper_controller.gripper_close = gripper_close
+                gripper_controller.gripper_close = int(gripper_close)
 
             gripper_controller.disconnect_joint(
                 home=home,
@@ -691,6 +700,7 @@ class UR:
                 approach_axis=joint_approach_axis,
                 approach_distance=joint_approach_distance,
                 depth=depth,
+                delay=delay,
             )
             print("Finished disconnect")
             gripper_controller.disconnect_gripper()
@@ -706,9 +716,31 @@ class UR:
 if __name__ == "__main__":
     """Tests"""
 
-    # pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    # pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     robot3 = UR(hostname="146.137.240.38")  # UR3
+    waypoint1 = [
+        -5.45778870979418,
+        -2.095121046105856,
+        2.1441996733294886,
+        -0.05430622518573003,
+        1.8396282196044922,
+        0.010314404033124447,
+    ]
+    waypoint2 = [
+        -0.13808589185898898,
+        -0.3343258604018853,
+        0.0228316443656502,
+        1.3892169444793483,
+        -0.7786089780873691,
+        -0.7682852134633944,
+    ]
+
+    robot3.gripper_disconnect_joint(
+        home=waypoint1, joint_location=waypoint2, joint_approach_axis="x", joint_approach_distance=0.05
+    )
+
+    # robot3.ur_dashboard.set_operational_mode("MANUAL")
+    # print(robot3.ur_connection.getj())
+    # print(robot3.ur_connection.getl())
 
     # robot5 = UR(hostname="164.54.116.109")  # UR5
 

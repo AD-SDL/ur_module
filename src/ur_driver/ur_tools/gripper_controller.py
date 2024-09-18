@@ -260,7 +260,8 @@ class FingerGripperController:
         joint_location: list = None,
         approach_axis: str = None,
         approach_distance: float = None,
-        depth: float = None,
+        depth: float = 0.008,
+        delay: float = 1,
     ):
         """Release joint at joint location"""
 
@@ -289,7 +290,7 @@ class FingerGripperController:
         above_goal[axis] += approach_distance
 
         below_goal = deepcopy(joint_location)
-        below_goal[axis] -= depth
+        below_goal[2] -= depth
 
         self.home_robot(home=home)
 
@@ -304,8 +305,14 @@ class FingerGripperController:
         print("Closing gripper")
         self.close_gripper()
 
+        print("Pausing...")
+        sleep(delay)
+
         print("Moving back to below joint position")
-        self.ur.movel(below_goal, self.acceleration, self.velocity)
+        self.ur.movel(below_goal, self.acceleration, 0.25)
+
+        print("Pausing...")
+        sleep(delay)
 
         print("Opening gripper")
         self.open_gripper()

@@ -1,5 +1,6 @@
 """REST-based node for UR robots"""
 
+import json
 from pathlib import Path
 from typing import List
 
@@ -339,6 +340,7 @@ def gripper_disconnect_joint(
     joint_approach_axis: Annotated[str, "Joint location approach axis, (X/Y/Z)"],
     joint_approach_distance: Annotated[float, "Approach distance in meters"],
     depth: Annotated[float, "Distance to slide joint down to disconnect in meters"],
+    delay: Annotated[float, "Seconds to pause before disconnecting joint."],
     gripper_open: Annotated[int, "Set a max value for the gripper open state"],
     gripper_close: Annotated[int, "Set a min value for the gripper close state"],
 ) -> StepResponse:
@@ -348,13 +350,14 @@ def gripper_disconnect_joint(
         return StepResponse(StepStatus.FAILED, error="Joint and home locations must be provided")
 
     state.ur.gripper_disconnect_joint(
-        home=home,
-        joint_location=joint_location,
-        joint_approach_distance=joint_approach_distance,
+        home=json.loads(home),
+        joint_location=json.loads(joint_location),
+        joint_approach_distance=float(joint_approach_distance),
         joint_approach_axis=joint_approach_axis,
-        depth=depth,
-        gripper_open=gripper_open,
-        gripper_close=gripper_close,
+        depth=float(depth),
+        delay=float(delay),
+        gripper_open=int(gripper_open),
+        gripper_close=int(gripper_close),
     )
     return StepResponse.step_succeeded()
 
