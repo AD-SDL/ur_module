@@ -29,15 +29,14 @@ class FingerGripperController:
             raise Exception("UR connection is not established")
         else:
             self.ur = ur
-            # self.ur.set_payload(1.2)# TODO: Check the actual payload
-
+            
         self.gripper_close = 255  # 0-255 (255 is closed)
         self.gripper_open = 0
         self.gripper_speed = 255  # 0-255
-        self.gripper_force = 255  # 0-255
+        self.gripper_force = 50  # 0-255
 
-        self.acceleration = 0.7
-        self.velocity = 0.7
+        self.acceleration = 0.2
+        self.velocity = 0.2
         self.speed_ms = 0.750
         self.speed_rads = 0.750
         self.accel_mss = 1.200
