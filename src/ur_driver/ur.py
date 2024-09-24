@@ -658,10 +658,24 @@ if __name__ == "__main__":
 
     # pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
     # pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot3 = UR(hostname="146.137.240.38")  # UR3
+    # robot3 = UR(hostname="146.137.240.38")  # UR3
 
     # robot5 = UR(hostname="164.54.116.109")  # UR5
+    robot_rpl = UR(hostname="146.137.240.38")
+    pin_source1 =[-0.0011294181369346343, -0.6293714175398767, 0.18699048520204695, 1.5709008418528707, -0.010612105225077896, -0.02637351854860042]
+    rpl_home = [-1.2919638792621058, -1.4035989803126832, -1.4282827377319336, 2.8391710954853515, -2.047021214162008, 0.0047561973333358765]
+    pin_target1 = [0.01290697074084389, -0.46699020729638807, 0.15595335634522503, 1.5001312438019965, 0.5615253499196761, 0.5372106182077204]
+    pin_source2 =  [-0.08450751160204803, -0.6399885345229381, 0.27401847293970844, 1.549470769944462, 0.32683121157034667, 0.2888985382782526]
+    pin_target2 = [0.06226086218873973, -0.43464554208346606, 0.09236450363766495, 1.5778582869249551, 0.3142949872873162, 0.3333589879779389]
+    # robot_rpl.ur_connection.translate([0,0.03,0])
+    # print(robot_rpl.ur_connection.getl())
+    # print(robot_rpl.ur_connection.getj())
+    # robot_rpl.ur_connection.movel(pin_source,0.1,0.1)
+    # print(pin_source)
+    robot_rpl.gripper_transfer(home=rpl_home,source=pin_target2,target=pin_source2, source_approach_distance=0.15, target_approach_distance=0.15)
+    robot_rpl.gripper_transfer(home=rpl_home,source=pin_source1,target=pin_target1, source_approach_distance=0.15, target_approach_distance=0.15)
 
+    robot_rpl.ur.disconnect_ur()
     home = [
         0.5431541204452515,
         -1.693524023095602,
@@ -864,4 +878,4 @@ if __name__ == "__main__":
     # robot5.place_tool(home= ur5_home,tool_loc=ur5_handE)
 
     # robot3.ur.disconnect_ur()
-    robot3.ur.disconnect_ur()
+    # robot3.ur.disconnect_ur()
