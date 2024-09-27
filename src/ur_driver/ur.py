@@ -719,11 +719,14 @@ if __name__ == "__main__":
     """Tests"""
 
     robot3 = UR(hostname="146.137.240.38")  # UR3
+    sleep(1)
     robot16 = UR(hostname="146.137.240.8")
-    # print(robot16.ur_connection.getl())
+    print(robot16.ur_connection.getl())
+    
     home_ur16 = [0.8010309338569641, -2.39469637493276, -1.2915183305740356, 0.7611629205891113, 1.1028605699539185, -2.4644046465503138]
     ur16_hose = [0.7487075153015419, 0.330226507876684, 0.248738174427395, 2.0754551044844254, 0.6133861010489023, 1.245985512192763]
     above_hose_ur16 = [0.7487217471234865, 0.2972016525026291, 0.2817635116032642, 2.0754533863192313, 0.6134081511170284, 1.2459725007789555]
+    place_hose_ur16 = [0.7487035561437048, 0.3331615220907849, 0.2457957259745664, 2.075426400086912, 0.6133516259560119, 1.2459536543944159]
     gripper_controller16 = FingerGripperController(hostname=robot16.hostname, ur=robot16.ur_connection)
     gripper_controller16.connect_gripper()
 
@@ -743,10 +746,7 @@ if __name__ == "__main__":
         -0.7786089780873691,
         -0.7682852134633944,
     ]
-
-    # robot3.gripper_disconnect_joint(
-    #     home=waypoint1, joint_location=waypoint2, joint_approach_axis="x", joint_approach_distance=0.05
-    # )
+    
     gripper_controller5 = FingerGripperController(hostname=robot3.hostname, ur=robot3.ur_connection)
     gripper_controller5.connect_gripper()
     gripper_controller16.hold_hose(home=home_ur16,joint_location=ur16_hose,approach_axis="-x",approach_distance=0.1)
@@ -767,11 +767,16 @@ if __name__ == "__main__":
             depth=0.008,
             delay=1,
         )
-    gripper_controller16.place_hose(home=home_ur16,above_target=above_hose_ur16,hose_target=ur16_hose)
+    # above_hose_ur16
+    gripper_controller16.place_hose(home=home_ur16,above_target=above_hose_ur16,hose_target=place_hose_ur16)
     gripper_controller5.recover_gripper(home=waypoint1)
-    gripper_controller16.open_gripper()
+    gripper_controller16.open_gripper()    
+    robot16.ur_connection.movel(above_hose_ur16,0.1,0.1)
     robot16.home(home_location=home_ur16)
-
+    robot3.home(waypoint1)
+    
+    
+    # gripper_controller5.open_gripper()
  # ------------------------------------------------
    # robot3.ur_dashboard.set_operational_mode("MANUAL")
     # print(robot3.ur_connection.getj())

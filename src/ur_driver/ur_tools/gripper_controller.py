@@ -36,8 +36,8 @@ class FingerGripperController:
         self.gripper_speed = 255  # 0-255
         self.gripper_force = 255  # 0-255
 
-        self.acceleration = 0.2
-        self.velocity = 0.2
+        self.acceleration = 0.8
+        self.velocity = 0.8
         self.speed_ms = 0.750
         self.speed_rads = 0.750
         self.accel_mss = 1.200
@@ -442,9 +442,9 @@ class FingerGripperController:
         
         self.ur.movel(above_target,0.1,0.1)
         self.ur.movel(hose_target,0.1,0.1)
-        self.gripper_open()
-        self.ur.movel(above_target,0.1,0.1)
-        self.home_robot(home=home)
+        # self.open_gripper()
+        # self.ur.movel(above_target,0.1,0.1)
+        # self.home_robot(home=home)
 class VacuumGripperController:
     """Robotiq Vacuum Gripper Controller"""
 

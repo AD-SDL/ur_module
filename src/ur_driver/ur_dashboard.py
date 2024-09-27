@@ -377,7 +377,8 @@ class UR_DASHBOARD:
 
 if __name__ == "__main__":
     """Tests"""
-    robot = UR_DASHBOARD("164.54.116.129")
+    robot = UR_DASHBOARD("146.137.240.8")
+    # robot.clear_operational_mode()
     # robot.get_loaded_program()
     # robot.get_program_state()
     # a = robot.load_program("/programs/interpreter_mode.urp")
