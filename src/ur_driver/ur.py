@@ -759,9 +759,19 @@ if __name__ == "__main__":
             )
     gripper_controller16.recover_hose(home=home_ur16,above_target=above_hose_ur16)
     gripper_controller5.recover_gripper(home=waypoint1)
+    #PLACE HOSE 
+    gripper_controller5.pull_disconnect_joint(home=waypoint1,
+            joint_location=waypoint2,
+            approach_axis="x",
+            approach_distance=0.05,
+            depth=0.008,
+            delay=1,
+        )
+    gripper_controller16.place_hose(home=home_ur16,above_target=above_hose_ur16,hose_target=ur16_hose)
+    gripper_controller5.recover_gripper(home=waypoint1)
+    gripper_controller16.open_gripper()
+    robot16.home(home_location=home_ur16)
 
- 
- 
  # ------------------------------------------------
    # robot3.ur_dashboard.set_operational_mode("MANUAL")
     # print(robot3.ur_connection.getj())

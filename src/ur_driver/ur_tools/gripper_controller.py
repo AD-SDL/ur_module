@@ -434,9 +434,16 @@ class FingerGripperController:
         
     def recover_hose(self,home: list = None, above_target:list=None):
         
-
         self.ur.movel(above_target,0.1,0.1)
 
+        self.home_robot(home=home)
+        
+    def place_hose(self,home: list = None, above_target:list=None, hose_target:list=None):
+        
+        self.ur.movel(above_target,0.1,0.1)
+        self.ur.movel(hose_target,0.1,0.1)
+        self.gripper_open()
+        self.ur.movel(above_target,0.1,0.1)
         self.home_robot(home=home)
 class VacuumGripperController:
     """Robotiq Vacuum Gripper Controller"""
