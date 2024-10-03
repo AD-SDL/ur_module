@@ -137,7 +137,7 @@ class UR:
                 -1.5595606009112757,
                 3.3403327465057373,
             ]
-        self.ur_connection.movej(home_loc, 2, 2)
+        self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
         print("Robot homed")
 
     def pick_tool(
