@@ -86,6 +86,8 @@ class UR:
         self.gripper = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
         self.gripper.gripper_speed = 255
         self.gripper.gripper_force = 255
+        self.gripper_speed = 255
+        self.gripper_force = 255
 
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.get_movement_state()
@@ -93,6 +95,11 @@ class UR:
         # TODO: Use simulation mode for local IP
 
         # TODO: get the information of what is the current tool attached to UR. Run a sanity check at the beginning to find out if a tool is connected
+
+    def disconnect(self):
+        "Disconnects the robot from URX and UR Dahsboard connections"
+        self.ur.disconnect_ur()
+        self.ur_dashboard.disconnect()
 
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.
@@ -232,6 +239,10 @@ class UR:
         try:
             gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
             gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
 
             if gripper_open:
                 gripper_controller.gripper_open = gripper_open
