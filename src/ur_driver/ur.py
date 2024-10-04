@@ -99,6 +99,7 @@ class UR:
     def disconnect(self):
         "Disconnects the robot from URX and UR Dahsboard connections"
         self.ur.disconnect_ur()
+        self.ur_dashboard.clear_operational_mode()
         self.ur_dashboard.disconnect()
 
     def get_movement_state(self) -> str:
