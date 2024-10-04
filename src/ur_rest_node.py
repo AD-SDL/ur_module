@@ -37,7 +37,7 @@ def ur_startup(state: State):
 @rest_module.shutdown()
 def ur_shutdown(state: State):
     """UR shutdown handler."""
-    state.ur.ur_connection.disconnect_ur()
+    state.ur.disconnect()
     print("UR offline")
 
 
