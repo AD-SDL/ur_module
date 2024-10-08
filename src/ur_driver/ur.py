@@ -268,6 +268,106 @@ class UR:
             gripper_controller.disconnect_gripper()
             self.home(home)
 
+    def gripper_pick(
+        self,
+        home: list = None,
+        source: list = None,
+        source_approach_axis: str = None,
+        source_approach_distance: float = None,
+        gripper_close: int = None,
+    ) -> None:
+        """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
+
+        Args
+            home (list): Home location
+            source (list): Source location
+            source_approach_axis (str): Source approach axis (X/Y/Z)
+            source_approach_distance (float): Source approach distance. Unit meters.
+            gripper_close (int): Gripper min close value (0-255)
+
+        """
+
+        if not source:
+            raise Exception("Please provide the source location to make a pick")
+
+        self.home(home)
+
+        try:
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
+
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.pick(
+                pick_goal=source,
+                approach_axis=source_approach_axis,
+                approach_distance=source_approach_distance,
+            )
+            print("Finished gripper pick")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            print(err)
+
+        finally:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+
+    def gripper_place(
+        self,
+        home: list = None,
+        target: list = None,
+        target_approach_axis: str = None,
+        target_approach_distance: float = None,
+        gripper_open: int = None,
+    ) -> None:
+        """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
+
+        Args
+            home (list): Home location
+            target (list): Source location
+            target_approach_axis (str): Source approach axis (X/Y/Z)
+            target_approach_distance (float): Source approach distance. Unit meters.
+            gripper_open (int): Gripper max open value (0-255)
+
+        """
+
+        if not target:
+            raise Exception("Please provide the target location to make a place")
+
+        self.home(home)
+
+        try:
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+
+            gripper_controller.place(
+                place_goal=target,
+                approach_axis=target_approach_axis,
+                approach_distance=target_approach_distance,
+            )
+            print("Finished gripper place")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            print(err)
+
+        finally:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+
     def gripper_screw_transfer(
         self,
         home: list = None,

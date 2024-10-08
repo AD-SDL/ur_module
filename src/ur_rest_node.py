@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List
 
 from fastapi.datastructures import State
+from typing import Optional
 from typing_extensions import Annotated
 from ur_driver.ur import UR
 from wei.modules.rest_module import RESTModule
@@ -65,11 +66,24 @@ def movej(
     v: Annotated[float, "Velocity"] = 0.6,
 ) -> StepResponse:
     """Move the robot to a joint position"""
-    joints = json.loads(joints)
+    if isinstance(joints, str):
+        joints = json.loads(joints)
     print(joints)
     state.ur.ur_connection.movej(joints, a, v)
     return StepResponse.step_succeeded()
 
+@rest_module.action()
+def movel(
+    state: State,
+    location: Annotated[List[float], "TCP location to move to"],
+    acceleration: Annotated[float, "The maximum acceleration during movement"] = 0.3,
+    velocity: Annotated[float, "The maximum magnitude of the velocity during movement"] = 0.3
+) -> StepResponse:
+    """Move the robot to the specified tool control position"""
+    if isinstance(location, str):
+        location = json.loads(location)
+    state.ur.ur_connection.movel(location, acceleration, velocity)
+    return StepResponse.step_succeeded()
 
 @rest_module.action()
 def toggle_gripper(
@@ -79,14 +93,35 @@ def toggle_gripper(
     close: Annotated[bool, "Close?"] = False,
 ) -> StepResponse:
     """Open or close the robot gripper."""
+    state.ur.gripper.connect_gripper()
     if open:
         state.ur.gripper.open_gripper()
-        print("POS: ", state.ur.gripper.gripper.get_current_position())
     if close:
         state.ur.gripper.close_gripper()
-        print("POS: ", state.ur.gripper.gripper.get_current_position())
+    state.ur.gripper.disconnect_gripper()
     return StepResponse.step_succeeded()
 
+@rest_module.action(
+    name="set_movement_params",
+    description="Set speed and acceleration parameters"
+)
+def set_movement_params(
+    state: State,
+    velocity: Optional[float] = None,
+    acceleration: Optional[float] = None,
+    gripper_speed: Optional[float] = None,
+    gripper_force: Optional[float] = None,
+):
+    """Configure the robot's movement parameters for subsequent transfers"""
+    if velocity is not None:
+        state.ur.velocity = velocity
+    if acceleration is not None:
+        state.ur.acceleration = acceleration
+    if gripper_speed is not None:
+        state.ur.gripper_speed = gripper_speed
+    if gripper_force is not None:
+        state.ur.gripper_force = gripper_force
+    return StepResponse.step_succeeded()
 
 @rest_module.action(
     name="gripper_transfer",
@@ -123,6 +158,43 @@ def gripper_transfer(
     )
     return StepResponse.step_succeeded()
 
+@rest_module.action()
+def gripper_pick(
+    state: State,
+    home: Annotated[List[float], "Home location"],
+    source: Annotated[List[float], "Location to transfer sample from"],
+    source_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
+    source_approach_distance: Annotated[float, "Approach distance in meters"],
+    gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+) -> StepResponse:
+    """Use the gripper to pick a piece of labware from the specified source"""
+    state.ur.gripper_pick(
+        home=home,
+        source=source,
+        source_approach_distance=source_approach_distance,
+        source_approach_axis=source_approach_axis,
+        gripper_close=gripper_close,
+    )
+    return StepResponse.step_succeeded()
+
+@rest_module.action()
+def gripper_place(
+    state: State,
+    home: Annotated[List[float], "Home location"],
+    target: Annotated[List[float], "Location to transfer sample to"],
+    target_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
+    target_approach_distance: Annotated[float, "Approach distance in meters"],
+    gripper_open: Annotated[int, "Set a max value for the gripper open state"],
+) -> StepResponse:
+    """Use the gripper to place a piece of labware at the target."""
+    state.ur.gripper_place(
+        home=home,
+        target=target,
+        target_approach_distance=target_approach_distance,
+        target_approach_axis=target_approach_axis,
+        gripper_open=gripper_open,
+    )
+    return StepResponse.step_succeeded()
 
 @rest_module.action(
     name="pick_tool",
