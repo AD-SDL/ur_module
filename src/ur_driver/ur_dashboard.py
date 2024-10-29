@@ -100,6 +100,10 @@ class UR_DASHBOARD:
 
         self.get_overall_robot_status()
 
+        if self.operational_mode == "MANUAL":
+            print("Operation mode is currently set to MANUAL, switching to AUTOMATIC")
+            self.set_operational_mode("automatic")
+
         if self.safety_status == "PROTECTIVE_STOP":
             print("Unlocking protective stop")
             self.unlock_protective_stop()
@@ -110,10 +114,6 @@ class UR_DASHBOARD:
             print("Restarting safety")
             self.close_safety_popup()
             self.restart_safety()
-
-        if self.operational_mode == "MANUAL":
-            print("Operation mode is currently set to MANUAL, switching to AUTOMATIC")
-            self.set_operational_mode("automatic")
 
         if self.remote_control_status is False:
             print("Robot is not in remote control")
