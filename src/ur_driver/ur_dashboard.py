@@ -204,6 +204,7 @@ class UR_DASHBOARD:
 
         Return (str): True / False
         """
+        print("Remote mode: ")
         return self.send_command("is in remote control")
 
     def restart_safety(self) -> str:
