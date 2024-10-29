@@ -44,17 +44,18 @@ def ur_shutdown(state: State):
 @rest_module.state_handler()
 def state(state: State):
     """Returns the current state of the UR module"""
-    if state.status not in [ModuleStatus.ERROR, ModuleStatus.INIT, None]:
+    if not state.status[ModuleStatus.ERROR] and not state.status[ModuleStatus.INIT]:
         # * Gets robot status by checking robot dashboard status messages.
         state.ur.ur_dashboard.get_overall_robot_status()
         if "NORMAL" not in state.ur.ur_dashboard.safety_status:
-            state.status = ModuleStatus.ERROR
+            state.status[ModuleStatus.ERROR] = True
+            state.status[ModuleStatus.READY] = False
         elif state.ur.get_movement_state() == "BUSY":
-            state.status = ModuleStatus.BUSY
+            state.status[ModuleStatus.RUNNING] = True
+            state.status[ModuleStatus.READY] = False
         else:
-            state.status = ModuleStatus.IDLE
-    return ModuleState(status=state.status, error="")
-
+            state.status[ModuleStatus.READY] = True
+    return ModuleState(status=state.status)
 
 @rest_module.action()
 def movej(
