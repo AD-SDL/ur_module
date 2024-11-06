@@ -9,7 +9,7 @@ from typing import Optional
 from typing_extensions import Annotated
 from ur_driver.ur import UR
 from wei.modules.rest_module import RESTModule
-from wei.types.module_types import ModuleState, ModuleStatus
+from wei.types.module_types import ModuleState, ModuleStatus, ValueModuleActionResult
 from wei.types.step_types import ActionRequest, StepResponse, StepStatus
 from wei.utils import extract_version
 
@@ -56,7 +56,40 @@ def state(state: State):
             state.status[ModuleStatus.READY] = False
         else:
             state.status[ModuleStatus.READY] = True
+            state.status[ModuleStatus.RUNNING] = False
     return ModuleState(status=state.status)
+
+@rest_module.action(name = "getj", results=[
+        ValueModuleActionResult(label="joints", description="joint values")]
+        )
+def getj(
+    state: State,
+    action: ActionRequest,
+) -> StepResponse:
+    """Move the robot to a joint position"""
+    joints = state.ur.ur_connection.getj()
+    return StepResponse.step_succeeded(data={"joints":joints})
+
+@rest_module.action(name = "getl", results=[
+        ValueModuleActionResult(label="lin_pos", description="linear tcp")]
+        )
+def getl(
+    state: State,
+    action: ActionRequest,
+) -> StepResponse:
+    """Move the robot to a joint position"""
+    lin_pos = state.ur.ur_connection.getl()
+    return StepResponse.step_succeeded(data={"lin_pos":lin_pos})
+
+@rest_module.action()
+def set_freedrive(
+    state: State,
+    action: ActionRequest,
+    timeout: Annotated[int, "how long to do freedrive"] = 60
+) -> StepResponse:
+    """set the robot into freedrive"""
+    state.ur.ur_connection.set_freedrive(True, timeout)
+    return StepResponse.step_succeeded()
 
 @rest_module.action()
 def movej(
