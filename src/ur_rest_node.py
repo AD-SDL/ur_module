@@ -57,6 +57,7 @@ def state(state: State):
             state.status[ModuleStatus.READY] = True
     return ModuleState(status=state.status)
 
+
 @rest_module.action()
 def movej(
     state: State,
