@@ -1,18 +1,18 @@
-name: ur_module
+name: ur
 services:
-  ur_module:
-    container_name: ur_module
-    image: ${IMAGE}
+  ur:
+    container_name: ur
+    image: ghcr.io/ad-sdl/ur_module
+    network_mode: host
+    environment:
+      - USER_ID=${USER_ID:-1000}
+      - GROUP_ID=${GROUP_ID:-1000}
     build:
       context: .
       dockerfile: Dockerfile
       tags:
-        - ${IMAGE}:latest
-        - ${IMAGE}:dev
-    command: python -m ur_rest_node --port 3011 --ur_ip ${UR_IP}
-    env_file: .env
+        - ghcr.io/ad-sdl/ur_module:latest
+        - ghcr.io/ad-sdl/ur_module:dev
+    command: python -m ur_rest_node --definition definitions/ur.node.yaml
     volumes:
-      - ./src:/home/app/ur_module/src
-      - ./tests:/home/app/ur_module/tests
-    ports:
-      - 3011:3011
+      - ./definitions:/home/madsci/definitions/
