@@ -7,13 +7,14 @@ from math import radians
 from time import sleep
 
 import numpy as np
-from ur_driver.ur_dashboard import UR_DASHBOARD
-from ur_driver.ur_tools.gripper_controller import FingerGripperController
-from ur_driver.ur_tools.ot_pipette_controller import OTPipetteController
-from ur_driver.ur_tools.screwdriver_controller import ScrewdriverController
-from ur_driver.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
-from ur_driver.ur_tools.wm_tool_changer_controller import WMToolChangerController
 from urx import Robot
+
+from ur_interface.ur_dashboard import UR_DASHBOARD
+from ur_interface.ur_tools.gripper_controller import FingerGripperController
+from ur_interface.ur_tools.ot_pipette_controller import OTPipetteController
+from ur_interface.ur_tools.screwdriver_controller import ScrewdriverController
+from ur_interface.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
+from ur_interface.ur_tools.wm_tool_changer_controller import WMToolChangerController
 
 
 class Connection:
