@@ -1,7 +1,10 @@
 name: Pre-Commit Checks
 
 on:
-  push:
+  push: # Run for every push
+    branches: ["*"]
+    tags: ["*"]
+  workflow_dispatch: # Run manually
 
 jobs:
   pre-commit:
@@ -9,7 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       name: Checkout code
-    - uses: actions/setup-python@v3
+    - uses: actions/setup-python@v4
       name: Setup Python
-    - uses: pre-commit/action@v3.0.0
+      with:
+        python-version: 3.9
+    - uses: pre-commit/action@v3.0.1
       name: Run Pre-Commit Checks
