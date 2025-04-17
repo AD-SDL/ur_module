@@ -14,7 +14,7 @@ from madsci.common.types.resource_types.definitions import (
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
-from ur_driver.ur import UR
+from ur_interface.ur import UR
 
 
 class URNodeConfig(RestNodeConfig):
