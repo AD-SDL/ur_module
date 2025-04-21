@@ -13,6 +13,7 @@ from madsci.common.types.resource_types.definitions import (
 )
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
+from pydantic.networks import AnyUrl
 from typing_extensions import Annotated
 from ur_interface.ur import UR
 
@@ -21,6 +22,7 @@ class URNodeConfig(RestNodeConfig):
     """Configuration for the pf400 node module."""
 
     ur_ip: str
+    resource_manager_url: Optional[AnyUrl] = None
 
 
 class URNode(RestNode):
@@ -167,7 +169,7 @@ class URNode(RestNode):
     @action(name="movej", description="Move the robot using joint angles")
     def movej(
         self,
-        joints: Annotated[List[float], "Joint angles to move to"],
+        joints: Annotated[LocationArgument, "Joint angles to move to"],
         acceleration: Annotated[float, "Acceleration"] = 0.6,
         velocity: Annotated[float, "Velocity"] = 0.6,
     ):

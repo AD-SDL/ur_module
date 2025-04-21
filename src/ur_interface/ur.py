@@ -5,8 +5,11 @@ import socket
 from copy import deepcopy
 from math import radians
 from time import sleep
+from typing import Union
 
 import numpy as np
+from madsci.client.resource_client import ResourceClient
+from madsci.common.types.location_types import LocationArgument
 from urx import Robot
 
 from ur_interface.ur_dashboard import UR_DASHBOARD
@@ -59,7 +62,7 @@ class UR:
     robot motion using URx, and the management of robot end-effectors such as grippers, screwdrivers, electronic pipettes, and cameras."
     """
 
-    def __init__(self, hostname: str = None):
+    def __init__(self, hostname: str = None, resource_client: ResourceClient = None, gripper_resource_id: str = None):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
         """
@@ -82,14 +85,14 @@ class UR:
         self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
         self.ur = Connection(hostname=self.hostname)
         self.ur_connection = self.ur.connection
+        self.resource_client = resource_client
+        self.gripper_resource_id = gripper_resource_id
 
         self.gripper_speed = 255
         self.gripper_force = 255
 
         self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
         self.get_movement_state()
-        # else:
-        # TODO: Use simulation mode for local IP
 
         # TODO: get the information of what is the current tool attached to UR. Run a sanity check at the beginning to find out if a tool is connected
 
@@ -117,43 +120,41 @@ class UR:
 
         return movement_state, current_location
 
-    def home(self, home_location: list = None) -> None:
+    def home(self, home_location: Union[LocationArgument, list]) -> None:
         """Moves the robot to the home location.
 
-        Args: home_location (list) A 6 joint value location
+        Args: home_location: 6 joint value location
         """
 
         print("Homing the robot...")
-        if home_location:
-            home_loc = home_location
+        if isinstance(home_location, LocationArgument):
+            home_loc = home_location.location
         else:
-            home_loc = [
-                -1.355567757283346,
-                -2.5413090191283167,
-                1.8447726408587855,
-                -0.891581193809845,
-                -1.5595606009112757,
-                3.3403327465057373,
-            ]
+            home_loc = home_location
         self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
         print("Robot homed")
 
     def pick_tool(
         self,
-        home: list = None,
-        tool_loc: list = None,
+        home: Union[LocationArgument, list] = None,
+        tool_loc: Union[LocationArgument, list] = None,
         docking_axis: str = "y",
         payload: float = 0.12,
         tool_name: str = None,
     ) -> None:
         """Picks up a tool using the given tool location
         Args
-            home (list): Home location
-            tool_loc (list): Tool location
+            home (Union[LocationArgument, list]): Home location
+            tool_loc (Union[LocationArgument, list]): Tool location
             docking_axis (str): Docking axis (x/y/z). Default: Y AXIS
             payload (float): Weight of the end effector
             tool_name (str): Name of the tool to indentify system variables
         """
+
+        if isinstance(home, LocationArgument):
+            home = home.location
+            tool_loc = tool_loc.location
+
         self.ur_connection.set_payload(payload)
         wingman_tool = WMToolChangerController(
             tool_location=tool_loc,
@@ -161,25 +162,30 @@ class UR:
             ur=self.ur_connection,
             tool=tool_name,
         )
+
         self.home(home)
         wingman_tool.pick_tool()
         self.home(home)
 
     def place_tool(
         self,
-        home: list = None,
-        tool_loc: list = None,
+        home: Union[LocationArgument, list] = None,
+        tool_loc: Union[LocationArgument, list] = None,
         docking_axis: str = "y",
         tool_name: str = None,
     ) -> None:
         """Places a tool back to tool docking location
         Args
-            home (list): Home location
-            tool_loc (list): Tool location
+            home (Union[LocationArgument, list]): Home location
+            tool_loc (Union[LocationArgument, list]): Tool location
             docking_axis (str): Docking axis (x/y/z). Default: Y AXIS
             tool_name (str): Name of the tool to indentify system variables
 
         """
+        if isinstance(home, LocationArgument):
+            home = home.location
+            tool_loc = tool_loc.location
+
         wingman_tool = WMToolChangerController(
             tool_location=tool_loc,
             docking_axis=docking_axis,
@@ -204,9 +210,9 @@ class UR:
 
     def gripper_transfer(
         self,
-        home: list = None,
-        source: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         source_approach_axis: str = None,
         target_approach_axis: str = None,
         source_approach_distance: float = None,
@@ -217,9 +223,9 @@ class UR:
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            source (list): Source location
-            target(list): Target location
+            home (Union[LocationArgument, list]): Home location
+            source (Union[LocationArgument, list]): Source location
+            target(Union[LocationArgument, list]): Target location
             source_approach_axis (str): Source approach axis (X/Y/Z)
             target_approach_axis (str): Target approach axis (X/Y/Z)
             source_approach_distance (float): Source approach distance. Unit meters.
@@ -231,6 +237,11 @@ class UR:
 
         if not source or not target:
             raise Exception("Please provide both the source and target locations to make a transfer")
+
+        if isinstance(home, LocationArgument):
+            home = home.location
+            source = source.location
+            target = target.location
 
         self.home(home)
 
@@ -268,8 +279,8 @@ class UR:
 
     def gripper_pick(
         self,
-        home: list = None,
-        source: list = None,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
         source_approach_axis: str = None,
         source_approach_distance: float = None,
         gripper_close: int = None,
@@ -277,8 +288,8 @@ class UR:
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            source (list): Source location
+            home (Union[LocationArgument, list]): Home location
+            source (Union[LocationArgument, list]): Source location
             source_approach_axis (str): Source approach axis (X/Y/Z)
             source_approach_distance (float): Source approach distance. Unit meters.
             gripper_close (int): Gripper min close value (0-255)
@@ -287,6 +298,10 @@ class UR:
 
         if not source:
             raise Exception("Please provide the source location to make a pick")
+
+        if isinstance(home, LocationArgument):
+            home = home.location
+            source = source.location
 
         self.home(home)
 
@@ -318,8 +333,8 @@ class UR:
 
     def gripper_place(
         self,
-        home: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         target_approach_axis: str = None,
         target_approach_distance: float = None,
         gripper_open: int = None,
@@ -327,8 +342,8 @@ class UR:
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            target (list): Source location
+            home (Union[LocationArgument, list]): Home location
+            target (Union[LocationArgument, list]): Source location
             target_approach_axis (str): Source approach axis (X/Y/Z)
             target_approach_distance (float): Source approach distance. Unit meters.
             gripper_open (int): Gripper max open value (0-255)
@@ -337,6 +352,10 @@ class UR:
 
         if not target:
             raise Exception("Please provide the target location to make a place")
+
+        if isinstance(home, LocationArgument):
+            home = home.location
+            target = target.location
 
         self.home(home)
 
@@ -368,10 +387,10 @@ class UR:
 
     def gripper_screw_transfer(
         self,
-        home: list = None,
-        target: list = None,
-        screwdriver_loc: list = None,
-        screw_loc: list = None,
+        home: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+        screwdriver_loc: Union[LocationArgument, list] = None,
+        screw_loc: Union[LocationArgument, list] = None,
         screw_time: float = 9,
         gripper_open: int = None,
         gripper_close: int = None,
@@ -379,10 +398,10 @@ class UR:
         """Using custom made screwdriving solution. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            target(list): Target location
-            screwdriver_loc (list): Location of the screwdriving bit
-            screw_loc (list): Location where the screwdriving will be performed
+            home (Union[LocationArgument, list]): Home location
+            target(Union[LocationArgument, list]): Target location
+            screwdriver_loc (Union[LocationArgument, list]): Location of the screwdriving bit
+            screw_loc (Union[LocationArgument, list]): Location where the screwdriving will be performed
             screw_time (float): Screwdriving duration
             gripper_open (int): Gripper max open value (0-255)
             gripper_close (int): Gripper min close value (0-255)
@@ -438,10 +457,10 @@ class UR:
 
     def gripper_unscrew(
         self,
-        home: list = None,
-        target: list = None,
-        screwdriver_loc: list = None,
-        screw_loc: list = None,
+        home: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+        screwdriver_loc: Union[LocationArgument, list] = None,
+        screw_loc: Union[LocationArgument, list] = None,
         screw_time: float = 10,
         gripper_open: int = None,
         gripper_close: int = None,
@@ -451,18 +470,18 @@ class UR:
 
     def remove_cap(
         self,
-        home: list = None,
-        source: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         gripper_open: int = None,
         gripper_close: int = None,
     ) -> None:
         """Remove vial cap. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            source (list): Source location
-            target (list): Target location
+            home (Union[LocationArgument, list]): Home location
+            source (Union[LocationArgument, list]): Source location
+            target (Union[LocationArgument, list]): Target location
             gripper_open (int): Gripper max open value (0-255)
             gripper_close (int): Gripper min close value (0-255)
 
@@ -503,18 +522,18 @@ class UR:
 
     def place_cap(
         self,
-        home: list = None,
-        source: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         gripper_open: int = None,
         gripper_close: int = None,
     ) -> None:
         """Place vial cap. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            source (list): Source location
-            target (list): Target location
+            home (Union[LocationArgument, list]): Home location
+            source (Union[LocationArgument, list]): Source location
+            target (Union[LocationArgument, list]): Target location
             gripper_open (int): Gripper max open value (0-255)
             gripper_close (int): Gripper min close value (0-255)
 
@@ -556,8 +575,8 @@ class UR:
 
     def pick_and_flip_object(
         self,
-        home: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         approach_axis: str = None,
         gripper_open: int = None,
         gripper_close: int = None,
@@ -566,8 +585,8 @@ class UR:
         Pick an object then flips it and puts it back to the same location. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            target (list): Target location
+            home (Union[LocationArgument, list]): Home location
+            target (Union[LocationArgument, list]): Target location
             approach_axis (str) = Object approach axis
             gripper_open (int): Gripper max open value (0-255)
             gripper_close (int): Gripper min close value (0-255)
@@ -607,9 +626,9 @@ class UR:
 
     def robotiq_screwdriver_transfer(
         self,
-        home: list = None,
-        source: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         source_approach_axis: str = None,
         target_approach_axis: str = None,
         source_approach_distance: float = None,
@@ -619,9 +638,9 @@ class UR:
         Make a screw transfer using the Robotiq Screwdriver. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            source (list): Source location
-            target(list): Target location
+            home (Union[LocationArgument, list]): Home location
+            source (Union[LocationArgument, list]): Source location
+            target(Union[LocationArgument, list]): Target location
             source_approach_axis (str): Source approach axis (X/Y/Z)
             target_approach_axis (str): Target approach axis (X/Y/Z)
             source_approach_distance (float): Source approach distance. Unit meters.
@@ -652,20 +671,20 @@ class UR:
 
     def pipette_transfer(
         self,
-        home: list = None,
-        tip_loc: list = None,
-        tip_trash: list = None,
-        source: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        tip_loc: Union[LocationArgument, list] = None,
+        tip_trash: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         volume: int = 10,
     ) -> None:
         """
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (list): Home location
-            tip_loc (list): Pipette tip location
-            tip_trash (list): Tip trash location
+            home (Union[LocationArgument, list]): Home location
+            tip_loc (Union[LocationArgument, list]): Pipette tip location
+            tip_trash (Union[LocationArgument, list]): Tip trash location
             source (str): Source location
             target (str): Target location
             volume (int): Pipette transfer volume. Unit number of steps. Each step is 1 mL
@@ -689,20 +708,20 @@ class UR:
 
     def run_droplet(
         self,
-        home: list = None,
-        tip_loc: list = None,
-        sample_loc: list = None,
-        droplet_loc: list = None,
-        tip_trash: list = None,
+        home: Union[LocationArgument, list] = None,
+        tip_loc: Union[LocationArgument, list] = None,
+        sample_loc: Union[LocationArgument, list] = None,
+        droplet_loc: Union[LocationArgument, list] = None,
+        tip_trash: Union[LocationArgument, list] = None,
     ) -> None:
         """Run the full droplet protocol cycle
 
         Args
-            home (list): Home location
-            tip_loc (list): Pipette tip location
-            sample_loc (list): Sample location
-            droplet_loc (list): Location where the droplet will be hung
-            tip_trash (list): Pipette tip trash location
+            home (Union[LocationArgument, list]): Home location
+            tip_loc (Union[LocationArgument, list]): Pipette tip location
+            sample_loc (Union[LocationArgument, list]): Sample location
+            droplet_loc (Union[LocationArgument, list]): Location where the droplet will be hung
+            tip_trash (Union[LocationArgument, list]): Pipette tip trash location
         """
         pipette = OTPipetteController(ur_connection=self.ur_connection, IP=self.hostname)
         pipette.connect_pipette()
