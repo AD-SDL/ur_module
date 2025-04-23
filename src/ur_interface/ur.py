@@ -62,7 +62,13 @@ class UR:
     robot motion using URx, and the management of robot end-effectors such as grippers, screwdrivers, electronic pipettes, and cameras."
     """
 
-    def __init__(self, hostname: str = None, resource_client: ResourceClient = None, gripper_resource_id: str = None):
+    def __init__(
+        self,
+        hostname: str = None,
+        resource_client: ResourceClient = None,
+        gripper_resource_id: str = None,
+        pipette_resource_id: str = None,
+    ):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
         """
@@ -87,7 +93,7 @@ class UR:
         self.ur_connection = self.ur.connection
         self.resource_client = resource_client
         self.gripper_resource_id = gripper_resource_id
-
+        self.pipette_resource_id = pipette_resource_id
         self.gripper_speed = 255
         self.gripper_force = 255
 

@@ -38,22 +38,17 @@ class URNode(RestNode):
             if self.config.resource_manager_url:
                 self.resource_client = ResourceClient(self.config.resource_manager_url)
                 self.resource_owner = OwnershipInfo(node_id=self.node_definition.node_id)
-                self.gripper_resource = self.resource_client.init_resource(
-                    SlotResourceDefinition(
-                        resource_name="ur_gripper",
-                        owner=self.resource_owner,
-                    )
-                )
+
             else:
                 self.resource_client = None
-                self.gripper_resource = None
 
             self.logger.log("Node initializing...")
             self.ur_interface = UR(
                 host=self.config.ur_ip,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource.resource_id if self.gripper_resource else None,
             )
+            self.gripper_resource = None
+            self.pipette_resource = None
 
         except Exception as err:
             self.logger.log_error(f"Error starting the UR Node: {err}")
@@ -106,6 +101,7 @@ class URNode(RestNode):
                 "current_joint_angles": current_location,
             }
 
+    # ___Delete
     @action(name="pick_plate", description="Pick a plate from a source location")
     def pick_plate(
         self,
@@ -126,6 +122,8 @@ class URNode(RestNode):
             self.logger.log_error(err)
 
         return ActionSucceeded()
+
+    # ___Delete
 
     @action(name="getj", description="Get joint angles")
     def getj(self):
@@ -176,8 +174,8 @@ class URNode(RestNode):
         """A doc string, but not the actual description of the action."""
         try:
             joints = json.loads(joints)
-            print(joints)
-            self.ur_interface.ur_connection.movej(joints, acceleration, velocity)
+            self.logger.log(f"Move joints: {joints}")
+            self.ur_interface.ur_connection.movej(joints=joints, acc=acceleration, vel=velocity)
 
         except Exception as err:
             self.logger.log_error(err)
@@ -204,6 +202,19 @@ class URNode(RestNode):
 
         if not source or not target or not home:  # Return Fail
             return ActionFailed(errors="Source, target and home locations must be provided")
+
+        if self.resource_client and self.gripper_resource is None:
+            # If the gripper resource is not initialized, initialize it
+            self.gripper_resource = self.resource_client.init_resource(
+                SlotResourceDefinition(
+                    resource_name="ur_gripper",
+                    owner=self.resource_owner,
+                )
+            )
+            self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
+        elif self.gripper_resource is not None:
+            # If the gripper resource is already initialized, set the resource id
+            self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
 
         self.ur_interface.gripper_transfer(
             home=home,

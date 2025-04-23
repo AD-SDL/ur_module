@@ -13,6 +13,8 @@ class FingerGripperController:
         self,
         hostname: str = "146.137.240.38",
         port: int = 63352,
+        resource_client=None,
+        gripper_resource_id: str = None,
         ur=None,
     ):
         """
