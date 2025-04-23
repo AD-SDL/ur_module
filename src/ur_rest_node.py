@@ -199,34 +199,35 @@ class URNode(RestNode):
         gripper_close: Annotated[int, "Set a min value for the gripper close state"],
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
+        try:
+            # Check if the source, target and home locations are provided
+            if not source or not target or not home:  # Return Fail
+                return ActionFailed(errors="Source, target and home locations must be provided")
 
-        if not source or not target or not home:  # Return Fail
-            return ActionFailed(errors="Source, target and home locations must be provided")
-
-        if self.resource_client and self.gripper_resource is None:
-            # If the gripper resource is not initialized, initialize it
-            self.gripper_resource = self.resource_client.init_resource(
-                SlotResourceDefinition(
-                    resource_name="ur_gripper",
-                    owner=self.resource_owner,
+            if self.resource_client and self.gripper_resource is None:
+                # If the gripper resource is not initialized, initialize it
+                self.gripper_resource = self.resource_client.init_resource(
+                    SlotResourceDefinition(
+                        resource_name="ur_gripper",
+                        owner=self.resource_owner,
+                    )
                 )
-            )
-            self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
-        elif self.gripper_resource is not None:
-            # If the gripper resource is already initialized, set the resource id
-            self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
+                self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
 
-        self.ur_interface.gripper_transfer(
-            home=home,
-            source=source,
-            target=target,
-            source_approach_distance=source_approach_distance,
-            target_approach_distance=target_approach_distance,
-            source_approach_axis=source_approach_axis,
-            target_approach_axis=target_approach_axis,
-            gripper_open=gripper_open,
-            gripper_close=gripper_close,
-        )
+            self.ur_interface.gripper_transfer(
+                home=home,
+                source=source,
+                target=target,
+                source_approach_distance=source_approach_distance,
+                target_approach_distance=target_approach_distance,
+                source_approach_axis=source_approach_axis,
+                target_approach_axis=target_approach_axis,
+                gripper_open=gripper_open,
+                gripper_close=gripper_close,
+            )
+        except Exception as err:
+            return ActionFailed(errors=err)
+
         return ActionSucceeded()
 
     @action()
@@ -240,6 +241,16 @@ class URNode(RestNode):
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
         try:
+            if self.resource_client and self.gripper_resource is None:
+                # If the gripper resource is not initialized, initialize it
+                self.gripper_resource = self.resource_client.init_resource(
+                    SlotResourceDefinition(
+                        resource_name="ur_gripper",
+                        owner=self.resource_owner,
+                    )
+                )
+                self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
+
             self.ur_interface.gripper_pick(
                 home=home,
                 source=source,
@@ -263,6 +274,16 @@ class URNode(RestNode):
     ):
         """Use the gripper to place a piece of labware at the target."""
         try:
+            if self.resource_client and self.gripper_resource is None:
+                # If the gripper resource is not initialized, initialize it
+                self.gripper_resource = self.resource_client.init_resource(
+                    SlotResourceDefinition(
+                        resource_name="ur_gripper",
+                        owner=self.resource_owner,
+                    )
+                )
+                self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
+
             self.ur_interface.gripper_place(
                 home=home,
                 target=target,

@@ -157,21 +157,22 @@ class UR:
             tool_name (str): Name of the tool to indentify system variables
         """
 
-        if isinstance(home, LocationArgument):
-            home = home.location
-            tool_loc = tool_loc.location
+        try:
+            self.ur_connection.set_payload(payload)
+            wingman_tool = WMToolChangerController(
+                tool_location=tool_loc,
+                docking_axis=docking_axis,
+                ur=self.ur_connection,
+                tool=tool_name,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
 
-        self.ur_connection.set_payload(payload)
-        wingman_tool = WMToolChangerController(
-            tool_location=tool_loc,
-            docking_axis=docking_axis,
-            ur=self.ur_connection,
-            tool=tool_name,
-        )
-
-        self.home(home)
-        wingman_tool.pick_tool()
-        self.home(home)
+            self.home(home)
+            wingman_tool.pick_tool()
+            self.home(home)
+        except Exception as err:
+            print("Error in picking tool: ", err)
 
     def place_tool(
         self,
@@ -197,6 +198,8 @@ class UR:
             docking_axis=docking_axis,
             ur=self.ur_connection,
             tool=tool_name,
+            resource_client=self.resource_client,
+            gripper_resource_id=self.gripper_resource_id,
         )
         self.home(home)
         wingman_tool.place_tool()
@@ -305,14 +308,16 @@ class UR:
         if not source:
             raise Exception("Please provide the source location to make a pick")
 
-        if isinstance(home, LocationArgument):
-            home = home.location
-            source = source.location
-
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
+
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
             gripper_controller.acceleration = self.acceleration
@@ -359,14 +364,15 @@ class UR:
         if not target:
             raise Exception("Please provide the target location to make a place")
 
-        if isinstance(home, LocationArgument):
-            home = home.location
-            target = target.location
-
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
             gripper_controller.acceleration = self.acceleration
@@ -417,7 +423,13 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
+
             gripper_controller.connect_gripper()
 
             if gripper_open:
@@ -495,7 +507,13 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
+
             gripper_controller.connect_gripper()
             if gripper_open:
                 gripper_controller.gripper_open = gripper_open
@@ -547,7 +565,13 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
+
             gripper_controller.connect_gripper()
             if gripper_open:
                 gripper_controller.gripper_open = gripper_open
@@ -602,7 +626,13 @@ class UR:
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
+
             gripper_controller.connect_gripper()
 
             if gripper_open:

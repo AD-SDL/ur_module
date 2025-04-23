@@ -29,6 +29,8 @@ class FingerGripperController:
         """
         self.host = hostname
         self.PORT = port
+        self.resource_client = resource_client
+        self.gripper_resource_id = gripper_resource_id
 
         if not ur:
             raise Exception("UR connection is not established")
