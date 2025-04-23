@@ -2,6 +2,9 @@
 
 from copy import deepcopy
 from time import sleep
+from typing import Union
+
+from madsci.common.types.location_types import LocationArgument
 
 from .robotiq_gripper_driver import RobotiqGripper
 
@@ -13,9 +16,9 @@ class FingerGripperController:
         self,
         hostname: str = "146.137.240.38",
         port: int = 63352,
+        ur=None,
         resource_client=None,
         gripper_resource_id: str = None,
-        ur=None,
     ):
         """
         Constructor for the FingerGripperController class.
@@ -92,13 +95,17 @@ class FingerGripperController:
         else:
             print("Gripper connection is closed")
 
-    def home_robot(self, home: list = None) -> None:
+    def home_robot(self, home: Union[LocationArgument, list] = None) -> None:
         """
         Home the robot
         """
         if not home:
             return
-        self.ur.movej(home, self.acceleration, self.velocity)
+        if isinstance(home, LocationArgument):
+            home_location = home.location
+        elif isinstance(home, list):
+            home_location = home
+        self.ur.movej(home_location, self.acceleration, self.velocity)
 
     def open_gripper(
         self,
@@ -144,14 +151,18 @@ class FingerGripperController:
 
     def pick(
         self,
-        pick_goal: list = None,
+        source: Union[LocationArgument, list] = None,
         approach_axis: str = None,
         approach_distance: float = None,
     ):
         """Pick up from first goal position"""
 
-        if not pick_goal:
-            raise Exception("Please provide the source loaction")
+        if isinstance(source, LocationArgument):
+            source_location = source.location
+        elif isinstance(source, list):
+            source_location = source
+        else:
+            raise Exception("Please provide an accurate source loaction")
 
         if not approach_distance:
             approach_distance = 0.05
@@ -171,7 +182,7 @@ class FingerGripperController:
             axis = 0
             approach_distance = -approach_distance
 
-        above_goal = deepcopy(pick_goal)
+        above_goal = deepcopy(source_location)
         above_goal[axis] += approach_distance
 
         self.open_gripper()
@@ -180,23 +191,32 @@ class FingerGripperController:
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
         print("Moving to goal position")
-        self.ur.movel(pick_goal, self.acceleration, self.velocity)
+        self.ur.movel(source_location, self.acceleration, self.velocity)
 
         print("Closing gripper")
         self.close_gripper()
+
+        if self.resource_client and isinstance(source, LocationArgument):  # Handle resources if configured
+            popped_object, updated_resource = self.resource_client.pop(resource=source.resource_id)
+            self.resource_client.push(resource=self.gripper_resource_id, child=popped_object)
 
         print("Moving back to above goal position")
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
     def place(
         self,
-        place_goal: list = None,
+        target: Union[LocationArgument, list] = None,
         approach_axis: str = None,
         approach_distance: float = None,
     ):
         """Place down at second goal position"""
-        if not place_goal:
-            raise Exception("Please provide the target loaction")
+
+        if isinstance(target, LocationArgument):
+            target_location = target.location
+        elif isinstance(target, list):
+            target_location = target
+        else:
+            raise Exception("Please provide an accurate target loaction")
 
         if not approach_distance:
             approach_distance = 0.05
@@ -216,26 +236,29 @@ class FingerGripperController:
             axis = 0
             approach_distance = -approach_distance
 
-        above_goal = deepcopy(place_goal)
+        above_goal = deepcopy(target_location)
         above_goal[axis] += approach_distance
 
         print("Moving to above goal position")
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
         print("Moving to goal position")
-        self.ur.movel(place_goal, self.acceleration, self.velocity)
+        self.ur.movel(target_location, self.acceleration, self.velocity)
 
         print("Opennig gripper")
         self.open_gripper()
 
+        if self.resource_client and isinstance(target, LocationArgument):  # Handle resources if configured
+            popped_object, updated_resource = self.resource_client.pop(resource=self.gripper_resource_id)
+            self.resource_client.push(resource=target.resource_id, child=popped_object)
         print("Moving back to above goal position")
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
     def transfer(
         self,
-        home: list = None,
-        source: list = None,
-        target: list = None,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
         source_approach_axis: str = None,
         target_approach_axis: str = None,
         source_approach_distance: float = None,
@@ -243,14 +266,14 @@ class FingerGripperController:
     ) -> None:
         """Handles the transfer request"""
         self.pick(
-            pick_goal=source,
+            source=source,
             approach_axis=source_approach_axis,
             approach_distance=source_approach_distance,
         )
         print("Pick up completed")
         self.home_robot(home=home)
         self.place(
-            place_goal=target,
+            place=target,
             approach_axis=target_approach_axis,
             approach_distance=target_approach_distance,
         )

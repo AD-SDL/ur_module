@@ -244,15 +244,15 @@ class UR:
         if not source or not target:
             raise Exception("Please provide both the source and target locations to make a transfer")
 
-        if isinstance(home, LocationArgument):
-            home = home.location
-            source = source.location
-            target = target.location
-
         self.home(home)
 
         try:
-            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.gripper_resource_id,
+            )
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
             gripper_controller.acceleration = self.acceleration
