@@ -1,7 +1,7 @@
 """REST-based node for UR robots"""
 
 import json
-from typing import List, Optional
+from typing import Optional
 
 from madsci.client.resource_client import ResourceClient
 from madsci.common.types.action_types import ActionFailed, ActionSucceeded
@@ -188,9 +188,9 @@ class URNode(RestNode):
     )
     def gripper_transfer(
         self,
-        home: Annotated[List[float], "Home location"],
-        source: Annotated[List[float], "Location to transfer sample from"],
-        target: Annotated[List[float], "Location to transfer sample to"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Location to transfer sample from"],
+        target: Annotated[LocationArgument, "Location to transfer sample to"],
         source_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
         target_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
         source_approach_distance: Annotated[float, "Approach distance in meters"],
@@ -232,8 +232,8 @@ class URNode(RestNode):
     @action()
     def gripper_pick(
         self,
-        home: Annotated[List[float], "Home location"],
-        source: Annotated[List[float], "Location to transfer sample from"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Location to transfer sample from"],
         source_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
         source_approach_distance: Annotated[float, "Approach distance in meters"],
         gripper_close: Annotated[int, "Set a min value for the gripper close state"],
@@ -255,8 +255,8 @@ class URNode(RestNode):
     @action()
     def gripper_place(
         self,
-        home: Annotated[List[float], "Home location"],
-        target: Annotated[List[float], "Location to transfer sample to"],
+        home: Annotated[LocationArgument, "Home location"],
+        target: Annotated[LocationArgument, "Location to transfer sample to"],
         target_approach_axis: Annotated[str, "Source location approach axis, (X/Y/Z)"],
         target_approach_distance: Annotated[float, "Approach distance in meters"],
         gripper_open: Annotated[int, "Set a max value for the gripper open state"],
@@ -280,8 +280,8 @@ class URNode(RestNode):
     )
     def pick_tool(
         self,
-        home: Annotated[List[float], "Home location"],
-        tool_loc: Annotated[List[float], "Tool location"],
+        home: Annotated[LocationArgument, "Home location"],
+        tool_loc: Annotated[LocationArgument, "Tool location"],
         docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
         payload: Annotated[float, "Tool payload"],
         tool_name: Annotated[str, "Tool name)"],
@@ -307,8 +307,8 @@ class URNode(RestNode):
     @action(name="Place_tool", description="Places the attached tool back to the provided tool docking location")
     def place_tool(
         self,
-        home: Annotated[List[float], "Home location"],
-        tool_docking: Annotated[List[float], "Tool docking location"],
+        home: Annotated[LocationArgument, "Home location"],
+        tool_docking: Annotated[LocationArgument, "Tool docking location"],
         docking_axis: Annotated[str, "Docking axis, (X/Y/Z)"],
         tool_name: Annotated[str, "Tool name)"],
     ):
@@ -331,11 +331,11 @@ class URNode(RestNode):
     )
     def gripper_screw_transfer(
         self,
-        home: Annotated[List[float], "Home location"],
-        screwdriver_loc: Annotated[List[float], "Screwdriver location"],
-        screw_loc: Annotated[List[float], "Screw location"],
+        home: Annotated[LocationArgument, "Home location"],
+        screwdriver_loc: Annotated[LocationArgument, "Screwdriver location"],
+        screw_loc: Annotated[LocationArgument, "Screw location"],
         screw_time: Annotated[int, "Srew time in seconds"],
-        target: Annotated[List[float], "Location where the srewdriving will be performed"],
+        target: Annotated[LocationArgument, "Location where the srewdriving will be performed"],
         gripper_open: Annotated[int, "Set a max value for the gripper open state"],
         gripper_close: Annotated[int, "Set a min value for the gripper close state"],
     ):
@@ -364,11 +364,11 @@ class URNode(RestNode):
     )
     def pipette_transfer(
         self,
-        home: Annotated[List[float], "Home location"],
-        source: Annotated[List[float], "Initial location of the sample"],
-        target: Annotated[List[float], "Target location of the sample"],
-        tip_loc=Annotated[List[float], "New tip location"],
-        tip_trash=Annotated[List[float], "Tip trash location"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Initial location of the sample"],
+        target: Annotated[LocationArgument, "Target location of the sample"],
+        tip_loc=Annotated[LocationArgument, "New tip location"],
+        tip_trash=Annotated[LocationArgument, "Tip trash location"],
         volume=Annotated[float, "Set a volume in micro liters"],
     ):
         """Make a pipette transfer for the defined volume with UR"""
@@ -392,8 +392,8 @@ class URNode(RestNode):
     )
     def pick_and_flip_object(
         self,
-        home: Annotated[List[float], "Home location"],
-        target: Annotated[List[float], "Location of the object"],
+        home: Annotated[LocationArgument, "Home location"],
+        target: Annotated[LocationArgument, "Location of the object"],
         approach_axis: Annotated[str, "Approach axis, (X/Y/Z)"],
         target_approach_distance: Annotated[float, "Approach distance in meters"],
         gripper_open: Annotated[int, "Set a max value for the gripper open state"],
@@ -420,10 +420,10 @@ class URNode(RestNode):
     )
     def remove_cap(
         self,
-        home: Annotated[List[float], "Home location"],
-        source: Annotated[List[float], "Location of the vial cap"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Location of the vial cap"],
         target: Annotated[
-            List[float],
+            LocationArgument,
             "Location of where the cap will be placed after it is removed from the vail",
         ],
         gripper_open: Annotated[int, "Set a max value for the gripper open state"],
@@ -449,9 +449,9 @@ class URNode(RestNode):
     )
     def place_cap(
         self,
-        home: Annotated[List[float], "Home location"],
-        source: Annotated[List[float], "Vail cap initial location"],
-        target: Annotated[List[float], "The vail location where the cap will installed"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Vail cap initial location"],
+        target: Annotated[LocationArgument, "The vail location where the cap will installed"],
         gripper_open: Annotated[int, "Set a max value for the gripper open state"],
         gripper_close: Annotated[int, "Set a min value for the gripper close state"],
     ):
