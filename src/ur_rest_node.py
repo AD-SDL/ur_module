@@ -47,8 +47,7 @@ class URNode(RestNode):
                 host=self.config.ur_ip,
                 resource_client=self.resource_client,
             )
-            self.gripper_resource = None
-            self.pipette_resource = None
+            self.tool_resource = None
 
         except Exception as err:
             self.logger.log_error(f"Error starting the UR Node: {err}")
@@ -204,15 +203,15 @@ class URNode(RestNode):
             if not source or not target or not home:  # Return Fail
                 return ActionFailed(errors="Source, target and home locations must be provided")
 
-            if self.resource_client and self.gripper_resource is None:
+            if self.resource_client:
                 # If the gripper resource is not initialized, initialize it
-                self.gripper_resource = self.resource_client.init_resource(
+                self.tool_resource = self.resource_client.init_resource(
                     SlotResourceDefinition(
                         resource_name="ur_gripper",
                         owner=self.resource_owner,
                     )
                 )
-                self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
+                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
             self.ur_interface.gripper_transfer(
                 home=home,
@@ -241,15 +240,15 @@ class URNode(RestNode):
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
         try:
-            if self.resource_client and self.gripper_resource is None:
+            if self.resource_client:
                 # If the gripper resource is not initialized, initialize it
-                self.gripper_resource = self.resource_client.init_resource(
+                self.tool_resource = self.resource_client.init_resource(
                     SlotResourceDefinition(
                         resource_name="ur_gripper",
                         owner=self.resource_owner,
                     )
                 )
-                self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
+                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
             self.ur_interface.gripper_pick(
                 home=home,
@@ -274,15 +273,15 @@ class URNode(RestNode):
     ):
         """Use the gripper to place a piece of labware at the target."""
         try:
-            if self.resource_client and self.gripper_resource is None:
+            if self.resource_client:
                 # If the gripper resource is not initialized, initialize it
-                self.gripper_resource = self.resource_client.init_resource(
+                self.tool_resource = self.resource_client.init_resource(
                     SlotResourceDefinition(
                         resource_name="ur_gripper",
                         owner=self.resource_owner,
                     )
                 )
-                self.ur_interface.gripper_resource_id = self.gripper_resource.resource_id
+                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
             self.ur_interface.gripper_place(
                 home=home,

@@ -9,6 +9,7 @@ from typing import Union
 
 import numpy as np
 from madsci.client.resource_client import ResourceClient
+from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from urx import Robot
 
@@ -66,8 +67,8 @@ class UR:
         self,
         hostname: str = None,
         resource_client: ResourceClient = None,
-        gripper_resource_id: str = None,
-        pipette_resource_id: str = None,
+        resource_owner: OwnershipInfo = None,
+        tool_resource_id: str = None,
     ):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
@@ -77,6 +78,10 @@ class UR:
             raise TypeError("Hostname cannot be None Type!")
 
         self.hostname = hostname
+        self.resource_client = resource_client
+        self.tool_resource_id = tool_resource_id
+        self.resource_owner = resource_owner
+
         self.acceleration = 0.5
         self.velocity = 0.5
         self.speed_ms = 0.750
@@ -91,9 +96,7 @@ class UR:
         self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
         self.ur = Connection(hostname=self.hostname)
         self.ur_connection = self.ur.connection
-        self.resource_client = resource_client
-        self.gripper_resource_id = gripper_resource_id
-        self.pipette_resource_id = pipette_resource_id
+
         self.gripper_speed = 255
         self.gripper_force = 255
 
@@ -165,12 +168,20 @@ class UR:
                 ur=self.ur_connection,
                 tool=tool_name,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource_id,
+                tool_resource_id=self.tool_resource_id,
             )
 
             self.home(home)
             wingman_tool.pick_tool()
+            if self.resource_client and isinstance(tool_loc, LocationArgument):  # Handle resources if configured
+                tool_resource = self.resource_client.get_resource(tool_loc.resource_id)
+                tool_resource.owner = self.resource_owner
+                self.resource_client.update_resource(
+                    resource_id=tool_resource.resource_id,
+                )
+            self.tool_resource_id = tool_resource.resource_id
             self.home(home)
+
         except Exception as err:
             print("Error in picking tool: ", err)
 
@@ -189,21 +200,28 @@ class UR:
             tool_name (str): Name of the tool to indentify system variables
 
         """
-        if isinstance(home, LocationArgument):
-            home = home.location
-            tool_loc = tool_loc.location
+        try:
+            wingman_tool = WMToolChangerController(
+                tool_location=tool_loc,
+                docking_axis=docking_axis,
+                ur=self.ur_connection,
+                tool=tool_name,
+                resource_client=self.resource_client,
+                tool_resource_id=self.tool_resource_id,
+            )
+            self.home(home)
+            wingman_tool.place_tool()
+            if self.resource_client and isinstance(tool_loc, LocationArgument):  # Handle resources if configured
+                tool_resource = self.resource_client.get_resource(tool_loc.resource_id)
+                tool_resource.owner = None
+                self.resource_client.update_resource(
+                    resource_id=tool_resource.resource_id,
+                )
+            self.tool_resource_id = None
+            self.home(home)
 
-        wingman_tool = WMToolChangerController(
-            tool_location=tool_loc,
-            docking_axis=docking_axis,
-            ur=self.ur_connection,
-            tool=tool_name,
-            resource_client=self.resource_client,
-            gripper_resource_id=self.gripper_resource_id,
-        )
-        self.home(home)
-        wingman_tool.place_tool()
-        self.home(home)
+        except Exception as err:
+            print("Error in placing tool: ", err)
 
     def set_digital_io(self, channel: int = None, value: bool = None) -> None:
         """Sets digital I/O outputs to open an close the channel. This helps controlling the external tools
@@ -254,7 +272,7 @@ class UR:
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource_id,
+                gripper_resource_id=self.tool_resource_id,
             )
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
@@ -315,7 +333,7 @@ class UR:
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource_id,
+                gripper_resource_id=self.tool_resource_id,
             )
 
             gripper_controller.connect_gripper()
@@ -371,7 +389,7 @@ class UR:
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource_id,
+                gripper_resource_id=self.tool_resource_id,
             )
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
@@ -427,7 +445,7 @@ class UR:
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource_id,
+                gripper_resource_id=self.tool_resource_id,
             )
 
             gripper_controller.connect_gripper()
@@ -511,7 +529,7 @@ class UR:
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource_id,
+                gripper_resource_id=self.tool_resource_id,
             )
 
             gripper_controller.connect_gripper()
@@ -569,7 +587,7 @@ class UR:
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
-                gripper_resource_id=self.gripper_resource_id,
+                gripper_resource_id=self.tool_resource_id,
             )
 
             gripper_controller.connect_gripper()
