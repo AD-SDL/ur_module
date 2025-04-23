@@ -100,30 +100,6 @@ class URNode(RestNode):
                 "current_joint_angles": current_location,
             }
 
-    # ___Delete
-    @action(name="pick_plate", description="Pick a plate from a source location")
-    def pick_plate(
-        self,
-        source: Annotated[LocationArgument, "Location to pick a plate from"],
-        source_approach: Annotated[Optional[LocationArgument], "Location to approach from"] = None,
-    ):
-        """A doc string, but not the actual description of the action."""
-        if self.resource_client:
-            source_resource = self.resource_client.get_resource(source.resource_id)
-            if source_resource.quantity == 0:
-                return ActionFailed(errors="Resource manager: Plate does not exist at source!")
-        try:
-            self.pf400_interface.pick_plate(
-                source=source,
-                source_approach=source_approach if source_approach else None,
-            )
-        except Exception as err:
-            self.logger.log_error(err)
-
-        return ActionSucceeded()
-
-    # ___Delete
-
     @action(name="getj", description="Get joint angles")
     def getj(self):
         """Get joint positions"""
