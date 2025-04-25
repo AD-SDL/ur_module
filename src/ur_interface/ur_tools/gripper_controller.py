@@ -205,6 +205,17 @@ class FingerGripperController:
         print("Moving back to above goal position")
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
+    def pick_screw(
+        self,
+        screw_loc: Union[LocationArgument, list] = None,
+    ) -> None:
+        """Handles the pick screw request"""
+        above_goal = deepcopy(screw_loc)
+        above_goal[2] += 0.06
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+        self.ur.movel(screw_loc, 0.2, 0.2)
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
     def place(
         self,
         target: Union[LocationArgument, list] = None,
@@ -256,6 +267,29 @@ class FingerGripperController:
         print("Moving back to above goal position")
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
+    def place_screw(
+        self,
+        target: Union[LocationArgument, list] = None,
+        screw_time: float = 9,
+    ) -> None:
+        """Handles the place screw request"""
+        # Move to the target location
+        above_target = deepcopy(target)
+        above_target[2] += 0.03
+        self.ur.movel(above_target, self.acceleration, self.velocity)
+        self.ur.movel(target, 0.2, 0.2)
+
+        target_pose = [0, 0, 0.00021, 0, 0, 3.14]  # Setting the screw drive motion
+        print("Screwing down")
+
+        self.ur.speedl_tool(
+            target_pose, 2, screw_time
+        )  # This will perform screw driving motion for defined number of seconds
+        sleep(screw_time)
+        print("Screw drive motion completed")
+
+        self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
+
     def transfer(
         self,
         home: Union[LocationArgument, list] = None,
@@ -280,6 +314,26 @@ class FingerGripperController:
             approach_distance=target_approach_distance,
         )
         print("Place completed")
+
+    def screw_transfer(
+        self,
+        home: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+        screwdriver_loc: Union[LocationArgument, list] = None,
+        screw_loc: Union[LocationArgument, list] = None,
+        screw_time: float = 9,
+    ) -> None:
+        """Handles the transfer request"""
+
+        self.pick(
+            pick_goal=screwdriver_loc,
+        )  # Pick up the screwdriver bit
+        self.home_robot(home=home)  # Move back to home position
+        self.pick_screw(home=home, screw_loc=screw_loc)  # Pick up the screw
+        self.place_screw(home=home, target=target, screw_time=screw_time)  # Drive the screwdriving motion
+        self.home_robot(home=home)  # Move back to home position
+        self.place(place_goal=screwdriver_loc)  # Place the screwdriver bit
+        self.home_robot(home=home)
 
 
 class VacuumGripperController:
