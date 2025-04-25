@@ -161,6 +161,24 @@ class URNode(RestNode):
 
         return ActionSucceeded()
 
+    @action(name="movel", description="Move the robot using linar motion")
+    def movel(
+        self,
+        location: Annotated[LocationArgument, "Linear location to move to"],
+        acceleration: Annotated[float, "Acceleration"] = 0.6,
+        velocity: Annotated[float, "Velocity"] = 0.6,
+    ):
+        """A doc string, but not the actual description of the action."""
+        try:
+            location = json.loads(location)
+            self.logger.log(f"Move location: {location}")
+            self.ur_interface.ur_connection.movel(tpose=location, acc=acceleration, vel=velocity)
+
+        except Exception as err:
+            self.logger.log_error(err)
+
+        return ActionSucceeded()
+
     @action(
         name="gripper_transfer",
         description="Execute a transfer in between source and target locations using Robotiq grippers",
