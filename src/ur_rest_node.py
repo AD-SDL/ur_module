@@ -10,6 +10,7 @@ from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from madsci.common.types.node_types import RestNodeConfig
 from madsci.common.types.resource_types.definitions import (
+    PoolResourceDefinition,
     SlotResourceDefinition,
 )
 from madsci.node_module.helpers import action
@@ -372,6 +373,16 @@ class URNode(RestNode):
     ):
         """Make a pipette transfer for the defined volume with UR"""
         try:
+            if self.resource_client:
+                # If the pipette resource is not initialized, initialize it
+                self.tool_resource = self.resource_client.init_resource(
+                    PoolResourceDefinition(
+                        resource_name="ur_pipette",
+                        owner=self.resource_owner,
+                    )
+                )
+                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+
             self.ur_interface.pipette_transfer(
                 home=home,
                 tip_loc=tip_loc,
