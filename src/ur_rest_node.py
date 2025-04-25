@@ -5,6 +5,7 @@ from typing import Optional
 
 from madsci.client.resource_client import ResourceClient
 from madsci.common.types.action_types import ActionFailed, ActionSucceeded
+from madsci.common.types.admin_command_types import AdminCommandResponse
 from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from madsci.common.types.node_types import RestNodeConfig
@@ -503,6 +504,13 @@ class URNode(RestNode):
             return ActionFailed(errors=err)
 
         return ActionSucceeded()
+
+    def get_location(self) -> AdminCommandResponse:
+        """Return the current position of the ur robot"""
+        try:
+            return AdminCommandResponse(data={"Joint Angles": self.ur_interface.ur_connection.getj()})
+        except Exception:
+            return AdminCommandResponse(success=False)
 
 
 if __name__ == "__main__":
