@@ -185,12 +185,12 @@ class URNode(RestNode):
         home: Annotated[LocationArgument, "Home location"],
         source: Annotated[LocationArgument, "Location to transfer sample from"],
         target: Annotated[LocationArgument, "Location to transfer sample to"],
-        source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = None,
-        target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = None,
-        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = None,
-        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = None,
-        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = None,
-        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = None,
+        source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
+        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
         try:
@@ -229,9 +229,9 @@ class URNode(RestNode):
         self,
         home: Annotated[LocationArgument, "Home location"],
         source: Annotated[LocationArgument, "Location to transfer sample from"],
-        source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = None,
-        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = None,
-        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = None,
+        source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = "0.05",
+        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = "255",
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
         try:
@@ -262,9 +262,9 @@ class URNode(RestNode):
         self,
         home: Annotated[LocationArgument, "Home location"],
         target: Annotated[LocationArgument, "Location to transfer sample to"],
-        target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = None,
-        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = None,
-        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = None,
+        target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = "0.05",
+        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
     ):
         """Use the gripper to place a piece of labware at the target."""
         try:
@@ -297,7 +297,7 @@ class URNode(RestNode):
         self,
         home: Annotated[LocationArgument, "Home location"],
         tool_loc: Annotated[LocationArgument, "Tool location"],
-        docking_axis: Annotated[Optional[str], "Docking axis, (X/Y/Z)"] = None,
+        docking_axis: Annotated[Optional[str], "Docking axis, (X/Y/Z)"] = "y",
         payload: Annotated[Optional[float], "Tool payload"] = None,
         tool_name: Annotated[Optional[str], "Tool name)"] = None,
     ):
@@ -324,7 +324,7 @@ class URNode(RestNode):
         self,
         home: Annotated[LocationArgument, "Home location"],
         tool_docking: Annotated[LocationArgument, "Tool docking location"],
-        docking_axis: Annotated[Optional[str], "Docking axis, (X/Y/Z)"] = None,
+        docking_axis: Annotated[Optional[str], "Docking axis, (X/Y/Z)"] = "y",
         tool_name: Annotated[Optional[str], "Tool name)"] = None,
     ):
         """Place a tool with the UR"""
@@ -351,8 +351,8 @@ class URNode(RestNode):
         screw_loc: Annotated[LocationArgument, "Screw location"],
         screw_time: Annotated[int, "Srew time in seconds"],
         target: Annotated[LocationArgument, "Location where the srewdriving will be performed"],
-        gripper_open: Annotated[int, "Set a max value for the gripper open state"],
-        gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
+        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Make a screwdriving transfer using Robotiq gripper and custom screwdriving bits with UR"""
 
@@ -419,10 +419,10 @@ class URNode(RestNode):
         self,
         home: Annotated[LocationArgument, "Home location"],
         target: Annotated[LocationArgument, "Location of the object"],
-        approach_axis: Annotated[str, "Approach axis, (X/Y/Z)"],
-        target_approach_distance: Annotated[float, "Approach distance in meters"],
-        gripper_open: Annotated[int, "Set a max value for the gripper open state"],
-        gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+        approach_axis: Annotated[Optional[str], "Approach axis, (X/Y/Z)"] = "z",
+        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
+        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Picks and flips an object 180 degrees with UR"""
         try:
@@ -451,8 +451,8 @@ class URNode(RestNode):
             LocationArgument,
             "Location of where the cap will be placed after it is removed from the vail",
         ],
-        gripper_open: Annotated[int, "Set a max value for the gripper open state"],
-        gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
+        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Remove caps from sample vials with UR"""
         try:
@@ -477,8 +477,8 @@ class URNode(RestNode):
         home: Annotated[LocationArgument, "Home location"],
         source: Annotated[LocationArgument, "Vail cap initial location"],
         target: Annotated[LocationArgument, "The vail location where the cap will installed"],
-        gripper_open: Annotated[int, "Set a max value for the gripper open state"],
-        gripper_close: Annotated[int, "Set a min value for the gripper close state"],
+        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
+        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Places caps back to sample vials with UR"""
         try:
