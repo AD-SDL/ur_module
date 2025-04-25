@@ -455,54 +455,15 @@ class UR:
             if gripper_close:
                 gripper_controller.gripper_close = gripper_close
 
-            gripper_controller.pick(pick_goal=screwdriver_loc)
-
-            # # Pick screw
-            self.home(home)
-            above_goal = deepcopy(screw_loc)
-            above_goal[2] += 0.06
-            self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
-            self.ur_connection.movel(screw_loc, 0.2, 0.2)
-            self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
-
-            # Move to the target location
-            above_target = deepcopy(target)
-            above_target[2] += 0.03
-            self.ur_connection.movel(above_target, self.acceleration, self.velocity)
-            self.ur_connection.movel(target, 0.2, 0.2)
-
-            target_pose = [0, 0, 0.00021, 0, 0, 3.14]  # Setting the screw drive motion
-            print("Screwing down")
-
-            self.ur_connection.speedl_tool(
-                target_pose, 2, screw_time
-            )  # This will perform screw driving motion for defined number of seconds
-            sleep(screw_time + 0.5)
-
-            self.ur_connection.translate_tool([0, 0, -0.03], 0.5, 0.5)
-            self.home(home)
-
-            gripper_controller.place(place_goal=hex_key)
-            self.home(home)
+            gripper_controller.screw_transfer(
+                home=home, target=target, screw_loc=screw_loc, screwdriver_loc=screwdriver_loc, screw_time=screw_time
+            )
 
         except Exception as err:
             print(err)
 
         finally:
             gripper_controller.disconnect_gripper()
-
-    def gripper_unscrew(
-        self,
-        home: Union[LocationArgument, list] = None,
-        target: Union[LocationArgument, list] = None,
-        screwdriver_loc: Union[LocationArgument, list] = None,
-        screw_loc: Union[LocationArgument, list] = None,
-        screw_time: float = 10,
-        gripper_open: int = None,
-        gripper_close: int = None,
-    ) -> None:
-        """Perform unscrewing"""
-        pass
 
     def remove_cap(
         self,
@@ -748,7 +709,11 @@ class UR:
 
         try:
             pipette = TricontinentPipetteController(
-                hostname=self.hostname, ur=self.ur_connection, pipette_ip=self.hostname
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                pipette_ip=self.hostname,
+                resource_client=self.resource_client,
+                pipette_resource_id=self.tool_resource_id,
             )
             pipette.connect_pipette()
             pipette.pick_tip(tip_loc=tip_loc)
@@ -833,218 +798,3 @@ class UR:
         }
 
         return program_log
-
-
-if __name__ == "__main__":
-    """Tests"""
-
-    # pos1 = [-0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    # pos2 = [0.22575, -0.65792, 0.39271, 2.216, 2.196, -0.043]
-    robot3 = UR(hostname="146.137.240.38")  # UR3
-    robot3.ur_connection.getl()
-
-    # robot5 = UR(hostname="164.54.116.109")  # UR5
-
-    home = [
-        0.5431541204452515,
-        -1.693524023095602,
-        -0.7301170229911804,
-        -2.2898713550963343,
-        1.567720651626587,
-        -1.0230830351458948,
-    ]
-    pipette_loc = [
-        0.21285670041158733,
-        0.1548897634390196,
-        0.005543999069077835,
-        3.137978068966478,
-        -0.009313836267512065,
-        -0.0008972976992386885,
-    ]
-    handE_loc = [
-        0.3131286590368134,
-        0.15480163498252172,
-        0.005543999069077835,
-        3.137978068966478,
-        -0.009313836267512065,
-        -0.0008972976992386885,
-    ]
-    screwdriver_loc = [
-        0.43804370307762014,
-        0.15513117190281586,
-        0.006677533813616729,
-        3.137978068966478,
-        -0.009313836267512065,
-        -0.0008972976992386885,
-    ]
-
-    tip1 = [
-        0.04314792894103472,
-        -0.2860322742006418,
-        0.2280902599833372,
-        3.1380017093793624,
-        -0.00934365687097245,
-        -0.0006742913527073343,
-    ]
-    sample = [
-        0.46141141854542533,
-        -0.060288367363232544,
-        0.25108778472947074,
-        3.1380721475655364,
-        -0.009380578809401673,
-        -0.0005480714914954698,
-    ]
-    sample_dispense = [
-        0.3171082280819746,
-        -0.2850972337811901,
-        0.3411125132555506,
-        3.1379895509880757,
-        -0.009383853947478633,
-        -0.0007087863735219047,
-    ]
-    vial_cap = [
-        0.46318998963189156,
-        -0.0618242346521575,
-        0.22044247577669074,
-        3.1380871312109466,
-        -0.009283145361593024,
-        -0.0008304449494246685,
-    ]
-    vial_cap_holder = [
-        0.3496362594442045,
-        -0.19833129786349898,
-        0.21851956360142491,
-        3.1380370691898447,
-        -0.00907338154155439,
-        -0.0006817652068428923,
-    ]
-    tip_trash = [
-        0.2584365150735084,
-        -0.29839447002022784,
-        0.26381819707970183,
-        3.1380107495494363,
-        -0.009257765762271986,
-        -0.0005604922095049701,
-    ]
-
-    cell_screw = [
-        0.2874263975289342,
-        -0.2865822322485842,
-        0.3180272525328063,
-        3.1380331051698533,
-        -0.009437118292235473,
-        -0.0007542998874791568,
-    ]
-    cell_screw2 = [
-        0.28785074639084496,
-        -0.3117594886471939,
-        0.3180272525328063,
-        3.138005298544322,
-        -0.009407801356733062,
-        -0.0005678208909298462,
-    ]
-
-    # screw_holder = [0.21876722334540147, -0.27273358502932915, 0.39525473397805677, 3.0390618278038524, -0.7398330220514875, 0.016498425988567388]
-    hex_key = [
-        0.4484990523709619,
-        -0.1237038201799127,
-        0.2186755997135713,
-        3.135206222241475,
-        -0.02162004543818643,
-        0.010296128434757565,
-    ]
-    cell_holder = [
-        0.4118605516028128,
-        -0.21084692579385614,
-        0.21973007226508956,
-        3.1352348451315843,
-        -0.021708986801283955,
-        0.010352984644658518,
-    ]
-    assembly_deck = [
-        0.3174903285108201,
-        -0.08258211007606345,
-        0.11525282484663647,
-        1.2274734115134542,
-        1.190534780943193,
-        -1.1813375188608897,
-    ]
-    assembly_above = [
-        0.31914521296697795,
-        -0.2855210106568889,
-        0.3477093639368639,
-        3.1380580674341614,
-        -0.009396149170921641,
-        -0.0006625851593942707,
-    ]
-    test_loc = [
-        0.30364466226740844,
-        -0.1243275644148994,
-        0.2844145579322907,
-        3.1380384242791366,
-        -0.009336265404641286,
-        -0.0007377624513656736,
-    ]
-
-    ur5_handE = [
-        0.4505002372355746,
-        0.16717122871181722,
-        0.00739685825039485,
-        -3.1306952779568222,
-        0.020705220743989523,
-        -0.004641385258241053,
-    ]
-    ur5_measurement_unit = [
-        -0.04604452261651587,
-        0.4160887446750063,
-        0.5646084224408194,
-        -3.130749997794984,
-        0.020664206546694767,
-        -0.004545336675276125,
-    ]
-    ur5_cell_holder = [
-        0.023601991519811308,
-        -0.8269812730950779,
-        0.22224875259615529,
-        -3.1294422940780655,
-        0.024367760380236043,
-        -0.006320087283384127,
-    ]
-    ur5_home = [
-        0.2069321870803833,
-        -1.4558529642275353,
-        -1.5868407487869263,
-        -1.665375371972555,
-        1.5850671529769897,
-        -1.350588623677389,
-    ]
-
-    # ----------------------------------------
-    # print(robot3.ur_connection.getl())
-    # CELL ASSEMBLY
-
-    # Put a cell into assamply and instal cap on one side
-    # robot3.pick_tool(home, handE_loc,payload=1.2)
-    # robot3.gripper_transfer(home = home, source = cell_holder, target = assembly_deck, source_approach_axis="z", target_approach_axis="y", gripper_open = 190, gripper_close = 240)
-    # robot3.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
-    # robot3.pick_and_flip_object(home=home,target=assembly_deck,approach_axis="y",gripper_open=190,gripper_close=240)
-    # robot3.remove_cap(home=home,source=vial_cap,target=vial_cap_holder,gripper_open=120, gripper_close=200)
-    # robot3.place_tool(home,tool_loc=handE_loc)
-
-    # # Transfer sample using pipette
-    # robot3.pick_tool(home,tool_loc=pipette_loc,payload=1.2)
-    # robot3.pipette_transfer(home=home,tip_loc=tip1, tip_trash=tip_trash, source=sample, target=sample_dispense, volume=9)
-    # robot3.place_tool(home,tool_loc=pipette_loc)
-
-    # Install cap on the other side of the cell
-    # robot3.pick_tool(home, handE_loc,payload=1.2)
-    # robot3.place_cap(home=home,source=vial_cap_holder,target=vial_cap,gripper_open=120, gripper_close=200)
-    # robot3.gripper_screw_transfer(home=home,screwdriver_loc=hex_key,screw_loc=cell_screw2,target=assembly_above,gripper_open=120,gripper_close=200,screw_time=10)
-    # robot3.gripper_transfer(home = home, source = assembly_deck, target = cell_holder, source_approach_axis="y", target_approach_axis="z", gripper_open = 190, gripper_close = 240)
-    # robot3.place_tool(home, handE_loc)
-    # robot5.pick_tool(home= ur5_home,tool_loc=ur5_handE)
-    # robot5.gripper_transfer(home = ur5_home, source = ur5_cell_holder, target = ur5_measurement_unit, source_approach_axis="z", target_approach_axis="z",source_approach_distance=0.15, target_approach_distance=0.15, gripper_open = 190, gripper_close = 240)
-    # robot5.place_tool(home= ur5_home,tool_loc=ur5_handE)
-
-    # robot3.ur.disconnect_ur()
-    robot3.ur.disconnect_ur()

@@ -9,7 +9,14 @@ from .pipette_driver import PipetteDriver
 class TricontinentPipetteController:
     """This class aims to control tricontinent pipetes by utilizing a socket connection with the pipette over PipetteDriver class while controlling the UR robot simultaneously"""
 
-    def __init__(self, hostname=None, ur=None, pipette_ip: str = None):
+    def __init__(
+        self,
+        hostname=None,
+        ur=None,
+        pipette_ip: str = None,
+        resource_client=None,
+        pipette_resource_id: str = None,
+    ) -> None:
         """
         Initializes the PipetteController class.
 
@@ -19,6 +26,8 @@ class TricontinentPipetteController:
         """
 
         self.hostname = hostname
+        self.resource_client = resource_client
+        self.pipette_resource_id = pipette_resource_id
 
         if not ur or not pipette_ip:
             raise Exception("UR connection is not established")
@@ -142,6 +151,12 @@ class TricontinentPipetteController:
         self.pipette.aspirate(vol=vol)
         sleep(5)
 
+        if self.resource_client:
+            self.resource_client.increase_quantity(
+                resource=self.pipette_resource_id,
+                amount=vol,
+            )
+
         self.ur.movel(sample_aspirate_above, self.accel_mss, speed_ms)
         self.ur.movej(home, 1, 1)
 
@@ -157,6 +172,11 @@ class TricontinentPipetteController:
         # DISPENSE FIRST SAMPLE
         self.pipette.dispense(vol=vol)
         sleep(5)
+        if self.resource_client:
+            self.resource_client.decrease_quantity(
+                resource=self.pipette_resource_id,
+                amount=vol,
+            )
         self.ur.movel(
             sample_dispense_above,
             self.accel_mss,

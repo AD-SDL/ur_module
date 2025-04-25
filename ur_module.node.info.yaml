@@ -1,0 +1,739 @@
+node_name: ur_module
+node_id: 01JSQ1E0GM1RGT10CS1ETK9BNH
+node_url: null
+node_description: REST API node for ur module
+node_type: device
+module_name: ur_module
+module_version: 0.0.1
+capabilities:
+  get_info: true
+  get_state: true
+  get_status: true
+  send_action: true
+  get_action_result: true
+  get_action_history: true
+  action_files: true
+  send_admin_commands: true
+  set_config: true
+  get_resources: false
+  get_log: true
+  admin_commands:
+  - get_location
+  - lock
+  - reset
+  - shutdown
+  - unlock
+commands: {}
+is_template: false
+config_defaults:
+  host: localhost
+  port: 3030
+  ur_ip: 127.0.0.1
+actions:
+  getj:
+    name: getj
+    description: Get joint angles
+    args: {}
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  getl:
+    name: getl
+    description: Get linear positions
+    args: {}
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  set_freedriver:
+    name: set_freedriver
+    description: Free robot joints
+    args:
+      timeout:
+        name: timeout
+        description: how long to do freedrive
+        argument_type: int
+        required: false
+        default: 60
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  set_movement_params:
+    name: set_movement_params
+    description: Set speed and acceleration parameters
+    args:
+      velocity:
+        name: velocity
+        description: ''
+        argument_type: float
+        required: false
+        default: null
+      acceleration:
+        name: acceleration
+        description: ''
+        argument_type: float
+        required: false
+        default: null
+      gripper_speed:
+        name: gripper_speed
+        description: ''
+        argument_type: float
+        required: false
+        default: null
+      gripper_force:
+        name: gripper_force
+        description: ''
+        argument_type: float
+        required: false
+        default: null
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  movej:
+    name: movej
+    description: Move the robot using joint angles
+    args:
+      acceleration:
+        name: acceleration
+        description: Acceleration
+        argument_type: float
+        required: false
+        default: 0.6
+      velocity:
+        name: velocity
+        description: Velocity
+        argument_type: float
+        required: false
+        default: 0.6
+    locations:
+      joints:
+        name: joints
+        description: Joint angles to move to
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  gripper_transfer:
+    name: gripper_transfer
+    description: Execute a transfer in between source and target locations using Robotiq
+      grippers
+    args:
+      source_approach_axis:
+        name: source_approach_axis
+        description: Source location approach axis, (X/Y/Z)
+        argument_type: str
+        required: true
+        default: null
+      target_approach_axis:
+        name: target_approach_axis
+        description: Source location approach axis, (X/Y/Z)
+        argument_type: str
+        required: true
+        default: null
+      source_approach_distance:
+        name: source_approach_distance
+        description: Approach distance in meters
+        argument_type: float
+        required: true
+        default: null
+      target_approach_distance:
+        name: target_approach_distance
+        description: Approach distance in meters
+        argument_type: float
+        required: true
+        default: null
+      gripper_open:
+        name: gripper_open
+        description: Set a max value for the gripper open state
+        argument_type: int
+        required: true
+        default: null
+      gripper_close:
+        name: gripper_close
+        description: Set a min value for the gripper close state
+        argument_type: int
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      source:
+        name: source
+        description: Location to transfer sample from
+        argument_type: location
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location to transfer sample to
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  gripper_pick:
+    name: gripper_pick
+    description: Use the gripper to pick a piece of labware from the specified source
+    args:
+      source_approach_axis:
+        name: source_approach_axis
+        description: Source location approach axis, (X/Y/Z)
+        argument_type: str
+        required: true
+        default: null
+      source_approach_distance:
+        name: source_approach_distance
+        description: Approach distance in meters
+        argument_type: float
+        required: true
+        default: null
+      gripper_close:
+        name: gripper_close
+        description: Set a min value for the gripper close state
+        argument_type: int
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      source:
+        name: source
+        description: Location to transfer sample from
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  gripper_place:
+    name: gripper_place
+    description: Use the gripper to place a piece of labware at the target.
+    args:
+      target_approach_axis:
+        name: target_approach_axis
+        description: Source location approach axis, (X/Y/Z)
+        argument_type: str
+        required: true
+        default: null
+      target_approach_distance:
+        name: target_approach_distance
+        description: Approach distance in meters
+        argument_type: float
+        required: true
+        default: null
+      gripper_open:
+        name: gripper_open
+        description: Set a max value for the gripper open state
+        argument_type: int
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location to transfer sample to
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  pick_tool:
+    name: pick_tool
+    description: Picks up a tool using the provided tool location
+    args:
+      docking_axis:
+        name: docking_axis
+        description: Docking axis, (X/Y/Z)
+        argument_type: str
+        required: true
+        default: null
+      payload:
+        name: payload
+        description: Tool payload
+        argument_type: float
+        required: true
+        default: null
+      tool_name:
+        name: tool_name
+        description: Tool name)
+        argument_type: str
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      tool_loc:
+        name: tool_loc
+        description: Tool location
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  Place_tool:
+    name: Place_tool
+    description: Places the attached tool back to the provided tool docking location
+    args:
+      docking_axis:
+        name: docking_axis
+        description: Docking axis, (X/Y/Z)
+        argument_type: str
+        required: true
+        default: null
+      tool_name:
+        name: tool_name
+        description: Tool name)
+        argument_type: str
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      tool_docking:
+        name: tool_docking
+        description: Tool docking location
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  gripper_screw_transfer:
+    name: gripper_screw_transfer
+    description: Performs a screw transfer using the Robotiq gripper and custom screwdriving
+      bits
+    args:
+      screw_time:
+        name: screw_time
+        description: Srew time in seconds
+        argument_type: int
+        required: true
+        default: null
+      gripper_open:
+        name: gripper_open
+        description: Set a max value for the gripper open state
+        argument_type: int
+        required: true
+        default: null
+      gripper_close:
+        name: gripper_close
+        description: Set a min value for the gripper close state
+        argument_type: int
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      screwdriver_loc:
+        name: screwdriver_loc
+        description: Screwdriver location
+        argument_type: location
+        required: true
+        default: null
+      screw_loc:
+        name: screw_loc
+        description: Screw location
+        argument_type: location
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location where the srewdriving will be performed
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  pipette_transfer:
+    name: pipette_transfer
+    description: Make a pipette transfer to transfer sample liquids in between two
+      locations
+    args: {}
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      source:
+        name: source
+        description: Initial location of the sample
+        argument_type: location
+        required: true
+        default: null
+      target:
+        name: target
+        description: Target location of the sample
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  pick_and_flip_object:
+    name: pick_and_flip_object
+    description: Picks and flips an object 180 degrees
+    args:
+      approach_axis:
+        name: approach_axis
+        description: Approach axis, (X/Y/Z)
+        argument_type: str
+        required: true
+        default: null
+      target_approach_distance:
+        name: target_approach_distance
+        description: Approach distance in meters
+        argument_type: float
+        required: true
+        default: null
+      gripper_open:
+        name: gripper_open
+        description: Set a max value for the gripper open state
+        argument_type: int
+        required: true
+        default: null
+      gripper_close:
+        name: gripper_close
+        description: Set a min value for the gripper close state
+        argument_type: int
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location of the object
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  remove_cap:
+    name: remove_cap
+    description: Removes caps from sample vials
+    args:
+      gripper_open:
+        name: gripper_open
+        description: Set a max value for the gripper open state
+        argument_type: int
+        required: true
+        default: null
+      gripper_close:
+        name: gripper_close
+        description: Set a min value for the gripper close state
+        argument_type: int
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      source:
+        name: source
+        description: Location of the vial cap
+        argument_type: location
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location of where the cap will be placed after it is removed
+          from the vail
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  place_cap:
+    name: place_cap
+    description: Places caps back to sample vials
+    args:
+      gripper_open:
+        name: gripper_open
+        description: Set a max value for the gripper open state
+        argument_type: int
+        required: true
+        default: null
+      gripper_close:
+        name: gripper_close
+        description: Set a min value for the gripper close state
+        argument_type: int
+        required: true
+        default: null
+    locations:
+      home:
+        name: home
+        description: Home location
+        argument_type: location
+        required: true
+        default: null
+      source:
+        name: source
+        description: Vail cap initial location
+        argument_type: location
+        required: true
+        default: null
+      target:
+        name: target
+        description: The vail location where the cap will installed
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  run_urp_program:
+    name: run_urp_program
+    description: Runs a URP program on the UR
+    args: {}
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  set_digital_io:
+    name: set_digital_io
+    description: Sets a channel IO output on the UR
+    args: {}
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+config:
+  status_update_interval: 2.0
+  state_update_interval: 2.0
+  event_client_config: null
+  resource_server_url: null
+  host: localhost
+  port: 3030
+  protocol: http
+  ur_ip: 127.0.0.1
+  resource_manager_url: null
+config_schema:
+  $defs:
+    EventClientConfig:
+      description: Configuration for an Event Client.
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The name of the event client.
+          title: Event Client Name
+        event_server_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The URL of the event server.
+          title: Event Server URL
+        log_level:
+          default: 20
+          description: The log level of the event client.
+          title: Event Client Log Level
+          type: integer
+        source:
+          $ref: '#/$defs/OwnershipInfo'
+          description: Information about the source of the event client.
+          title: Source
+        log_dir:
+          anyOf:
+          - type: string
+          - format: path
+            type: string
+          description: The directory to store logs in.
+          title: Log Directory
+      title: EventClientConfig
+      type: object
+    OwnershipInfo:
+      description: Information about the ownership of a MADSci object.
+      properties:
+        user_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the user who owns the object.
+          title: User ID
+        experiment_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the experiment that owns the object.
+          title: Experiment ID
+        campaign_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the campaign that owns the object.
+          title: Campaign ID
+        project_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the project that owns the object.
+          title: Project ID
+        node_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the node that owns the object.
+          title: Node ID
+        workcell_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the workcell that owns the object.
+          title: Workcell ID
+        lab_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the lab that owns the object.
+          title: Lab ID
+        step_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the step that owns the object.
+          title: Step ID
+        workflow_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the workflow that owns the object.
+          title: Workflow ID
+      title: OwnershipInfo
+      type: object
+  additionalProperties: true
+  description: Configuration for the pf400 node module.
+  properties:
+    status_update_interval:
+      anyOf:
+      - type: number
+      - type: 'null'
+      default: 2.0
+      description: The interval in seconds at which the node should update its status.
+      title: Status Update Interval
+    state_update_interval:
+      anyOf:
+      - type: number
+      - type: 'null'
+      default: 2.0
+      description: The interval in seconds at which the node should update its state.
+      title: State Update Interval
+    event_client_config:
+      anyOf:
+      - $ref: '#/$defs/EventClientConfig'
+      - type: 'null'
+      default: null
+      description: The configuration for a MADSci event client.
+      title: Event Client Configuration
+    resource_server_url:
+      anyOf:
+      - format: uri
+        minLength: 1
+        type: string
+      - type: 'null'
+      default: null
+      description: The URL of the resource server for this node to use.
+      title: Resource Client URL
+    host:
+      default: 127.0.0.1
+      description: The host of the REST API.
+      title: Host
+      type: string
+    port:
+      default: 8000
+      description: The port of the REST API.
+      title: Port
+      type: integer
+    protocol:
+      default: http
+      description: The protocol of the REST API, either 'http' or 'https'.
+      title: Protocol
+      type: string
+    ur_ip:
+      title: Ur Ip
+      type: string
+    resource_manager_url:
+      anyOf:
+      - format: uri
+        minLength: 1
+        type: string
+      - type: 'null'
+      default: null
+      title: Resource Manager Url
+  required:
+  - ur_ip
+  title: URNodeConfig
+  type: object

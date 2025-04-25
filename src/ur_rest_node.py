@@ -5,10 +5,12 @@ from typing import Optional
 
 from madsci.client.resource_client import ResourceClient
 from madsci.common.types.action_types import ActionFailed, ActionSucceeded
+from madsci.common.types.admin_command_types import AdminCommandResponse
 from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from madsci.common.types.node_types import RestNodeConfig
 from madsci.common.types.resource_types.definitions import (
+    PoolResourceDefinition,
     SlotResourceDefinition,
 )
 from madsci.node_module.helpers import action
@@ -44,7 +46,7 @@ class URNode(RestNode):
 
             self.logger.log("Node initializing...")
             self.ur_interface = UR(
-                host=self.config.ur_ip,
+                hostname=self.config.ur_ip,
                 resource_client=self.resource_client,
             )
             self.tool_resource = None
@@ -70,17 +72,19 @@ class URNode(RestNode):
 
     def state_handler(self) -> None:
         """Periodically called to update the current state of the node."""
-        if self.ur_interface is not None:
+        if self.ur_interface:
             # Getting robot state
             self.ur_interface.ur_dashboard.get_overall_robot_status()
             movement_state, current_location = self.ur_interface.get_movement_state()
-
-            if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
-                self.node_state = {
-                    "ur_status_code": "ERROR",
-                    "current_joint_angles": current_location,
-                }
-                self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
+        else:
+            self.logger.log_error("UR interface is not initialized")
+            return
+        if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
+            self.node_state = {
+                "ur_status_code": "ERROR",
+                "current_joint_angles": current_location,
+            }
+            self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
 
             elif movement_state == "BUSY":
                 self.node_state = {
@@ -363,12 +367,22 @@ class URNode(RestNode):
         home: Annotated[LocationArgument, "Home location"],
         source: Annotated[LocationArgument, "Initial location of the sample"],
         target: Annotated[LocationArgument, "Target location of the sample"],
-        tip_loc=Annotated[LocationArgument, "New tip location"],
-        tip_trash=Annotated[LocationArgument, "Tip trash location"],
-        volume=Annotated[float, "Set a volume in micro liters"],
+        tip_loc: Annotated[LocationArgument, "New tip location"],
+        tip_trash: Annotated[LocationArgument, "Tip trash location"],
+        volume: Annotated[float, "Set a volume in micro liters"],
     ):
         """Make a pipette transfer for the defined volume with UR"""
         try:
+            if self.resource_client:
+                # If the pipette resource is not initialized, initialize it
+                self.tool_resource = self.resource_client.init_resource(
+                    PoolResourceDefinition(
+                        resource_name="ur_pipette",
+                        owner=self.resource_owner,
+                    )
+                )
+                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+
             self.ur_interface.pipette_transfer(
                 home=home,
                 tip_loc=tip_loc,
@@ -501,6 +515,13 @@ class URNode(RestNode):
             return ActionFailed(errors=err)
 
         return ActionSucceeded()
+
+    def get_location(self) -> AdminCommandResponse:
+        """Return the current position of the ur robot"""
+        try:
+            return AdminCommandResponse(data={"Joint Angles": self.ur_interface.ur_connection.getj()})
+        except Exception:
+            return AdminCommandResponse(success=False)
 
 
 if __name__ == "__main__":
