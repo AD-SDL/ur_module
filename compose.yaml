@@ -13,6 +13,6 @@ services:
       tags:
         - ghcr.io/ad-sdl/ur_module:latest
         - ghcr.io/ad-sdl/ur_module:dev
-    command: python -m ur_rest_node --definition definitions/ur.node.yaml
+    command: python -m ur_rest_node
     volumes:
       - ./definitions:/home/madsci/definitions/
