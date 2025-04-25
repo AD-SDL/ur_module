@@ -1,6 +1,7 @@
 """Controls Various Type of Gripper End Effectors"""
 
 from copy import deepcopy
+from math import radians
 from time import sleep
 from typing import Union
 
@@ -369,6 +370,27 @@ class FingerGripperController:
         self.open_gripper()
         self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
         self.home_robot(home)
+
+    def flip_object(
+        self,
+        target: Union[LocationArgument, list] = None,
+        approach_axis: str = None,
+    ) -> None:
+        """Flips the object at the target location"""
+
+        self.pick(pick_goal=target, approach_axis=approach_axis)
+
+        cur_j = self.ur.getj()
+        rotate_j = cur_j
+        rotate_j[5] += radians(180)
+        self.ur.movej(rotate_j, 0.6, 0.6)
+
+        cur_l = self.ur.getl()
+        target[3] = cur_l[3]
+        target[4] = cur_l[4]
+        target[5] = cur_l[5]
+
+        self.place(place_goal=target, approach_axis=approach_axis)
 
     def transfer(
         self,

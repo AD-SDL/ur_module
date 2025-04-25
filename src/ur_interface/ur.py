@@ -2,7 +2,6 @@
 """Interface for UR Driver"""
 
 import socket
-from math import radians
 from time import sleep
 from typing import Union
 
@@ -574,21 +573,9 @@ class UR:
             if gripper_close:
                 gripper_controller.gripper_close = gripper_close
 
-            gripper_controller.pick(pick_goal=target, approach_axis=approach_axis)
-
-            cur_j = self.ur_connection.getj()
-            rotate_j = cur_j
-            rotate_j[5] += radians(180)
-            self.ur_connection.movej(rotate_j, 0.6, 0.6)
-
-            cur_l = self.ur_connection.getl()
-            target[3] = cur_l[3]
-            target[4] = cur_l[4]
-            target[5] = cur_l[5]
-
-            gripper_controller.place(place_goal=target, approach_axis=approach_axis)
+            gripper_controller.flip_object(target=target, approach_axis=approach_axis)
+            gripper_controller.disconnect_gripper()
             self.home(home)
-
         except Exception as er:
             print(er)
         finally:
