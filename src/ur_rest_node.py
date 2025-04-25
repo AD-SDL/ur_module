@@ -44,7 +44,7 @@ class URNode(RestNode):
 
             self.logger.log("Node initializing...")
             self.ur_interface = UR(
-                host=self.config.ur_ip,
+                hostname=self.config.ur_ip,
                 resource_client=self.resource_client,
             )
             self.tool_resource = None
@@ -70,11 +70,13 @@ class URNode(RestNode):
 
     def state_handler(self) -> None:
         """Periodically called to update the current state of the node."""
-        if self.ur_interface is not None:
+        if self.ur_interface:
             # Getting robot state
             self.ur_interface.ur_dashboard.get_overall_robot_status()
             movement_state, current_location = self.ur_interface.get_movement_state()
-
+        else:
+            self.logger.log_error("UR interface is not initialized")
+            return
         if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
             self.node_state = {
                 "ur_status_code": "ERROR",
