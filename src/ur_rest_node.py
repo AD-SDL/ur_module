@@ -1,6 +1,5 @@
 """REST-based node for UR robots"""
 
-import json
 from typing import Optional
 
 from madsci.client.resource_client import ResourceClient
@@ -150,11 +149,27 @@ class URNode(RestNode):
         acceleration: Annotated[float, "Acceleration"] = 0.6,
         velocity: Annotated[float, "Velocity"] = 0.6,
     ):
-        """A doc string, but not the actual description of the action."""
+        """Move the robot using joint angles"""
         try:
-            joints = json.loads(joints)
-            self.logger.log(f"Move joints: {joints}")
-            self.ur_interface.ur_connection.movej(joints=joints, acc=acceleration, vel=velocity)
+            self.logger.log(f"Move joints: {joints.location}")
+            self.ur_interface.ur_connection.movej(joints=joints.location, acc=acceleration, vel=velocity)
+
+        except Exception as err:
+            self.logger.log_error(err)
+
+        return ActionSucceeded()
+
+    @action(name="movel", description="Move the robot using linar motion")
+    def movel(
+        self,
+        target: Annotated[LocationArgument, "Linear location to move to"],
+        acceleration: Annotated[float, "Acceleration"] = 0.6,
+        velocity: Annotated[float, "Velocity"] = 0.6,
+    ):
+        """Move the robot using linear motion"""
+        try:
+            self.logger.log(f"Move location: {target.location}")
+            self.ur_interface.ur_connection.movel(tpose=target.location, acc=acceleration, vel=velocity)
 
         except Exception as err:
             self.logger.log_error(err)
