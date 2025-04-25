@@ -85,22 +85,22 @@ class URNode(RestNode):
             }
             self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
 
-            elif movement_state == "BUSY":
-                self.node_state = {
-                    "ur_status_code": "BUSY",
-                    "current_joint_angles": current_location,
-                }
-                self.logger.info("BUSY")
+        elif movement_state == "BUSY":
+            self.node_state = {
+                "ur_status_code": "BUSY",
+                "current_joint_angles": current_location,
+            }
+            self.logger.info("BUSY")
 
-            elif movement_state == "READY":
-                self.node_state = {
-                    "ur_status_code": "READY",
-                    "current_joint_angles": current_location,
-                }
-            else:
-                self.node_state = {
-                    "ur_status_code": "UNKOWN",
-                    "current_joint_angles": current_location,
+        elif movement_state == "READY":
+            self.node_state = {
+                "ur_status_code": "READY",
+                "current_joint_angles": current_location,
+            }
+        else:
+            self.node_state = {
+                "ur_status_code": "UNKOWN",
+                "current_joint_angles": current_location,
                 }
 
     @action(name="getj", description="Get joint angles")
