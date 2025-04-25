@@ -367,9 +367,9 @@ class URNode(RestNode):
         home: Annotated[LocationArgument, "Home location"],
         source: Annotated[LocationArgument, "Initial location of the sample"],
         target: Annotated[LocationArgument, "Target location of the sample"],
-        tip_loc=Annotated[LocationArgument, "New tip location"],
-        tip_trash=Annotated[LocationArgument, "Tip trash location"],
-        volume=Annotated[float, "Set a volume in micro liters"],
+        tip_loc: Annotated[LocationArgument, "New tip location"],
+        tip_trash: Annotated[LocationArgument, "Tip trash location"],
+        volume: Annotated[float, "Set a volume in micro liters"],
     ):
         """Make a pipette transfer for the defined volume with UR"""
         try:
