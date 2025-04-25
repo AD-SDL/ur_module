@@ -210,10 +210,16 @@ class FingerGripperController:
         screw_loc: Union[LocationArgument, list] = None,
     ) -> None:
         """Handles the pick screw request"""
-        above_goal = deepcopy(screw_loc)
+
+        if isinstance(screw_loc, LocationArgument):
+            source_location = screw_loc.location
+        elif isinstance(screw_loc, list):
+            source_location = screw_loc
+
+        above_goal = deepcopy(source_location)
         above_goal[2] += 0.06
         self.ur.movel(above_goal, self.acceleration, self.velocity)
-        self.ur.movel(screw_loc, 0.2, 0.2)
+        self.ur.movel(source_location, 0.2, 0.2)
         self.ur.movel(above_goal, self.acceleration, self.velocity)
 
     def place(
@@ -274,10 +280,16 @@ class FingerGripperController:
     ) -> None:
         """Handles the place screw request"""
         # Move to the target location
-        above_target = deepcopy(target)
+
+        if isinstance(target, LocationArgument):
+            target_location = target.location
+        elif isinstance(target, list):
+            target_location = target
+
+        above_target = deepcopy(target_location)
         above_target[2] += 0.03
         self.ur.movel(above_target, self.acceleration, self.velocity)
-        self.ur.movel(target, 0.2, 0.2)
+        self.ur.movel(target_location, 0.2, 0.2)
 
         target_pose = [0, 0, 0.00021, 0, 0, 3.14]  # Setting the screw drive motion
         print("Screwing down")
@@ -289,6 +301,74 @@ class FingerGripperController:
         print("Screw drive motion completed")
 
         self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
+
+    def remove_cap(
+        self,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+    ) -> None:
+        """Handles the remove cap request"""
+        self.open_gripper()
+        if isinstance(source, LocationArgument):
+            source_location = source.location
+        elif isinstance(source, list):
+            source_location = source
+
+        above_goal = deepcopy(source_location)
+        above_goal[2] += 0.06
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+        self.ur.movel(source_location, 0.2, 0.2)
+
+        self.close_gripper()
+
+        target_pose = [0, 0, -0.001, 0, 0, -3.14]  # Setting the screw drive motion
+        print("Removing cap")
+        screw_time = 7
+        self.ur.speedl_tool(
+            target_pose, 2, screw_time
+        )  # This will perform screw driving motion for defined number of seconds
+        sleep(screw_time + 0.5)
+        self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
+
+        self.home_robot(home)
+        self.place(place_goal=target)
+        self.home_robot(home)
+
+    def place_cap(
+        self,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+    ) -> None:
+        """Handles the replace cap request"""
+
+        self.pick(pick_goal=source)
+        self.home_robot(home)
+
+        if isinstance(target, LocationArgument):
+            target_location = target.location
+        elif isinstance(target, list):
+            target_location = target
+
+        above_goal = deepcopy(target_location)
+        above_goal[2] += 0.06
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+        self.ur.movel(target_location, 0.1, 0.1)
+
+        # self.close_gripper()
+
+        target_pose = [0, 0, 0.0001, 0, 0, 2.10]  # Setting the screw drive motion
+        print("Placing cap")
+        screw_time = 6
+        self.ur.speedl_tool(
+            target_pose, 2, screw_time
+        )  # This will perform screw driving motion for defined number of seconds
+        sleep(screw_time)
+
+        self.open_gripper()
+        self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
+        self.home_robot(home)
 
     def transfer(
         self,

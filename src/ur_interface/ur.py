@@ -2,7 +2,6 @@
 """Interface for UR Driver"""
 
 import socket
-from copy import deepcopy
 from math import radians
 from time import sleep
 from typing import Union
@@ -499,26 +498,8 @@ class UR:
             if gripper_close:
                 gripper_controller.gripper_close = gripper_close
 
-            gripper_controller.open_gripper()
-            above_goal = deepcopy(source)
-            above_goal[2] += 0.06
-            self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
-            self.ur_connection.movel(source, 0.2, 0.2)
-
-            gripper_controller.close_gripper()
-
-            target_pose = [0, 0, -0.001, 0, 0, -3.14]  # Setting the screw drive motion
-            print("Removing cap")
-            screw_time = 7
-            self.ur_connection.speedl_tool(
-                target_pose, 2, screw_time
-            )  # This will perform screw driving motion for defined number of seconds
-            sleep(screw_time + 0.5)
-            self.ur_connection.translate_tool([0, 0, -0.03], 0.5, 0.5)
-
-            self.home(home)
-            gripper_controller.place(place_goal=target)
-            self.home(home)
+            gripper_controller.remove_cap(home=home, target=target, source=source)
+            gripper_controller.disconnect_gripper()
 
         except Exception as err:
             print(err)
@@ -550,34 +531,8 @@ class UR:
                 resource_client=self.resource_client,
                 gripper_resource_id=self.tool_resource_id,
             )
-
-            gripper_controller.connect_gripper()
-            if gripper_open:
-                gripper_controller.gripper_open = gripper_open
-            if gripper_close:
-                gripper_controller.gripper_close = gripper_close
-
-            gripper_controller.pick(pick_goal=source)
-            self.home(home)
-
-            above_goal = deepcopy(target)
-            above_goal[2] += 0.06
-            self.ur_connection.movel(above_goal, self.acceleration, self.velocity)
-            self.ur_connection.movel(target, 0.1, 0.1)
-
-            # gripper_controller.close_gripper()
-
-            target_pose = [0, 0, 0.0001, 0, 0, 2.10]  # Setting the screw drive motion
-            print("Placing cap")
-            screw_time = 6
-            self.ur_connection.speedl_tool(
-                target_pose, 2, screw_time
-            )  # This will perform screw driving motion for defined number of seconds
-            sleep(screw_time + 0.5)
-
-            gripper_controller.open_gripper()
-            self.ur_connection.translate_tool([0, 0, -0.03], 0.5, 0.5)
-            self.home(home)
+            gripper_controller.place_cap(home=home, target=target, source=source)
+            gripper_controller.disconnect_gripper()
 
         except Exception as err:
             print(err)

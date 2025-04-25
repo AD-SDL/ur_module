@@ -349,8 +349,8 @@ class URNode(RestNode):
         home: Annotated[LocationArgument, "Home location"],
         screwdriver_loc: Annotated[LocationArgument, "Screwdriver location"],
         screw_loc: Annotated[LocationArgument, "Screw location"],
-        screw_time: Annotated[int, "Srew time in seconds"],
         target: Annotated[LocationArgument, "Location where the srewdriving will be performed"],
+        screw_time: Annotated[Optional[int], "Srew time in seconds"] = 9,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
