@@ -75,30 +75,30 @@ class URNode(RestNode):
             self.ur_interface.ur_dashboard.get_overall_robot_status()
             movement_state, current_location = self.ur_interface.get_movement_state()
 
-        if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
-            self.node_state = {
-                "ur_status_code": "ERROR",
-                "current_joint_angles": current_location,
-            }
-            self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
+            if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
+                self.node_state = {
+                    "ur_status_code": "ERROR",
+                    "current_joint_angles": current_location,
+                }
+                self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
 
-        elif movement_state == "BUSY":
-            self.node_state = {
-                "ur_status_code": "BUSY",
-                "current_joint_angles": current_location,
-            }
-            self.logger.info("BUSY")
+            elif movement_state == "BUSY":
+                self.node_state = {
+                    "ur_status_code": "BUSY",
+                    "current_joint_angles": current_location,
+                }
+                self.logger.info("BUSY")
 
-        elif movement_state == "READY":
-            self.node_state = {
-                "ur_status_code": "READY",
-                "current_joint_angles": current_location,
-            }
-        else:
-            self.node_state = {
-                "ur_status_code": "UNKOWN",
-                "current_joint_angles": current_location,
-            }
+            elif movement_state == "READY":
+                self.node_state = {
+                    "ur_status_code": "READY",
+                    "current_joint_angles": current_location,
+                }
+            else:
+                self.node_state = {
+                    "ur_status_code": "UNKOWN",
+                    "current_joint_angles": current_location,
+                }
 
     @action(name="getj", description="Get joint angles")
     def getj(self):
@@ -114,7 +114,7 @@ class URNode(RestNode):
         self.logger.log_info(lin_pos)
         return ActionSucceeded(data={"lin_pos": lin_pos})
 
-    @action(name="set_freedriver", description="Free robot joints")
+    @action(name="set_freedrive", description="Free robot joints")
     def set_freedrive(self, timeout: Annotated[int, "how long to do freedrive"] = 60):
         """set the robot into freedrive"""
         self.ur_interface.ur_connection.set_freedrive(True, timeout)
