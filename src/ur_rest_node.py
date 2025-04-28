@@ -17,6 +17,7 @@ from madsci.node_module.rest_node_module import RestNode
 from pydantic.networks import AnyUrl
 from typing_extensions import Annotated
 from ur_interface.ur import UR
+from ur_interface.ur_kinematics import get_pose_from_joint_angles
 
 
 class URNodeConfig(RestNodeConfig):
@@ -208,6 +209,9 @@ class URNode(RestNode):
                 )
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
+            source.location = get_pose_from_joint_angles(source.location)
+            target.location = get_pose_from_joint_angles(target.location)
+
             self.ur_interface.gripper_transfer(
                 home=home,
                 source=source,
@@ -245,6 +249,8 @@ class URNode(RestNode):
                 )
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
+            source.location = get_pose_from_joint_angles(source.location)
+
             self.ur_interface.gripper_pick(
                 home=home,
                 source=source,
@@ -277,6 +283,8 @@ class URNode(RestNode):
                     )
                 )
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+
+            target.location = get_pose_from_joint_angles(target.location)
 
             self.ur_interface.gripper_place(
                 home=home,
