@@ -1,10 +1,19 @@
 # UR Robot Keyboard Control
 
 This script allows you to control a Universal Robots (UR) robotic arm using a keyboard.
+It mimics teach pendant behavior with precise step-based movements using TCP or joint control.
 
-- Default movement: **Cartesian linear velocity** (via `speedl_tool`)
-- Switch to **joint movement** mode (`movej`) by pressing `j`
-- Support for Freedrive Mode
+---
+
+## Features
+
+- **Step-based Cartesian movement** using `movel()`
+- **Joint control** using `movej()`
+- **Freedrive toggle** for manual movement
+- **Real-time printout of pose and joint angles**
+- **Orientation control** (Rx, Ry, Rz) from keyboard
+- **Set gripper perpendicular to ground instantly**
+- Highly responsive and configurable via command-line arguments
 
 ---
 
@@ -15,53 +24,76 @@ This script allows you to control a Universal Robots (UR) robotic arm using a ke
 - `pynput` library
 - UR Interface SDK (`ur_interface`)
 
+### Installation
+If `ur_module` package is installed, you can skip this install step.
+```bash
+pip install pynput
+# And make sure `ur_interface` is installed in your environment
+```
+
 ### Usage
 ```bash
-python ur_keyboard_control.py --url <robot_ip> --lin_speed <linear_speed> --rad_speed <radial_speed>
+python keyboard_control.py \
+    --url <robot_ip> \
+    --step <step_size_meters_or_radians> \
+    --joint_step <joint_step_radians> \
+    --speed <velocity_and_acceleration>
 ```
 
 Defaults:
 - `--url 146.137.240.38`
-- `--lin_speed 0.01` (m/s)
-- `--rad_speed 0.01` (rad/s)
+- `--step 0.01` (m)
+- `--joint_step 0.05` (rad)
+- `--speed 2.0` (max linear/angular speed)
 
 ---
 
 ## Keyboard Mappings
 
-| Key        | Action                                      | Mode         |
-|------------|---------------------------------------------|--------------|
-| Up Arrow   | Move +Y                                     | Linear       |
-| Down Arrow | Move -Y                                     | Linear       |
-| Left Arrow | Move +X                                     | Linear       |
-| Right Arrow| Move -X                                     | Linear       |
-| `w`        | Move +Z (up)                                | Linear       |
-| `s`        | Move -Z (down)                              | Linear       |
-| `q`        | Rotate +Yaw (around Z axis)                 | Linear       |
-| `e`        | Rotate -Yaw (around Z axis)                 | Linear       |
-| `4`        | Rotate +Pitch (around Y axis)               | Linear       |
-| `6`        | Rotate -Pitch (around Y axis)               | Linear       |
-| `7`        | Rotate +Roll (around X axis)                | Linear       |
-| `9`        | Rotate -Roll (around X axis)                | Linear       |
-| `j`        | Toggle between Cartesian (linear) and Joint mode | Switch   |
-| `l`        | Reset orientation                          | Action       |
-| `v`        | Adjust yaw only                            | Action       |
-| `f`        | Toggle Freedrive Mode                      | Switch       |
+### Cartesian (TCP) Movement:
+| Key        | Action                      |
+|------------|-----------------------------|
+| Up Arrow   | +Y (forward)                |
+| Down Arrow | -Y (backward)               |
+| Left Arrow | +X (left)                   |
+| Right Arrow| -X (right)                  |
+| `w`        | +Z (up)                     |
+| `s`        | -Z (down)                   |
 
----
+### Orientation (TCP rotation):
+| Key        | Action                      |
+|------------|-----------------------------|
+| `u`        | +Roll (Rx)                  |
+| `o`        | -Roll (Rx)                  |
+| `m`        | +Pitch (Ry)                 |
+| `,`        | -Pitch (Ry)                 |
+| `j`        | +Yaw (Rz)                   |
+| `l`        | -Yaw (Rz)                   |
 
-## Behavior Details
-- **Default**: Move robot via `speedl_tool(velocity)`.
-- **Joint Mode (`j`)**: Adjust joints individually using the same keys.
-- **Freedrive Mode (`f`)**: Manual physical movement allowed.
-- **Reset Orientation (`l`)**: Resets TCP orientation to face forward.
-- **Adjust Yaw (`v`)**: Correct yaw angle only.
+### Joint Rotation:
+| Key        | Joint Index | Direction     |
+|------------|-------------|---------------|
+| `1` / `2`  | Joint 0     | + / -          |
+| `3` / `4`  | Joint 1     | + / -          |
+| `5` / `6`  | Joint 2     | + / -          |
+| `7` / `8`  | Joint 3     | + / -          |
+| `9` / `0`  | Joint 4     | + / -          |
+| `-` / `=`  | Joint 5     | + / -          |
+
+### Functional Keys:
+| Key        | Action                                     |
+|------------|--------------------------------------------|
+| `f`        | Enable Freedrive mode                      |
+| `p`        | Print current pose and joint angles        |
+| `g`        | Set gripper to face straight down (Rx=pi)  |
+| `ESC`      | Quit                                        |
 
 ---
 
 ## Notes
-- Always monitor robot movement closely to avoid collisions.
-- Speed settings are user adjustable via CLI arguments.
-- Code is built to be extendable and easily modifiable.
+- This tool is useful for teaching poses and validating motion steps.
+- Ideal for position tuning, pick-and-place prep, and lab robotics.
+- Modify step sizes and speed for precision or fast setup.
+- Extendable and safe to use in supervised testing environments.
 
 ---
