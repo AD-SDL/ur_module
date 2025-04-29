@@ -76,4 +76,3 @@ We welcome pull requests and issues. Please ensure code is typed and documented.
 ## License
 
 This repository is licensed under the MIT License - see the [LICENSE](/LICENSE) file for details.
-
