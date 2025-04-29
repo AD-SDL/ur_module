@@ -2,22 +2,26 @@
 
 ## Overview
 
-The `ur_module` repository is a comprehensive package that includes a UR driver and a REST node for Universal Robots (UR). This module is designed to provide a robust and flexible interface for controlling UR robots, offering a variety of control interfaces for different use cases. The repository supports initialization via the UR dashboard, motion control using URx, and end-effector management.
+The `ur_module` repository is a comprehensive robotics control package centered around a modernized **UR Interface**. It replaces the legacy driver system with a Python-based interface built on `madsci` infrastructure and includes tooling for motion control, tool management, and integration with external systems. It supports direct robot control through UR Dashboard and URX, and also provides keyboard-based teleoperation.
 
 ## Features
 
-### UR Driver Package
+### UR Interface Package
 
-The UR driver package in this repository encompasses various remote interfaces to enable comprehensive control over the UR robot. The supported interfaces include:
+The UR interface offers a unified API to:
 
-1. **Initialization via UR Dashboard:**
-   - Seamless integration with the UR dashboard for easy initialization.
-   - Dashboard Server features include loading and playing URP programs, power on and off, querying robot status, and setting operational modes.
+1. **Initialize Robot via UR Dashboard**
+   - Power on/off
+   - Load and run `.urp` programs
+   - Set operational modes
+   - Clear faults
 
-2. **Motion Control using URx:**
-   - URx features provide precise control over robot motion.
+2. **Motion Control Using Updated URX**
+   - Cartesian and joint-space control
+   - Speed and acceleration tuning
+   - Safe motion state checking
 
-3. **End-Effector Management:**
+3. **Tool Control**
    - Support for a variety of end-tools, including:
      - Robotiq Gripper (Modbus TCP/IP)
      - TriContenent Pipette (RS485)
@@ -26,60 +30,50 @@ The UR driver package in this repository encompasses various remote interfaces t
      - OpenTrone Pipette (PyEpics)
      - ATI Tool Changer (PyEpics)
 
-### Dashboard Server Features
+4. **I/O Digital Output Handling**
+   - Set digital pins to open/close connected tools or devices
 
-Seamless integration with the UR dashboard for easy initialization. The dashboard server facilitates the following operations:
+5. **Keyboard Control (Jogging)**
+   - Use keyboard to jog the arm in real-time
+   - Easily save poses by moving robot manually
 
-- Load and play URP programs.
-- Power on and off the robot.
-- Query the robot status.
-- Set the operational mode.
-
-### URx Features
-
-URx features provide fine-grained control over robot motion.
-
-### End-Tools Integration
-
-Support for a variety of end-tools, including communication protocols such as TCP/IP, RS485, Interpreter Socket, and PyEpics.
-
-- **Robotiq Gripper:** TCP/IP
-- **TriContenent Pipette:** RS485
-- **Robotiq Screwdriver:** Interpreter Socket
-- **Robotiq Vacuum Gripper:** Interpreter Socket
-- **OpenTrone Pipette:** PyEpics
-- **ATI Tool Changer:** PyEpics
-
-### AI Camera Integration
-
-The repository includes AI camera support for real-time object detection and recognition. The detected target locations can be seamlessly transitioned to the UR robot for further action.
-
-## REST Node
-
-The role of the REST node in this repository is to establish communication between UR robots and the higher-level system of WEI (Workflow Execution Interface). This node acts as a bridge, enabling seamless integration of UR robots into a broader robotic ecosystem.
+6. **Support for Camera Integration**
+   - The repository includes AI camera support for real-time object detection and recognition. The detected target locations can be seamlessly transitioned to the UR robot for further action.
 
 ## Installation
 
-<!-- To use the `ur_module` repository, follow the installation instructions provided in the [Installation Guide](/docs/installation.md). -->
+> ⚠️ This repo includes a patched and dependency-fixed version of URX. Installing this repo as a whole is critical.
 
+```bash
+cd ur_module
+pdm install
 ```
-mkdir ~/wei_ws/src
-cd ~/wei_ws/src
-git clone https://github.com/AD-SDL/ur_module.git
-cd ~/wei_ws
-colcon build
-source install/setup.bash
-```
+
+PDM ensures all dependencies (including madsci, URX fork, etc.) are resolved in a reliable and reproducible environment.
+
 ## Usage
 
-Detailed information on how to use the UR driver and ROS node is available in the [User Guide](/docs/user_guide.md).
+After installing, explore the following modules:
 
-## Contribution
+- `ur_interface/ur.py`: Primary control interface (`UR` class)
+- `keyboard_control.py`: Manual jogging and pose discovery
+- `tests/`: Example Jupyter notebooks to interact with the interface and the REST Node
+   - `tests/interface_test.ipynb`
+   - `tests/node_test.ipynb`
 
-Contributions are welcome! If you have ideas for improvements or find any issues, please open an issue or submit a pull request.
+Example:
+```python
+from ur_interface.ur import UR
+robot = UR("192.168.0.100")
+robot.home([0, -1.57, 0, -1.57, 0, 0])
+robot.disconnect()
+```
+
+## Contributions
+
+We welcome pull requests and issues. Please ensure code is typed and documented.
 
 ## License
 
 This repository is licensed under the MIT License - see the [LICENSE](/LICENSE) file for details.
 
----
