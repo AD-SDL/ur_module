@@ -411,7 +411,7 @@ class FingerGripperController:
         print("Pick up completed")
         self.home_robot(home=home)
         self.place(
-            place=target,
+            target=target,
             approach_axis=target_approach_axis,
             approach_distance=target_approach_distance,
         )
