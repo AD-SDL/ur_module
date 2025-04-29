@@ -28,7 +28,7 @@ is_template: false
 config_defaults:
   host: localhost
   port: 3030
-  ur_ip: 127.0.0.1
+  ur_ip: 146.137.240.38
 actions:
   getj:
     name: getj
@@ -123,6 +123,33 @@ actions:
     results: {}
     blocking: false
     asynchronous: true
+  movel:
+    name: movel
+    description: Move the robot using linar motion
+    args:
+      acceleration:
+        name: acceleration
+        description: Acceleration
+        argument_type: float
+        required: false
+        default: 0.6
+      velocity:
+        name: velocity
+        description: Velocity
+        argument_type: float
+        required: false
+        default: 0.6
+    locations:
+      target:
+        name: target
+        description: Linear location to move to
+        argument_type: location
+        required: true
+        default: null
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
   gripper_transfer:
     name: gripper_transfer
     description: Execute a transfer in between source and target locations using Robotiq
@@ -132,38 +159,38 @@ actions:
         name: source_approach_axis
         description: Source location approach axis, (X/Y/Z)
         argument_type: str
-        required: true
-        default: null
+        required: false
+        default: z
       target_approach_axis:
         name: target_approach_axis
         description: Source location approach axis, (X/Y/Z)
         argument_type: str
-        required: true
-        default: null
+        required: false
+        default: z
       source_approach_distance:
         name: source_approach_distance
         description: Approach distance in meters
         argument_type: float
-        required: true
-        default: null
+        required: false
+        default: 0.05
       target_approach_distance:
         name: target_approach_distance
         description: Approach distance in meters
         argument_type: float
-        required: true
-        default: null
+        required: false
+        default: 0.05
       gripper_open:
         name: gripper_open
         description: Set a max value for the gripper open state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 0
       gripper_close:
         name: gripper_close
         description: Set a min value for the gripper close state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 255
     locations:
       home:
         name: home
@@ -195,20 +222,20 @@ actions:
         name: source_approach_axis
         description: Source location approach axis, (X/Y/Z)
         argument_type: str
-        required: true
-        default: null
+        required: false
+        default: z
       source_approach_distance:
         name: source_approach_distance
         description: Approach distance in meters
         argument_type: float
-        required: true
-        default: null
+        required: false
+        default: '0.05'
       gripper_close:
         name: gripper_close
         description: Set a min value for the gripper close state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: '255'
     locations:
       home:
         name: home
@@ -234,20 +261,20 @@ actions:
         name: target_approach_axis
         description: Source location approach axis, (X/Y/Z)
         argument_type: str
-        required: true
-        default: null
+        required: false
+        default: z
       target_approach_distance:
         name: target_approach_distance
         description: Approach distance in meters
         argument_type: float
-        required: true
-        default: null
+        required: false
+        default: '0.05'
       gripper_open:
         name: gripper_open
         description: Set a max value for the gripper open state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 0
     locations:
       home:
         name: home
@@ -273,19 +300,19 @@ actions:
         name: docking_axis
         description: Docking axis, (X/Y/Z)
         argument_type: str
-        required: true
-        default: null
+        required: false
+        default: y
       payload:
         name: payload
         description: Tool payload
         argument_type: float
-        required: true
+        required: false
         default: null
       tool_name:
         name: tool_name
         description: Tool name)
         argument_type: str
-        required: true
+        required: false
         default: null
     locations:
       home:
@@ -312,13 +339,13 @@ actions:
         name: docking_axis
         description: Docking axis, (X/Y/Z)
         argument_type: str
-        required: true
-        default: null
+        required: false
+        default: y
       tool_name:
         name: tool_name
         description: Tool name)
         argument_type: str
-        required: true
+        required: false
         default: null
     locations:
       home:
@@ -346,20 +373,20 @@ actions:
         name: screw_time
         description: Srew time in seconds
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 9
       gripper_open:
         name: gripper_open
         description: Set a max value for the gripper open state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 0
       gripper_close:
         name: gripper_close
         description: Set a min value for the gripper close state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 255
     locations:
       home:
         name: home
@@ -393,7 +420,13 @@ actions:
     name: pipette_transfer
     description: Make a pipette transfer to transfer sample liquids in between two
       locations
-    args: {}
+    args:
+      volume:
+        name: volume
+        description: Set a volume in micro liters
+        argument_type: float
+        required: true
+        default: null
     locations:
       home:
         name: home
@@ -413,6 +446,18 @@ actions:
         argument_type: location
         required: true
         default: null
+      tip_loc:
+        name: tip_loc
+        description: New tip location
+        argument_type: location
+        required: true
+        default: null
+      tip_trash:
+        name: tip_trash
+        description: Tip trash location
+        argument_type: location
+        required: true
+        default: null
     files: {}
     results: {}
     blocking: false
@@ -425,26 +470,26 @@ actions:
         name: approach_axis
         description: Approach axis, (X/Y/Z)
         argument_type: str
-        required: true
-        default: null
+        required: false
+        default: z
       target_approach_distance:
         name: target_approach_distance
         description: Approach distance in meters
         argument_type: float
-        required: true
-        default: null
+        required: false
+        default: 0.05
       gripper_open:
         name: gripper_open
         description: Set a max value for the gripper open state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 0
       gripper_close:
         name: gripper_close
         description: Set a min value for the gripper close state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 255
     locations:
       home:
         name: home
@@ -470,14 +515,14 @@ actions:
         name: gripper_open
         description: Set a max value for the gripper open state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 0
       gripper_close:
         name: gripper_close
         description: Set a min value for the gripper close state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 255
     locations:
       home:
         name: home
@@ -510,14 +555,14 @@ actions:
         name: gripper_open
         description: Set a max value for the gripper open state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 0
       gripper_close:
         name: gripper_close
         description: Set a min value for the gripper close state
         argument_type: int
-        required: true
-        default: null
+        required: false
+        default: 255
     locations:
       home:
         name: home
@@ -567,7 +612,7 @@ config:
   host: localhost
   port: 3030
   protocol: http
-  ur_ip: 127.0.0.1
+  ur_ip: 146.137.240.38
   resource_manager_url: null
 config_schema:
   $defs:

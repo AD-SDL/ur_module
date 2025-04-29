@@ -28,4 +28,4 @@ is_template: false
 config_defaults:
   host: localhost
   port: 3030
-  ur_ip: 127.0.0.1
+  ur_ip: 146.137.240.38

@@ -119,7 +119,8 @@ if __name__ == "__main__":
     """Tests"""
     tool = InterpreterSocket(ip="164.54.116.129")
     tool.connect()
-    tool.execute_command("rq_screw_turn(1,1,3600,100,False,9)")
+    # tool.execute_command("rq_screw_turn(1,1,3600,100,False,9)")
+    # tool.execute_command("")
     # sleep(10)
     # tool.execute_command("rq_screw_turn(1,1,3600,250,False,9)")
     sleep(5)
