@@ -381,6 +381,7 @@ if __name__ == "__main__":
     robot = UR_DASHBOARD("146.137.240.38")
 
     robot.get_loaded_program()
+    robot.run_program()
     # robot.transfer_program("/home/rpl/workspace/ur_module/src/ur_interface/scripts/urp_programs/interpreter_mode.urp","/programs/interpreter_mode.urp")
     # robot.get_program_state()
     # robot.load_program("/programs/interpreter_mode.urp")

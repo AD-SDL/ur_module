@@ -53,7 +53,7 @@ class InterpreterSocket:
         """
         collected = b""
         while True:
-            part = self.socket.recv(1)
+            part = self.socket.recv(4096)
             if part != b"\n":
                 collected += part
             elif part == b"\n":
