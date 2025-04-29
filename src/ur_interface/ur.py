@@ -399,7 +399,7 @@ class UR:
                 gripper_controller.gripper_open = gripper_open
 
             gripper_controller.place(
-                place_goal=target,
+                target=target,
                 approach_axis=target_approach_axis,
                 approach_distance=target_approach_distance,
             )
