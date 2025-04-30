@@ -3,28 +3,24 @@ name = "ur_module"
 version = "0.3.0"
 description = "Software for automatting a UR robot"
 authors = [
-    {name = "Ryan D. Lewis", email="ryan.lewis@anl.gov"},
-    {name = "Rafael Vescovi", email="ravescovi@anl.gov"},
     {name = "Doga Ozgulbas", email="dozgulbas@anl.gov"},
-    {name = "Abe Stroka", email="astroka@anl.gov"},
-    {name = "Kyle Hippe", email = "khippe@anl.gov"},
+    {name = "Ryan D. Lewis", email="ryan.lewis@anl.gov"},
     {name = "Tobias Ginsburg", email = "tginsburg@anl.gov"},
 ]
 dependencies = [
-    "ad_sdl.wei>=0.6.2",
     "fastapi>=0.103.2",
     "uvicorn>=0.21.1",
-    "pytest",
     "paramiko",
     "scp",
     "sockets",
+    "pynput",
     "pyepics",
+    "numpy>=2.0.0",
     "urx@git+https://github.com/Dozgulbas/python-urx.git",
-    "numpy",
-
+    "madsci.node_module>=0.2.1",
 ]
 
-requires-python = ">=3.8.1"
+requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
 
@@ -147,3 +143,10 @@ plugins = ["pydantic.mypy"]
 strict = true
 disallow_untyped_defs = true
 implicit_reexport = true
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "ruff>=0.11.7",
+    "pytest",
+]

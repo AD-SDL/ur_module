@@ -2,6 +2,9 @@
 
 from copy import deepcopy
 from time import sleep
+from typing import Union
+
+from madsci.common.types.location_types import LocationArgument
 
 
 class WMToolChangerController:
@@ -9,10 +12,12 @@ class WMToolChangerController:
 
     def __init__(
         self,
-        tool_location: list = None,
+        tool_location: Union[LocationArgument, list] = None,
         docking_axis: str = "y",
         ur=None,
         tool: str = None,
+        resource_client=None,
+        tool_resource_id: str = None,
     ):
         """Constractor class
 
@@ -26,6 +31,9 @@ class WMToolChangerController:
             raise AttributeError("Ur connection is not provided")
 
         self.ur = ur
+        self.resource_client = resource_client
+        self.tool_resource_id = tool_resource_id
+        self.tool = tool
         self.current_tool = None
         self.axis = docking_axis
 
@@ -34,17 +42,11 @@ class WMToolChangerController:
         else:
             self.location = tool_location
 
-        self.tool_above = deepcopy(self.location)
-        self.tool_above[2] += 0.05
-        self.tool_front = None
-        self._get_tool_front()
-        self.tool_front_above = deepcopy(self.tool_front)
-        self.tool_front_above[2] += 0.25
-
+        self._set_target_locations()
         self.robot_fast_acceleration = 1.0
         self.robot_fast_velocity = 1.0
-        self.robot_slow_acceleration = 1.0
-        self.robot_slow_velocity = 1.0
+        self.robot_slow_acceleration = 0.2
+        self.robot_slow_velocity = 0.2
 
         self.gripper_com = {
             "baud_rate": 115200,
@@ -61,6 +63,20 @@ class WMToolChangerController:
             "rx_idle_chars": 1.5,
             "tx_idle_chars": 3.5,
         }
+
+    def _set_target_locations(self):
+        """Sets the target locations for the tool changer"""
+        if isinstance(self.location, LocationArgument):
+            self.location_joint_values = self.location.location
+        elif isinstance(self.location, list):
+            self.location_joint_values = self.location
+
+        self.tool_above = deepcopy(self.location_joint_values)
+        self.tool_above[2] += 0.05
+        self.tool_front = None
+        self._get_tool_front()
+        self.tool_front_above = deepcopy(self.tool_front)
+        self.tool_front_above[2] += 0.25
 
     def _set_tool_params(self, tool: str = None):
         """Sets Tool Parameters
@@ -102,7 +118,7 @@ class WMToolChangerController:
 
     def _get_tool_front(self):
         """Gets the tool front location"""
-        self.tool_front = deepcopy(self.location)
+        self.tool_front = deepcopy(self.location_joint_values)
         if self.axis == "x":
             self.tool_front[0] += 0.1
         elif self.axis == "-x":
@@ -132,7 +148,7 @@ class WMToolChangerController:
                 self.robot_fast_velocity,
             )
             self.ur.movel(
-                self.location,
+                self.location_joint_values,
                 self.robot_slow_acceleration,
                 self.robot_slow_velocity,
             )
@@ -168,7 +184,7 @@ class WMToolChangerController:
                 self.robot_fast_velocity,
             )
             self.ur.movel(
-                self.location,
+                self.location_joint_values,
                 self.robot_slow_acceleration,
                 self.robot_slow_velocity,
             )
@@ -185,4 +201,5 @@ class WMToolChangerController:
 
     def discover_tool(self):
         """Discover if a tool is currently attached and which tool it is."""
+        ### Check resources DB for the tool
         pass

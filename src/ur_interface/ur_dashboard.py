@@ -280,7 +280,7 @@ class UR_DASHBOARD:
         local_path: str = None,
         remote_path: str = "/programs/",
         user_name: str = "root",
-        user_password: str = "easybot",
+        user_password: str = "123",
     ) -> None:
         """Trasnfers a URP program from local path to Robot computer
 
@@ -378,10 +378,13 @@ class UR_DASHBOARD:
 
 if __name__ == "__main__":
     """Tests"""
-    robot = UR_DASHBOARD("164.54.116.129")
-    # robot.get_loaded_program()
+    robot = UR_DASHBOARD("146.137.240.38")
+
+    robot.get_loaded_program()
+    robot.run_program()
+    # robot.transfer_program("/home/rpl/workspace/ur_module/src/ur_interface/scripts/urp_programs/interpreter_mode.urp","/programs/interpreter_mode.urp")
     # robot.get_program_state()
-    # a = robot.load_program("/programs/interpreter_mode.urp")
+    # robot.load_program("/programs/interpreter_mode.urp")
     # if "File not found" in a:
     #     print(a)
     # robot.get_overall_robot_status()
