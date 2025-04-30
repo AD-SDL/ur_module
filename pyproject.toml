@@ -14,6 +14,7 @@ dependencies = [
     "paramiko",
     "scp",
     "sockets",
+    "pynput",
     "pyepics",
     "numpy>=2.0.0",
     "urx@git+https://github.com/Dozgulbas/python-urx.git",
