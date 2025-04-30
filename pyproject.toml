@@ -1,6 +1,6 @@
 [project]
 name = "ur_module"
-version = "0.3.0"
+version = "1.0.0"
 description = "Software for automatting a UR robot"
 authors = [
     {name = "Doga Ozgulbas", email="dozgulbas@anl.gov"},
