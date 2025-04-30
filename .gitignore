@@ -120,7 +120,6 @@ venv.bak/
 # mkdocs documentation
 /site
 # pdm
-pdm.lock
 .pdm.toml
 .pdm-python
 .pdm-build/
