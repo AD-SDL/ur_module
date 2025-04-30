@@ -144,3 +144,9 @@ plugins = ["pydantic.mypy"]
 strict = true
 disallow_untyped_defs = true
 implicit_reexport = true
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "ruff>=0.11.7",
+]

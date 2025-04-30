@@ -16,6 +16,7 @@ from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
 from pydantic.networks import AnyUrl
 from typing_extensions import Annotated
+
 from ur_interface.ur import UR
 from ur_interface.ur_kinematics import get_pose_from_joint_angles
 
@@ -102,7 +103,7 @@ class URNode(RestNode):
             self.node_state = {
                 "ur_status_code": "UNKOWN",
                 "current_joint_angles": current_location,
-                }
+            }
 
     @action(name="getj", description="Get joint angles")
     def getj(self):

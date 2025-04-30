@@ -14,8 +14,9 @@ import time
 
 from pynput import keyboard
 from pynput.keyboard import Key
-from ur_interface.ur import UR
 from urx.urrobot import RobotException
+
+from ur_interface.ur import UR
 
 parser = argparse.ArgumentParser(description="Teach Pendant Style Keyboard Control for UR Robot")
 parser.add_argument("-u", "--url", default="146.137.240.38", help="UR robot IP address")
