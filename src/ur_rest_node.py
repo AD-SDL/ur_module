@@ -22,14 +22,14 @@ from ur_interface.ur_kinematics import get_pose_from_joint_angles
 
 
 class URNodeConfig(RestNodeConfig):
-    """Configuration for the pf400 node module."""
+    """Configuration for the UR node module."""
 
     ur_ip: str
     resource_manager_url: Optional[AnyUrl] = None
 
 
 class URNode(RestNode):
-    """A Rest Node object to control PF400 robots"""
+    """A Rest Node object to control UR robots"""
 
     ur_interface: UR = None
     config_model = URNodeConfig
