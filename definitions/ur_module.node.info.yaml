@@ -48,8 +48,8 @@ actions:
     results: {}
     blocking: false
     asynchronous: true
-  set_freedriver:
-    name: set_freedriver
+  set_freedrive:
+    name: set_freedrive
     description: Free robot joints
     args:
       timeout:
@@ -720,7 +720,7 @@ config_schema:
       title: OwnershipInfo
       type: object
   additionalProperties: true
-  description: Configuration for the pf400 node module.
+  description: Configuration for the UR node module.
   properties:
     status_update_interval:
       anyOf:

@@ -235,8 +235,8 @@ class URNode(RestNode):
         home: Annotated[LocationArgument, "Home location"],
         source: Annotated[LocationArgument, "Location to transfer sample from"],
         source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
-        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = "0.05",
-        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = "255",
+        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
         try:
@@ -270,7 +270,7 @@ class URNode(RestNode):
         home: Annotated[LocationArgument, "Home location"],
         target: Annotated[LocationArgument, "Location to transfer sample to"],
         target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
-        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = "0.05",
+        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
     ):
         """Use the gripper to place a piece of labware at the target."""
