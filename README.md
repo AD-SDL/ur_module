@@ -69,6 +69,15 @@ robot.home([0, -1.57, 0, -1.57, 0, 0])
 robot.disconnect()
 ```
 
+## Rest Node
+
+Initilize REST Node using below steps:
+
+- In your terminal run `madsci node create` to create a device type node definition file.
+- Navigate into the created definition file and add `ur_ip:<your_robot_ip>` under `config_defaults`
+- If you are using Docker you can start the node with `docker compose build` and `docker compose up`
+- If you are running for development proposes, navigate into `/ur_module/src` and run `python ur_rest_node.py --definition <path_to_your_definition_file>`
+
 ## Contributions
 
 We welcome pull requests and issues. Please ensure code is typed and documented.
