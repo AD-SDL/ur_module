@@ -19,6 +19,7 @@ from typing_extensions import Annotated
 
 from ur_interface.ur import UR
 from ur_interface.ur_kinematics import get_pose_from_joint_angles
+from ur_interface.ur_tools.gripper_controller import FingerGripperController
 
 
 class URNodeConfig(RestNodeConfig):
@@ -176,6 +177,34 @@ class URNode(RestNode):
         except Exception as err:
             self.logger.log_error(err)
 
+        return ActionSucceeded()
+
+    @action(name="toggle_gripper", description="Move the robot gripper")
+    def toggle_gripper(
+        self,
+        open: Annotated[bool, "Open?"] = False,
+        close: Annotated[bool, "Close?"] = False,
+    ):
+        """Open or close the robot gripper."""
+        try:
+            gripper = FingerGripperController(hostname=self.config.ur_ip, ur=self.ur_interface)
+            self.logger.log("Connecting to gripper...")
+            gripper.connect_gripper()
+            self.logger.log("Gripper connected")
+            if open:
+                gripper.open_gripper()
+                self.logger.log("Gripper opened")
+            elif close:
+                gripper.close_gripper()
+                self.logger.log("Gripper closed")
+            else:
+                self.logger.log("No action taken")
+
+        except Exception as err:
+            self.logger.log_error(err)
+        else:
+            gripper.disconnect_gripper()
+            self.logger.log("Gripper disconnected")
         return ActionSucceeded()
 
     @action(
