@@ -344,7 +344,7 @@ class UR:
                 gripper_controller.gripper_close = gripper_close
 
             gripper_controller.pick(
-                pick_goal=source,
+                source=source,
                 approach_axis=source_approach_axis,
                 approach_distance=source_approach_distance,
             )

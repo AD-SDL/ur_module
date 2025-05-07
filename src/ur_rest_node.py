@@ -543,7 +543,7 @@ class URNode(RestNode):
     def get_location(self) -> AdminCommandResponse:
         """Return the current position of the ur robot"""
         try:
-            return AdminCommandResponse(data={"Joint Angles": self.ur_interface.ur_connection.getj()})
+            return AdminCommandResponse(data=self.ur_interface.ur_connection.getj())
         except Exception:
             return AdminCommandResponse(success=False)
 
