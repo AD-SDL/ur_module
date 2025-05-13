@@ -150,6 +150,27 @@ actions:
     results: {}
     blocking: false
     asynchronous: true
+  toggle_gripper:
+    name: toggle_gripper
+    description: Move the robot gripper
+    args:
+      open:
+        name: open
+        description: Open?
+        argument_type: bool
+        required: false
+        default: false
+      close:
+        name: close
+        description: Close?
+        argument_type: bool
+        required: false
+        default: false
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
   gripper_transfer:
     name: gripper_transfer
     description: Execute a transfer in between source and target locations using Robotiq
@@ -229,13 +250,13 @@ actions:
         description: Approach distance in meters
         argument_type: float
         required: false
-        default: '0.05'
+        default: 0.05
       gripper_close:
         name: gripper_close
         description: Set a min value for the gripper close state
         argument_type: int
         required: false
-        default: '255'
+        default: 255
     locations:
       home:
         name: home
@@ -268,7 +289,7 @@ actions:
         description: Approach distance in meters
         argument_type: float
         required: false
-        default: '0.05'
+        default: 0.05
       gripper_open:
         name: gripper_open
         description: Set a max value for the gripper open state
@@ -634,10 +655,12 @@ config_schema:
           description: The URL of the event server.
           title: Event Server URL
         log_level:
+          anyOf:
+          - type: integer
+          - $ref: '#/$defs/EventLogLevel'
           default: 20
           description: The log level of the event client.
           title: Event Client Log Level
-          type: integer
         source:
           $ref: '#/$defs/OwnershipInfo'
           description: Information about the source of the event client.
@@ -651,6 +674,17 @@ config_schema:
           title: Log Directory
       title: EventClientConfig
       type: object
+    EventLogLevel:
+      description: The log level of an event.
+      enum:
+      - 0
+      - 10
+      - 20
+      - 30
+      - 40
+      - 50
+      title: EventLogLevel
+      type: integer
     OwnershipInfo:
       description: Information about the ownership of a MADSci object.
       properties:
@@ -717,6 +751,13 @@ config_schema:
           default: null
           description: The ID of the workflow that owns the object.
           title: Workflow ID
+        manager_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the manager that owns the object.
+          title: Manager ID
       title: OwnershipInfo
       type: object
   additionalProperties: true
@@ -758,7 +799,7 @@ config_schema:
       title: Host
       type: string
     port:
-      default: 8000
+      default: 2000
       description: The port of the REST API.
       title: Port
       type: integer
