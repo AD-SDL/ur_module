@@ -67,6 +67,7 @@ class UR:
         resource_client: ResourceClient = None,
         resource_owner: OwnershipInfo = None,
         tool_resource_id: str = None,
+        tcp_pose: list = [0, 0, 0, 0, 0, 0],
     ):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
@@ -82,15 +83,8 @@ class UR:
 
         self.acceleration = 0.5
         self.velocity = 0.5
-        self.speed_ms = 0.750
-        self.speed_rads = 0.750
-        self.accel_mss = 1.200
-        self.accel_radss = 1.200
-        self.blend_radius_m = 0.001
-        self.ref_frame = [0, 0, 0, 0, 0, 0]
         self.robot_current_joint_angles = None
 
-        # if not self.hostname == "127.0.0.1":
         self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
         self.ur = Connection(hostname=self.hostname)
         self.ur_connection = self.ur.connection
@@ -98,10 +92,8 @@ class UR:
         self.gripper_speed = 255
         self.gripper_force = 255
 
-        self.ur_connection.set_tcp((0, 0, 0, 0, 0, 0))
+        self.ur_connection.set_tcp(tcp_pose)
         self.get_movement_state()
-
-        # TODO: get the information of what is the current tool attached to UR. Run a sanity check at the beginning to find out if a tool is connected
 
     def disconnect(self):
         "Disconnects the robot from URX and UR Dahsboard connections"

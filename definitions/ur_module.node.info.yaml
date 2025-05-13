@@ -29,6 +29,13 @@ config_defaults:
   host: localhost
   port: 3030
   ur_ip: 146.137.240.38
+  tcp_pose:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
 actions:
   getj:
     name: getj
@@ -634,7 +641,13 @@ config:
   port: 3030
   protocol: http
   ur_ip: 146.137.240.38
-  resource_manager_url: null
+  tcp_pose:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
 config_schema:
   $defs:
     EventClientConfig:
@@ -811,14 +824,17 @@ config_schema:
     ur_ip:
       title: Ur Ip
       type: string
-    resource_manager_url:
-      anyOf:
-      - format: uri
-        minLength: 1
-        type: string
-      - type: 'null'
-      default: null
-      title: Resource Manager Url
+    tcp_pose:
+      default:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      items: {}
+      title: Tcp Pose
+      type: array
   required:
   - ur_ip
   title: URNodeConfig
