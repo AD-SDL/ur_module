@@ -14,7 +14,6 @@ from madsci.common.types.resource_types.definitions import (
 )
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
-from pydantic.networks import AnyUrl
 from typing_extensions import Annotated
 
 from ur_interface.ur import UR
@@ -26,7 +25,7 @@ class URNodeConfig(RestNodeConfig):
     """Configuration for the UR node module."""
 
     ur_ip: str
-    resource_manager_url: Optional[AnyUrl] = None
+    tcp_pose: list = [0, 0, 0, 0, 0, 0]
 
 
 class URNode(RestNode):
@@ -37,10 +36,10 @@ class URNode(RestNode):
 
     def startup_handler(self) -> None:
         """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
-
+        print(self.config.tcp_pose)
         try:
-            if self.config.resource_manager_url:
-                self.resource_client = ResourceClient(self.config.resource_manager_url)
+            if self.config.resource_server_url:
+                self.resource_client = ResourceClient(self.config.resource_server_url)
                 self.resource_owner = OwnershipInfo(node_id=self.node_definition.node_id)
 
             else:
@@ -50,6 +49,7 @@ class URNode(RestNode):
             self.ur_interface = UR(
                 hostname=self.config.ur_ip,
                 resource_client=self.resource_client,
+                tcp_pose=self.config.tcp_pose,
             )
             self.tool_resource = None
 
@@ -129,12 +129,15 @@ class URNode(RestNode):
     @action(name="set_movement_params", description="Set speed and acceleration parameters")
     def set_movement_params(
         self,
+        tcp_pose: Optional[list] = None,
         velocity: Optional[float] = None,
         acceleration: Optional[float] = None,
         gripper_speed: Optional[float] = None,
         gripper_force: Optional[float] = None,
     ):
         """Configure the robot's movement parameters for subsequent transfers"""
+        if tcp_pose is not None:
+            self.ur_interface.ur_connection.set_tcp(tcp_pose)
         if velocity is not None:
             self.ur_interface.velocity = velocity
         if acceleration is not None:
