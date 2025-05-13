@@ -1,6 +1,6 @@
 """REST-based node for UR robots"""
 
-from typing import Optional
+from typing import Optional, Union
 
 from madsci.client.resource_client import ResourceClient
 from madsci.common.types.action_types import ActionFailed, ActionSucceeded
@@ -151,7 +151,7 @@ class URNode(RestNode):
     @action(name="movej", description="Move the robot using joint angles")
     def movej(
         self,
-        joints: Annotated[LocationArgument, "Joint angles to move to"],
+        joints: Annotated[Union[LocationArgument, list], "Joint angles to move to"],
         acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
         velocity: Annotated[Optional[float], "Velocity"] = 0.6,
     ):
@@ -168,7 +168,7 @@ class URNode(RestNode):
     @action(name="movel", description="Move the robot using linar motion")
     def movel(
         self,
-        target: Annotated[LocationArgument, "Linear location to move to"],
+        target: Annotated[Union[LocationArgument, list], "Linear location to move to"],
         acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
         velocity: Annotated[Optional[float], "Velocity"] = 0.6,
     ):
@@ -216,15 +216,16 @@ class URNode(RestNode):
     )
     def gripper_transfer(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        source: Annotated[LocationArgument, "Location to transfer sample from"],
-        target: Annotated[LocationArgument, "Location to transfer sample to"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        source: Annotated[Union[LocationArgument, list], "Location to transfer sample from"],
+        target: Annotated[Union[LocationArgument, list], "Location to transfer sample to"],
         source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
         try:
@@ -242,8 +243,12 @@ class URNode(RestNode):
                 )
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
-            source.location = get_pose_from_joint_angles(source.location)
-            target.location = get_pose_from_joint_angles(target.location)
+            if joint_angle_locations and isinstance(source, LocationArgument):
+                source.location = get_pose_from_joint_angles(source.location)
+                target.location = get_pose_from_joint_angles(target.location)
+            elif joint_angle_locations and isinstance(source, list):
+                source = get_pose_from_joint_angles(source)
+                target = get_pose_from_joint_angles(target)
 
             self.ur_interface.gripper_transfer(
                 home=home,
@@ -264,11 +269,12 @@ class URNode(RestNode):
     @action()
     def gripper_pick(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        source: Annotated[LocationArgument, "Location to transfer sample from"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        source: Annotated[Union[LocationArgument, list], "Location to transfer sample from"],
         source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
         try:
@@ -282,7 +288,10 @@ class URNode(RestNode):
                 )
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
-            source.location = get_pose_from_joint_angles(source.location)
+            if joint_angle_locations and isinstance(source, LocationArgument):
+                source.location = get_pose_from_joint_angles(source.location)
+            elif joint_angle_locations and isinstance(source, list):
+                source = get_pose_from_joint_angles(source)
 
             self.ur_interface.gripper_pick(
                 home=home,
@@ -299,11 +308,12 @@ class URNode(RestNode):
     @action()
     def gripper_place(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        target: Annotated[LocationArgument, "Location to transfer sample to"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        target: Annotated[Union[LocationArgument, list], "Location to transfer sample to"],
         target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to place a piece of labware at the target."""
         try:
@@ -317,7 +327,10 @@ class URNode(RestNode):
                 )
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
-            target.location = get_pose_from_joint_angles(target.location)
+            if joint_angle_locations and isinstance(target, LocationArgument):
+                target.location = get_pose_from_joint_angles(target.location)
+            elif joint_angle_locations and isinstance(target, list):
+                target = get_pose_from_joint_angles(target)
 
             self.ur_interface.gripper_place(
                 home=home,
@@ -336,16 +349,22 @@ class URNode(RestNode):
     )
     def pick_tool(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        tool_loc: Annotated[LocationArgument, "Tool location"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        tool_loc: Annotated[Union[LocationArgument, list], "Tool location"],
         docking_axis: Annotated[Optional[str], "Docking axis, (X/Y/Z)"] = "y",
         payload: Annotated[Optional[float], "Tool payload"] = None,
         tool_name: Annotated[Optional[str], "Tool name)"] = None,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Pick a tool with the UR"""
 
         if not tool_loc or not home:  # Return Fail
             return ActionFailed(errors="tool_loc and home locations must be provided")
+
+        if joint_angle_locations and isinstance(tool_loc, LocationArgument):
+            tool_loc.location = get_pose_from_joint_angles(tool_loc.location)
+        elif joint_angle_locations and isinstance(tool_loc, list):
+            tool_loc = get_pose_from_joint_angles(tool_loc)
 
         try:
             self.ur_interface.pick_tool(
@@ -363,13 +382,19 @@ class URNode(RestNode):
     @action(name="Place_tool", description="Places the attached tool back to the provided tool docking location")
     def place_tool(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        tool_docking: Annotated[LocationArgument, "Tool docking location"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        tool_docking: Annotated[Union[LocationArgument, list], "Tool docking location"],
         docking_axis: Annotated[Optional[str], "Docking axis, (X/Y/Z)"] = "y",
         tool_name: Annotated[Optional[str], "Tool name)"] = None,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Place a tool with the UR"""
         try:
+            if joint_angle_locations and isinstance(tool_docking, LocationArgument):
+                tool_docking.location = get_pose_from_joint_angles(tool_docking.location)
+            elif joint_angle_locations and isinstance(tool_docking, list):
+                tool_docking = get_pose_from_joint_angles(tool_docking)
+
             self.ur_interface.place_tool(
                 home=home,
                 tool_loc=tool_docking,
@@ -387,18 +412,29 @@ class URNode(RestNode):
     )
     def gripper_screw_transfer(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        screwdriver_loc: Annotated[LocationArgument, "Screwdriver location"],
-        screw_loc: Annotated[LocationArgument, "Screw location"],
-        target: Annotated[LocationArgument, "Location where the srewdriving will be performed"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        screwdriver_loc: Annotated[Union[LocationArgument, list], "Screwdriver location"],
+        screw_loc: Annotated[Union[LocationArgument, list], "Screw location"],
+        target: Annotated[Union[LocationArgument, list], "Location where the srewdriving will be performed"],
         screw_time: Annotated[Optional[int], "Srew time in seconds"] = 9,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Make a screwdriving transfer using Robotiq gripper and custom screwdriving bits with UR"""
 
         if not home or not screwdriver_loc or not screw_loc or not target:
             return ActionFailed(errors="screwdriver_loc, screw_loc and home locations must be provided")
+
+        if joint_angle_locations and isinstance(screwdriver_loc, LocationArgument):
+            screwdriver_loc.location = get_pose_from_joint_angles(screwdriver_loc.location)
+            screw_loc.location = get_pose_from_joint_angles(screw_loc.location)
+            target.location = get_pose_from_joint_angles(target.location)
+        elif joint_angle_locations and isinstance(screwdriver_loc, list):
+            screwdriver_loc = get_pose_from_joint_angles(screwdriver_loc)
+            screw_loc = get_pose_from_joint_angles(screw_loc)
+            target = get_pose_from_joint_angles(target)
+
         try:
             self.ur_interface.gripper_screw_transfer(
                 home=home,
@@ -420,14 +456,29 @@ class URNode(RestNode):
     )
     def pipette_transfer(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        source: Annotated[LocationArgument, "Initial location of the sample"],
-        target: Annotated[LocationArgument, "Target location of the sample"],
-        tip_loc: Annotated[LocationArgument, "New tip location"],
-        tip_trash: Annotated[LocationArgument, "Tip trash location"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        source: Annotated[Union[LocationArgument, list], "Initial location of the sample"],
+        target: Annotated[Union[LocationArgument, list], "Target location of the sample"],
+        tip_loc: Annotated[Union[LocationArgument, list], "New tip location"],
+        tip_trash: Annotated[Union[LocationArgument, list], "Tip trash location"],
         volume: Annotated[float, "Set a volume in micro liters"],
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Make a pipette transfer for the defined volume with UR"""
+        if not home or not source or not target or not tip_loc or not tip_trash:
+            return ActionFailed(errors="home, source, target, tip_loc and tip_trash locations must be provided")
+
+        if joint_angle_locations and isinstance(source, LocationArgument):
+            source.location = get_pose_from_joint_angles(source.location)
+            target.location = get_pose_from_joint_angles(target.location)
+            tip_loc.location = get_pose_from_joint_angles(tip_loc.location)
+            tip_trash.location = get_pose_from_joint_angles(tip_trash.location)
+        elif joint_angle_locations and isinstance(source, list):
+            source = get_pose_from_joint_angles(source)
+            target = get_pose_from_joint_angles(target)
+            tip_loc = get_pose_from_joint_angles(tip_loc)
+            tip_trash = get_pose_from_joint_angles(tip_trash)
+
         try:
             if self.resource_client:
                 # If the pipette resource is not initialized, initialize it
@@ -458,14 +509,23 @@ class URNode(RestNode):
     )
     def pick_and_flip_object(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        target: Annotated[LocationArgument, "Location of the object"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        target: Annotated[Union[LocationArgument, list], "Location of the object"],
         approach_axis: Annotated[Optional[str], "Approach axis, (X/Y/Z)"] = "z",
         target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Picks and flips an object 180 degrees with UR"""
+
+        if not home or not target:
+            return ActionFailed(errors="home and target locations must be provided")
+        if joint_angle_locations and isinstance(target, LocationArgument):
+            target.location = get_pose_from_joint_angles(target.location)
+        elif joint_angle_locations and isinstance(target, list):
+            target = get_pose_from_joint_angles(target)
+
         try:
             self.ur_interface.pick_and_flip_object(
                 home=home,
@@ -486,16 +546,26 @@ class URNode(RestNode):
     )
     def remove_cap(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        source: Annotated[LocationArgument, "Location of the vial cap"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        source: Annotated[Union[LocationArgument, list], "Location of the vial cap"],
         target: Annotated[
-            LocationArgument,
+            Union[LocationArgument, list],
             "Location of where the cap will be placed after it is removed from the vail",
         ],
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Remove caps from sample vials with UR"""
+        if not home or not source or not target:
+            return ActionFailed(errors="home, source and target locations must be provided")
+        if joint_angle_locations and isinstance(source, LocationArgument):
+            source.location = get_pose_from_joint_angles(source.location)
+            target.location = get_pose_from_joint_angles(target.location)
+        elif joint_angle_locations and isinstance(source, list):
+            source = get_pose_from_joint_angles(source)
+            target = get_pose_from_joint_angles(target)
+
         try:
             self.ur_interface.remove_cap(
                 home=home,
@@ -515,13 +585,23 @@ class URNode(RestNode):
     )
     def place_cap(
         self,
-        home: Annotated[LocationArgument, "Home location"],
-        source: Annotated[LocationArgument, "Vail cap initial location"],
-        target: Annotated[LocationArgument, "The vail location where the cap will installed"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        source: Annotated[Union[LocationArgument, list], "Vail cap initial location"],
+        target: Annotated[Union[LocationArgument, list], "The vail location where the cap will installed"],
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Places caps back to sample vials with UR"""
+        if not home or not source or not target:
+            return ActionFailed(errors="home, source and target locations must be provided")
+        if joint_angle_locations and isinstance(source, LocationArgument):
+            source.location = get_pose_from_joint_angles(source.location)
+            target.location = get_pose_from_joint_angles(target.location)
+        elif joint_angle_locations and isinstance(source, list):
+            source = get_pose_from_joint_angles(source)
+            target = get_pose_from_joint_angles(target)
+
         try:
             self.ur_interface.place_cap(
                 home=home,
