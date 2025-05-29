@@ -503,6 +503,76 @@ class URNode(RestNode):
         return ActionSucceeded()
 
     @action(
+        name="pipette_pick_and_move_sample",
+        description="Picks and moves a sample using the pipette",
+    )
+    def pipette_pick_and_move_sample(
+        self,
+        home: Annotated[Union[LocationArgument, list], "Home location in joint angles"],
+        sample_loc: Annotated[Union[LocationArgument, list], "Sample location"],
+        target: Annotated[Union[LocationArgument, list], "Location of the object"],
+        volume: Annotated[int, "Set a volume in micro liters"] = 10,
+        tip_loc: Annotated[Union[LocationArgument, list], "Tip location"] = None,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
+    ):
+        """Picks and moves a sample with UR"""
+
+        if joint_angle_locations and isinstance(target, LocationArgument):
+            target.location = get_pose_from_joint_angles(target.location)
+            sample_loc.location = get_pose_from_joint_angles(sample_loc.location)
+            tip_loc.location = get_pose_from_joint_angles(tip_loc.location) if tip_loc else None
+        elif joint_angle_locations and isinstance(target, list):
+            target = get_pose_from_joint_angles(target)
+            sample_loc = get_pose_from_joint_angles(sample_loc)
+            tip_loc = get_pose_from_joint_angles(tip_loc) if tip_loc else None
+
+        try:
+            self.ur_interface.pipette_pick_and_move_sample(
+                home=home,
+                sample_loc=sample_loc,
+                target=target,
+                volume=volume,
+                tip_loc=tip_loc,
+            )
+        except Exception as err:
+            return ActionFailed(errors=err)
+
+        return ActionSucceeded()
+
+    @action(
+        name="pipette_dispense_and_retrieve",
+        description="Dispenses a sample and retrieves the pipette tip",
+    )
+    def pipette_dispense_and_retrieve(
+        self,
+        home: Annotated[Union[LocationArgument, list], "Home location in joint angles"],
+        target: Annotated[Union[LocationArgument, list], "Location of the object"],
+        volume: Annotated[int, "Set a volume in micro liters"] = 10,
+        tip_trash: Annotated[Union[LocationArgument, list], "Tip trash location"] = None,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
+    ):
+        """Dispenses a sample and retrieves the pipette with UR"""
+
+        if joint_angle_locations and isinstance(target, LocationArgument):
+            target.location = get_pose_from_joint_angles(target.location)
+            tip_trash.location = get_pose_from_joint_angles(tip_trash.location) if tip_trash else None
+        elif joint_angle_locations and isinstance(target, list):
+            target = get_pose_from_joint_angles(target)
+            tip_trash = get_pose_from_joint_angles(tip_trash) if tip_trash else None
+
+        try:
+            self.ur_interface.pipette_dispense_and_retrieve(
+                home=home,
+                target=target,
+                volume=volume,
+                tip_trash=tip_trash,
+            )
+        except Exception as err:
+            return ActionFailed(errors=err)
+
+        return ActionSucceeded()
+
+    @action(
         name="pick_and_flip_object",
         description="Picks and flips an object 180 degrees",
     )
