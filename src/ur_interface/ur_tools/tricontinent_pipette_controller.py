@@ -37,11 +37,9 @@ class TricontinentPipetteController:
 
         self.acceleration = 0.5
         self.velocity = 0.5
-        self.speed_ms = 0.750
-        self.speed_rads = 0.750
-        self.accel_mss = 1.200
-        self.accel_radss = 1.200
-        self.blend_radius_m = 0.001
+        self.speed_fast = 0.750
+        self.speed_slow = 0.1
+        self.acceleration = 1.200
         self.ref_frame = [0, 0, 0, 0, 0, 0]
 
         self.pipette_drop_tip_value = -8
@@ -103,19 +101,16 @@ class TricontinentPipetteController:
         tip_above[2] += 0.1
 
         print("Picking up the first pipette tip...")
-        speed_ms = 0.100
 
-        self.ur.movel(tip_above, self.accel_radss, self.speed_rads)
+        self.ur.movel(tip_above, self.acceleration, self.speed_fast)
         # sleep(2)
-        speed_ms = 0.01
-        self.ur.movel(tip_approach, self.accel_radss, self.speed_rads)
+        self.ur.movel(tip_approach, self.acceleration, self.speed_fast)
         # sleep(2)
-        self.ur.movel(tip_loc, self.accel_mss, speed_ms)
+        self.ur.movel(tip_loc, self.acceleration, self.speed_slow)
         # sleep(3)
-        self.ur.movel(tip_approach, self.accel_mss, speed_ms)
+        self.ur.movel(tip_approach, self.acceleration, self.speed_slow)
         # sleep(2)
-        speed_ms = 0.1
-        self.ur.movel(tip_above, self.accel_mss, speed_ms)
+        self.ur.movel(tip_above, self.acceleration, self.speed_fast)
         # sleep(2)
         print("Pipette tip successfully picked up")
 
@@ -135,17 +130,16 @@ class TricontinentPipetteController:
         print("Making a sample using two liquids...")
 
         # MOVE TO THE FIRT SAMPLE LOCATION
-        speed_ms = 0.1
 
         sample_aspirate_above = deepcopy(sample_aspirate)
         sample_aspirate_above[2] += 0.05
 
         self.ur.movel(
             sample_aspirate_above,
-            self.accel_mss,
-            self.speed_ms,
+            self.acceleration,
+            self.speed_fast,
         )
-        self.ur.movel(sample_aspirate, self.accel_mss, speed_ms)
+        self.ur.movel(sample_aspirate, self.acceleration, self.speed_slow)
 
         # ASPIRATE FIRST SAMPLE
         self.pipette.aspirate(vol=vol)
@@ -157,19 +151,18 @@ class TricontinentPipetteController:
                 amount=vol,
             )
 
-        self.ur.movel(sample_aspirate_above, self.accel_mss, speed_ms)
+        self.ur.movel(sample_aspirate_above, self.acceleration, self.speed_slow)
         self.ur.movej(home, 1, 1)
 
         sample_dispense_above = deepcopy(sample_dispense)
         sample_dispense_above[2] += 0.02
         self.ur.movel(
             sample_dispense_above,
-            self.accel_mss,
-            self.speed_ms,
+            self.acceleration,
+            self.speed_fast,
         )
-        self.ur.movel(sample_dispense, self.accel_mss, speed_ms)
+        self.ur.movel(sample_dispense, self.acceleration, self.speed_slow)
 
-        # DISPENSE FIRST SAMPLE
         self.pipette.dispense(vol=vol)
         sleep(5)
         if self.resource_client:
@@ -179,8 +172,90 @@ class TricontinentPipetteController:
             )
         self.ur.movel(
             sample_dispense_above,
-            self.accel_mss,
-            self.speed_ms,
+            self.acceleration,
+            self.speed_slow,
+        )
+        self.ur.movej(home, 1, 1)
+
+    def pick_and_move(
+        self,
+        home: list = None,
+        sample_loc: list = None,
+        target: list = None,
+        vol: int = 10,
+    ):
+        """
+        Description:
+            - Picks up a sample from the sample location and moves it to the target location.
+            - The sample is picked up using the pipette and then moved to the target location but not dispensed.
+        """
+
+        sample_loc_above = deepcopy(sample_loc)
+        sample_loc_above[2] += 0.05
+
+        self.ur.movel(
+            sample_loc_above,
+            self.acceleration,
+            self.speed_fast,
+        )
+        self.ur.movel(sample_loc, self.acceleration, self.speed_slow)
+
+        # ASPIRATE FIRST SAMPLE
+        self.pipette.aspirate(vol=vol)
+        sleep(5)
+
+        if self.resource_client:
+            self.resource_client.increase_quantity(
+                resource=self.pipette_resource_id,
+                amount=vol,
+            )
+
+        self.ur.movel(sample_loc_above, self.acceleration, self.speed_slow)
+        self.ur.movej(home, 1, 1)
+
+        target_above = deepcopy(target)
+        target_above2 = deepcopy(target)
+        target_above[2] += 0.05
+        target_above2[2] += 0.01
+        self.ur.movel(
+            target_above,
+            self.acceleration,
+            self.speed_fast,
+        )
+        self.ur.movel(
+            target_above2,
+            self.acceleration,
+            self.speed_slow,
+        )
+
+    def dispense_and_retrieve(
+        self,
+        home: list = None,
+        target: list = None,
+        vol: int = 10,
+    ):
+        """
+        Description:
+            - Dispenses the sample at the target location and retrieves the pipette.
+            - The sample is dispensed using the pipette and then the robot is moved back to the home position.
+        """
+        self.ur.movel(target, self.acceleration, self.speed_slow)
+
+        # DISPENSE FIRST SAMPLE
+        self.pipette.dispense(vol=vol)
+        sleep(5)
+        if self.resource_client:
+            self.resource_client.decrease_quantity(
+                resource=self.pipette_resource_id,
+                amount=vol,
+            )
+
+        target_above = deepcopy(target)
+        target_above[2] += 0.03
+        self.ur.movel(
+            target_above,
+            self.acceleration,
+            self.speed_slow,
         )
         self.ur.movej(home, 1, 1)
 
@@ -194,14 +269,14 @@ class TricontinentPipetteController:
         print("Creating a droplet...")
         droplet_front = deepcopy(droplet_loc)
         droplet_front[1] += 0.1
-        self.ur.movel(droplet_front, self.accel_mss, self.speed_ms)
-        self.ur.movel(droplet_loc, self.accel_mss, self.speed_ms)
+        self.ur.movel(droplet_front, self.acceleration, self.speed_fast)
+        self.ur.movel(droplet_loc, self.acceleration, self.speed_fast)
         sleep(1)
         self.pipette.dispense(vol=3)
         sleep(5)
         self.pipette.aspirate(vol=3)
         sleep(1)
-        self.ur.movel(droplet_front, self.accel_mss, self.speed_ms)
+        self.ur.movel(droplet_front, self.acceleration, self.speed_slow)
 
     def empty_tip(self, sample_loc):
         """
@@ -212,15 +287,14 @@ class TricontinentPipetteController:
         print("Emtying the tip...")
 
         # MOVE TO THE FIRT SAMPLE LOCATION
-        speed_ms = 0.1
         sample_above = deepcopy(sample_loc)
         sample_above[2] += 0.1
 
-        self.ur.movel(sample_above, self.accel_mss, self.speed_ms)
-        self.ur.movel(sample_loc, self.accel_mss, speed_ms)
+        self.ur.movel(sample_above, self.acceleration, self.speed_fast)
+        self.ur.movel(sample_loc, self.acceleration, self.speed_fast)
         self.pipette.dispense(vol=25)
         sleep(2)
-        self.ur.movel(sample_above, self.accel_mss, speed_ms)
+        self.ur.movel(sample_above, self.acceleration, self.speed_fast)
 
     def eject_tip(
         self,
@@ -245,10 +319,10 @@ class TricontinentPipetteController:
 
         print("Droping tip to the trash bin...")
         # Move to the trash bin location
-        self.ur.movel(trash_front_above, self.accel_mss, self.speed_ms)
-        self.ur.movel(trash_front, self.accel_mss, self.speed_ms)
-        self.ur.movel(eject_tip_loc, self.accel_mss, self.speed_ms)
-        self.ur.movel(trash_above, self.accel_mss, self.speed_ms)
+        self.ur.movel(trash_front_above, self.acceleration, self.speed_fast)
+        self.ur.movel(trash_front, self.acceleration, self.speed_fast)
+        self.ur.movel(eject_tip_loc, self.acceleration, self.speed_fast)
+        self.ur.movel(trash_above, self.acceleration, self.speed_fast)
 
 
 if __name__ == "__main__":
