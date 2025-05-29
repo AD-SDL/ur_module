@@ -631,14 +631,14 @@ class UR:
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (Union[LocationArgument, list]): Home location
+            home (Union[LocationArgument, list]): Home location joint values
             tip_loc (Union[LocationArgument, list]): Pipette tip location
             tip_trash (Union[LocationArgument, list]): Tip trash location
             source (str): Source location
             target (str): Target location
             volume (int): Pipette transfer volume. Unit number of steps. Each step is 1 mL
         """
-        if not tip_loc or not source:
+        if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
 
         try:
@@ -650,10 +650,12 @@ class UR:
                 pipette_resource_id=self.tool_resource_id,
             )
             pipette.connect_pipette()
-            pipette.pick_tip(tip_loc=tip_loc)
+            if tip_loc:
+                pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
             pipette.transfer_sample(home=home, sample_aspirate=source, sample_dispense=target, vol=volume)
-            pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
+            if tip_trash:
+                pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
         except Exception as err:
