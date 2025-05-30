@@ -26,6 +26,7 @@ class URNodeConfig(RestNodeConfig):
 
     ur_ip: str
     tcp_pose: list = [0, 0, 0, 0, 0, 0]
+    ur_model: str = "UR5e"
 
 
 class URNode(RestNode):
@@ -243,11 +244,11 @@ class URNode(RestNode):
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
             if joint_angle_locations and isinstance(source, LocationArgument):
-                source.location = get_pose_from_joint_angles(source.location)
-                target.location = get_pose_from_joint_angles(target.location)
+                source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
+                target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
             elif joint_angle_locations and isinstance(source, list):
-                source = get_pose_from_joint_angles(source)
-                target = get_pose_from_joint_angles(target)
+                source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
+                target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
             self.ur_interface.gripper_transfer(
                 home=home,
@@ -288,9 +289,9 @@ class URNode(RestNode):
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
             if joint_angle_locations and isinstance(source, LocationArgument):
-                source.location = get_pose_from_joint_angles(source.location)
+                source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
             elif joint_angle_locations and isinstance(source, list):
-                source = get_pose_from_joint_angles(source)
+                source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
 
             self.ur_interface.gripper_pick(
                 home=home,
@@ -327,9 +328,9 @@ class URNode(RestNode):
                 self.ur_interface.tool_resource_id = self.tool_resource.resource_id
 
             if joint_angle_locations and isinstance(target, LocationArgument):
-                target.location = get_pose_from_joint_angles(target.location)
+                target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
             elif joint_angle_locations and isinstance(target, list):
-                target = get_pose_from_joint_angles(target)
+                target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
             self.ur_interface.gripper_place(
                 home=home,
@@ -361,9 +362,9 @@ class URNode(RestNode):
             return ActionFailed(errors="tool_loc and home locations must be provided")
 
         if joint_angle_locations and isinstance(tool_loc, LocationArgument):
-            tool_loc.location = get_pose_from_joint_angles(tool_loc.location)
+            tool_loc.location = get_pose_from_joint_angles(joints=tool_loc.location, robot_model=self.config.ur_model)
         elif joint_angle_locations and isinstance(tool_loc, list):
-            tool_loc = get_pose_from_joint_angles(tool_loc)
+            tool_loc = get_pose_from_joint_angles(joints=tool_loc, robot_model=self.config.ur_model)
 
         try:
             self.ur_interface.pick_tool(
@@ -390,9 +391,11 @@ class URNode(RestNode):
         """Place a tool with the UR"""
         try:
             if joint_angle_locations and isinstance(tool_docking, LocationArgument):
-                tool_docking.location = get_pose_from_joint_angles(tool_docking.location)
+                tool_docking.location = get_pose_from_joint_angles(
+                    joints=tool_docking.location, robot_model=self.config.ur_model
+                )
             elif joint_angle_locations and isinstance(tool_docking, list):
-                tool_docking = get_pose_from_joint_angles(tool_docking)
+                tool_docking = get_pose_from_joint_angles(joints=tool_docking, robot_model=self.config.ur_model)
 
             self.ur_interface.place_tool(
                 home=home,
@@ -426,13 +429,15 @@ class URNode(RestNode):
             return ActionFailed(errors="screwdriver_loc, screw_loc and home locations must be provided")
 
         if joint_angle_locations and isinstance(screwdriver_loc, LocationArgument):
-            screwdriver_loc.location = get_pose_from_joint_angles(screwdriver_loc.location)
-            screw_loc.location = get_pose_from_joint_angles(screw_loc.location)
-            target.location = get_pose_from_joint_angles(target.location)
+            screwdriver_loc.location = get_pose_from_joint_angles(
+                joints=screwdriver_loc.location, robot_model=self.config.ur_model
+            )
+            screw_loc.location = get_pose_from_joint_angles(joints=screw_loc.location, robot_model=self.config.ur_model)
+            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
         elif joint_angle_locations and isinstance(screwdriver_loc, list):
-            screwdriver_loc = get_pose_from_joint_angles(screwdriver_loc)
-            screw_loc = get_pose_from_joint_angles(screw_loc)
-            target = get_pose_from_joint_angles(target)
+            screwdriver_loc = get_pose_from_joint_angles(joints=screwdriver_loc, robot_model=self.config.ur_model)
+            screw_loc = get_pose_from_joint_angles(joints=screw_loc, robot_model=self.config.ur_model)
+            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
         try:
             self.ur_interface.gripper_screw_transfer(
@@ -468,15 +473,15 @@ class URNode(RestNode):
             return ActionFailed(errors="home, source, target, tip_loc and tip_trash locations must be provided")
 
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(source.location)
-            target.location = get_pose_from_joint_angles(target.location)
-            tip_loc.location = get_pose_from_joint_angles(tip_loc.location)
-            tip_trash.location = get_pose_from_joint_angles(tip_trash.location)
+            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
+            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            tip_loc.location = get_pose_from_joint_angles(joints=tip_loc.location, robot_model=self.config.ur_model)
+            tip_trash.location = get_pose_from_joint_angles(joints=tip_trash.location, robot_model=self.config.ur_model)
         elif joint_angle_locations and isinstance(source, list):
-            source = get_pose_from_joint_angles(source)
-            target = get_pose_from_joint_angles(target)
-            tip_loc = get_pose_from_joint_angles(tip_loc)
-            tip_trash = get_pose_from_joint_angles(tip_trash)
+            source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
+            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
+            tip_loc = get_pose_from_joint_angles(joints=tip_loc, robot_model=self.config.ur_model)
+            tip_trash = get_pose_from_joint_angles(joints=tip_trash, robot_model=self.config.ur_model)
 
         try:
             if self.resource_client:
@@ -518,13 +523,19 @@ class URNode(RestNode):
         """Picks and moves a sample with UR"""
 
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(target.location)
-            sample_loc.location = get_pose_from_joint_angles(sample_loc.location)
-            tip_loc.location = get_pose_from_joint_angles(tip_loc.location) if tip_loc else None
+            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            sample_loc.location = get_pose_from_joint_angles(
+                joints=sample_loc.location, robot_model=self.config.ur_model
+            )
+            tip_loc.location = (
+                get_pose_from_joint_angles(joints=tip_loc.location, robot_model=self.config.ur_model)
+                if tip_loc
+                else None
+            )
         elif joint_angle_locations and isinstance(target, list):
-            target = get_pose_from_joint_angles(target)
-            sample_loc = get_pose_from_joint_angles(sample_loc)
-            tip_loc = get_pose_from_joint_angles(tip_loc) if tip_loc else None
+            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
+            sample_loc = get_pose_from_joint_angles(joints=sample_loc, robot_model=self.config.ur_model)
+            tip_loc = get_pose_from_joint_angles(joints=tip_loc, robot_model=self.config.ur_model) if tip_loc else None
 
         try:
             self.ur_interface.pipette_pick_and_move_sample(
@@ -554,11 +565,17 @@ class URNode(RestNode):
         """Dispenses a sample and retrieves the pipette with UR"""
 
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(target.location)
-            tip_trash.location = get_pose_from_joint_angles(tip_trash.location) if tip_trash else None
+            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            tip_trash.location = (
+                get_pose_from_joint_angles(joints=tip_trash.location, robot_model=self.config.ur_model)
+                if tip_trash
+                else None
+            )
         elif joint_angle_locations and isinstance(target, list):
-            target = get_pose_from_joint_angles(target)
-            tip_trash = get_pose_from_joint_angles(tip_trash) if tip_trash else None
+            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
+            tip_trash = (
+                get_pose_from_joint_angles(joints=tip_trash, robot_model=self.config.ur_model) if tip_trash else None
+            )
 
         try:
             self.ur_interface.pipette_dispense_and_retrieve(
@@ -591,9 +608,9 @@ class URNode(RestNode):
         if not home or not target:
             return ActionFailed(errors="home and target locations must be provided")
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(target.location)
+            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
         elif joint_angle_locations and isinstance(target, list):
-            target = get_pose_from_joint_angles(target)
+            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
         try:
             self.ur_interface.pick_and_flip_object(
@@ -629,11 +646,11 @@ class URNode(RestNode):
         if not home or not source or not target:
             return ActionFailed(errors="home, source and target locations must be provided")
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(source.location)
-            target.location = get_pose_from_joint_angles(target.location)
+            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
+            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
         elif joint_angle_locations and isinstance(source, list):
-            source = get_pose_from_joint_angles(source)
-            target = get_pose_from_joint_angles(target)
+            source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
+            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
         try:
             self.ur_interface.remove_cap(
@@ -665,11 +682,11 @@ class URNode(RestNode):
         if not home or not source or not target:
             return ActionFailed(errors="home, source and target locations must be provided")
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(source.location)
-            target.location = get_pose_from_joint_angles(target.location)
+            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
+            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
         elif joint_angle_locations and isinstance(source, list):
-            source = get_pose_from_joint_angles(source)
-            target = get_pose_from_joint_angles(target)
+            source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
+            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
         try:
             self.ur_interface.place_cap(
