@@ -517,6 +517,7 @@ class URNode(RestNode):
         sample_loc: Annotated[Union[LocationArgument, list], "Sample location"],
         target: Annotated[Union[LocationArgument, list], "Location of the object"],
         volume: Annotated[int, "Set a volume in micro liters"] = 10,
+        safe_waypoint: Annotated[Union[LocationArgument, list], "Safe waypoint in joint angles"] = None,
         tip_loc: Annotated[Union[LocationArgument, list], "Tip location"] = None,
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
@@ -540,6 +541,7 @@ class URNode(RestNode):
         try:
             self.ur_interface.pipette_pick_and_move_sample(
                 home=home,
+                safe_waypoint=safe_waypoint,
                 sample_loc=sample_loc,
                 target=target,
                 volume=volume,
@@ -559,6 +561,7 @@ class URNode(RestNode):
         home: Annotated[Union[LocationArgument, list], "Home location in joint angles"],
         target: Annotated[Union[LocationArgument, list], "Location of the object"],
         volume: Annotated[int, "Set a volume in micro liters"] = 10,
+        safe_waypoint: Annotated[Union[LocationArgument, list], "Safe waypoint in joint angles"] = None,
         tip_trash: Annotated[Union[LocationArgument, list], "Tip trash location"] = None,
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
@@ -580,6 +583,7 @@ class URNode(RestNode):
         try:
             self.ur_interface.pipette_dispense_and_retrieve(
                 home=home,
+                safe_waypoint=safe_waypoint,
                 target=target,
                 volume=volume,
                 tip_trash=tip_trash,
