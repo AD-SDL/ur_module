@@ -36,10 +36,8 @@ class TricontinentPipetteController:
             self.IP = pipette_ip
 
         self.acceleration = 0.5
-        self.velocity = 0.5
         self.speed_fast = 0.750
         self.speed_slow = 0.1
-        self.acceleration = 1.200
         self.ref_frame = [0, 0, 0, 0, 0, 0]
 
         self.pipette_drop_tip_value = -8
@@ -65,8 +63,6 @@ class TricontinentPipetteController:
                 )
                 sleep(2)
                 self.pipette.connect(hostname=self.IP)
-                self.pipette.initialize()
-                sleep(2)
 
             except Exception as err:
                 print("Pipette connection error: ", err)
@@ -74,6 +70,21 @@ class TricontinentPipetteController:
             else:
                 print("Pipette is connected after {} tries".format(i))
                 break
+
+    def initialize_pipette(self):
+        """
+        Initializes the pipette by setting the correct tool communication parameters
+        and connecting to the pipette.
+        """
+        try:
+            self.pipette.initialize()
+            sleep(2)
+
+        except Exception as err:
+            print("Pipette initialization error: ", err)
+
+        else:
+            print("Pipette is initialized")
 
     def disconnect_pipette(self):
         """
@@ -179,7 +190,7 @@ class TricontinentPipetteController:
 
     def pick_and_move(
         self,
-        home: list = None,
+        safe_waypoint: list = None,
         sample_loc: list = None,
         target: list = None,
         vol: int = 10,
@@ -210,9 +221,9 @@ class TricontinentPipetteController:
                 amount=vol,
             )
 
-        self.ur.movel(sample_loc_above, self.acceleration, self.speed_slow)
-        self.ur.movej(home, 1, 1)
-
+        self.ur.movel(sample_loc_above, self.acceleration, self.speed_fast)
+        if safe_waypoint:
+            self.ur.movel(safe_waypoint, self.acceleration, self.speed_fast)
         target_above = deepcopy(target)
         target_above2 = deepcopy(target)
         target_above[2] += 0.05
@@ -221,6 +232,7 @@ class TricontinentPipetteController:
             target_above,
             self.acceleration,
             self.speed_fast,
+            wait=True,
         )
         self.ur.movel(
             target_above2,
@@ -230,7 +242,7 @@ class TricontinentPipetteController:
 
     def dispense_and_retrieve(
         self,
-        home: list = None,
+        safe_waypoint: list = None,
         target: list = None,
         vol: int = 10,
     ):
@@ -251,13 +263,15 @@ class TricontinentPipetteController:
             )
 
         target_above = deepcopy(target)
-        target_above[2] += 0.03
+        target_above[2] += 0.05
         self.ur.movel(
             target_above,
             self.acceleration,
-            self.speed_slow,
+            self.speed_fast,
+            wait=True,
         )
-        self.ur.movej(home, 1, 1)
+        if safe_waypoint:
+            self.ur.movel(safe_waypoint, self.acceleration, self.speed_fast)
 
     def create_droplet(self, droplet_loc):
         """

@@ -119,7 +119,7 @@ class UR:
 
         return movement_state, current_location
 
-    def home(self, home_location: Union[LocationArgument, list]) -> None:
+    def home(self, home_location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
         """Moves the robot to the home location.
 
         Args: home_location: 6 joint value location
@@ -130,7 +130,10 @@ class UR:
             home_loc = home_location.location
         else:
             home_loc = home_location
-        self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
+        if linear_motion:
+            self.ur_connection.movel(home_loc, self.velocity, self.acceleration)
+        else:
+            self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
         print("Robot homed")
 
     def pick_tool(
@@ -664,6 +667,8 @@ class UR:
     def pipette_pick_and_move_sample(
         self,
         home: Union[LocationArgument, list] = None,
+        linear_motion: bool = False,
+        safe_waypoint: Union[LocationArgument, list] = None,
         tip_loc: Union[LocationArgument, list] = None,
         sample_loc: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
@@ -672,7 +677,8 @@ class UR:
         """Pipette pick sample from the source location and transfer it to the target location
 
         Args
-            home (Union[LocationArgument, list]): Home location
+            home (Union[LocationArgument, list]): Home location use Linear motions if needed
+            safe_waypoint (Union[LocationArgument, list]): Safe waypoint location to move the pipette
             tip_loc (Union[LocationArgument, list]): Pipette tip location
             sample_loc (Union[LocationArgument, list]): Sample location
             target (Union[LocationArgument, list]): Target location
@@ -690,10 +696,12 @@ class UR:
                 pipette_resource_id=self.tool_resource_id,
             )
             pipette.connect_pipette()
+            pipette.initialize_pipette()
             if tip_loc:
                 pipette.pick_tip(tip_loc=tip_loc)
-            self.home(home)
-            pipette.pick_and_move(home=home, sample_loc=sample_loc, target=target, vol=volume)
+            if home:
+                self.home(home, linear_motion=linear_motion)
+            pipette.pick_and_move(safe_waypoint=safe_waypoint, sample_loc=sample_loc, target=target, vol=volume)
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
         except Exception as err:
@@ -702,6 +710,8 @@ class UR:
     def pipette_dispense_and_retrieve(
         self,
         home: Union[LocationArgument, list] = None,
+        linear_motion: bool = False,
+        safe_waypoint: Union[LocationArgument, list] = None,
         tip_trash: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
         volume: int = 10,
@@ -725,11 +735,11 @@ class UR:
                 pipette_resource_id=self.tool_resource_id,
             )
             pipette.connect_pipette()
-            pipette.dispense_and_retrieve(home=home, target=target, vol=volume)
+            pipette.dispense_and_retrieve(target=target, safe_waypoint=safe_waypoint, vol=volume)
             if tip_trash:
                 pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
-            self.home(home)
+            self.home(home, linear_motion=linear_motion)
             print("Disconnecting from the pipette")
         except Exception as err:
             print(err)
