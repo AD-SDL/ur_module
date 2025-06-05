@@ -749,6 +749,18 @@ class URNode(RestNode):
         except Exception:
             return AdminCommandResponse(success=False)
 
+    @action(name="e_stop", description="Emergency stop the UR robot")
+    def e_stop(self) -> AdminCommandResponse:
+        """Emergency stop the UR robot"""
+        try:
+            self.ur_interface.ur_dashboard.stop_program()
+            self.ur_interface.ur_dashboard.power_off()
+            self.logger.log_info("Emergency stop executed successfully.")
+            return AdminCommandResponse()
+        except Exception as err:
+            self.logger.log_error(f"Failed to emergency stop: {err}")
+            return AdminCommandResponse(success=False, errors=str(err))
+
 
 if __name__ == "__main__":
     ur_node = URNode()
