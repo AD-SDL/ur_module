@@ -520,6 +520,9 @@ class URNode(RestNode):
         safe_waypoint: Annotated[Union[LocationArgument, list], "Safe waypoint in joint angles"] = None,
         tip_loc: Annotated[Union[LocationArgument, list], "Tip location"] = None,
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
+        pipette_speed: Annotated[Optional[float], "Pipette speed in m/s"] = 0,
+        pipette_top_speed: Annotated[Optional[float], "Pipette top speed in m/s"] = 0,
+        pipette_delay: Annotated[Optional[float], "Pipette delay in seconds"] = 0,
     ):
         """Picks and moves a sample with UR"""
 
@@ -546,6 +549,9 @@ class URNode(RestNode):
                 target=target,
                 volume=volume,
                 tip_loc=tip_loc,
+                pipette_speed=pipette_speed,
+                pipette_top_speed=pipette_top_speed,
+                pipette_delay=pipette_delay,
             )
         except Exception as err:
             return ActionFailed(errors=err)
@@ -564,6 +570,9 @@ class URNode(RestNode):
         safe_waypoint: Annotated[Union[LocationArgument, list], "Safe waypoint in joint angles"] = None,
         tip_trash: Annotated[Union[LocationArgument, list], "Tip trash location"] = None,
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
+        pipette_speed: Annotated[Optional[float], "Pipette speed in m/s"] = 0,
+        pipette_top_speed: Annotated[Optional[float], "Pipette top speed in m/s"] = 0,
+        pipette_delay: Annotated[Optional[float], "Pipette delay in seconds"] = 0,
     ):
         """Dispenses a sample and retrieves the pipette with UR"""
 
@@ -587,6 +596,9 @@ class URNode(RestNode):
                 target=target,
                 volume=volume,
                 tip_trash=tip_trash,
+                pipette_speed=pipette_speed,
+                pipette_top_speed=pipette_top_speed,
+                pipette_delay=pipette_delay,
             )
         except Exception as err:
             return ActionFailed(errors=err)

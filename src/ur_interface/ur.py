@@ -629,6 +629,9 @@ class UR:
         source: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
         volume: int = 10,
+        pipette_speed: float = 0,
+        pipette_top_speed: float = 0,
+        pipette_delay: float = 0,
     ) -> None:
         """
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
@@ -656,7 +659,15 @@ class UR:
             if tip_loc:
                 pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
-            pipette.transfer_sample(home=home, sample_aspirate=source, sample_dispense=target, vol=volume)
+            pipette.transfer_sample(
+                home=home,
+                sample_aspirate=source,
+                sample_dispense=target,
+                volume=volume,
+                start_speed=pipette_speed,
+                top_speed=pipette_top_speed,
+                delay=pipette_delay,
+            )
             if tip_trash:
                 pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
@@ -673,6 +684,9 @@ class UR:
         sample_loc: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
         volume: int = 10,
+        pipette_speed: float = 0,
+        pipette_top_speed: float = 0,
+        pipette_delay: float = 0,
     ) -> None:
         """Pipette pick sample from the source location and transfer it to the target location
 
@@ -701,7 +715,15 @@ class UR:
                 pipette.pick_tip(tip_loc=tip_loc)
             if home:
                 self.home(home, linear_motion=linear_motion)
-            pipette.pick_and_move(safe_waypoint=safe_waypoint, sample_loc=sample_loc, target=target, vol=volume)
+            pipette.pick_and_move(
+                safe_waypoint=safe_waypoint,
+                sample_loc=sample_loc,
+                target=target,
+                volume=volume,
+                start_speed=pipette_speed,
+                top_speed=pipette_top_speed,
+                delay=pipette_delay,
+            )
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
         except Exception as err:
@@ -715,6 +737,9 @@ class UR:
         tip_trash: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
         volume: int = 10,
+        pipette_speed: float = 0,
+        pipette_top_speed: float = 0,
+        pipette_delay: float = 0,
     ) -> None:
         """Dispense a sample using the pipette. This function uses linear motions to perform the pick and place movements.
         Args
@@ -735,7 +760,14 @@ class UR:
                 pipette_resource_id=self.tool_resource_id,
             )
             pipette.connect_pipette()
-            pipette.dispense_and_retrieve(target=target, safe_waypoint=safe_waypoint, vol=volume)
+            pipette.dispense_and_retrieve(
+                target=target,
+                safe_waypoint=safe_waypoint,
+                volume=volume,
+                start_speed=pipette_speed,
+                top_speed=pipette_top_speed,
+                delay=pipette_delay,
+            )
             if tip_trash:
                 pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
