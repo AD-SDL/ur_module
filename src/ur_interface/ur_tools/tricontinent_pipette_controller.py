@@ -227,7 +227,8 @@ class TricontinentPipetteController:
         target_above = deepcopy(target)
         target_above2 = deepcopy(target)
         target_above[2] += 0.05
-        target_above2[2] += 0.01
+        # target_above2[2] += 0.01
+        target_above2[2] += 0.030
         self.ur.movel(
             target_above,
             self.acceleration,

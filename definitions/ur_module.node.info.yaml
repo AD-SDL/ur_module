@@ -21,6 +21,7 @@ capabilities:
   - get_location
   - lock
   - reset
+  - safety_stop
   - shutdown
   - unlock
 commands: {}
@@ -28,7 +29,7 @@ is_template: false
 config_defaults:
   host: localhost
   port: 3030
-  ur_ip: 146.137.240.38
+  ur_ip: 192.168.100.109
   ur_model: UR5e
   tcp_pose:
   - 0
@@ -567,6 +568,12 @@ actions:
         argument_type: int
         required: false
         default: 10
+      safe_waypoint:
+        name: safe_waypoint
+        description: Safe waypoint in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
       tip_loc:
         name: tip_loc
         description: Tip location
@@ -606,6 +613,12 @@ actions:
         argument_type: int
         required: false
         default: 10
+      safe_waypoint:
+        name: safe_waypoint
+        description: Safe waypoint in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
       tip_trash:
         name: tip_trash
         description: Tip trash location
@@ -783,6 +796,15 @@ actions:
     results: {}
     blocking: false
     asynchronous: true
+  e_stop:
+    name: e_stop
+    description: Emergency stop the UR robot
+    args: {}
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
 config:
   status_update_interval: 2.0
   state_update_interval: 2.0
@@ -792,7 +814,7 @@ config:
   host: localhost
   port: 3030
   protocol: http
-  ur_ip: 146.137.240.38
+  ur_ip: 192.168.100.109
   tcp_pose:
   - 0
   - 0

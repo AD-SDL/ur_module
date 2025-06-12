@@ -753,7 +753,7 @@ class URNode(RestNode):
     def e_stop(self):
         """Emergency stop the UR robot"""
         try:
-            self.ur_interface.ur_dashboard.stop_program()
+            # self.ur_interface.ur_dashboard.stop_program()
             self.ur_interface.ur_dashboard.power_off()
             self.logger.log_info("EMERRGENCY STOP EXECUTED")
             return ActionSucceeded()
