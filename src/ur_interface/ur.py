@@ -629,9 +629,7 @@ class UR:
         source: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
         volume: int = 10,
-        pipette_speed: float = 0,
-        pipette_top_speed: float = 0,
-        pipette_delay: float = 0,
+        pipette_speed: int = 150,
     ) -> None:
         """
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
@@ -664,9 +662,7 @@ class UR:
                 sample_aspirate=source,
                 sample_dispense=target,
                 volume=volume,
-                start_speed=pipette_speed,
-                top_speed=pipette_top_speed,
-                delay=pipette_delay,
+                speed=pipette_speed,
             )
             if tip_trash:
                 pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
