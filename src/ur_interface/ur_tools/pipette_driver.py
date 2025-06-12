@@ -267,7 +267,7 @@ class PipetteDriver:
         """Initializes the pipette motor"""
         self.send_command("z1600A0A10z0", wait=True)
 
-    def set_speed(self, start, top, stop):
+    def set_speed(self, start, top=100, stop=100):
         """Sets the speed
         Args
             start: Start value
@@ -757,12 +757,19 @@ class PipetteDriver:
 if __name__ == "__main__":
     a = PipetteDriver()
     # a.connect(hostname="164.54.116.129")
-    a.connect(hostname="192.168.1.102")
+    a.connect(hostname="192.168.100.109")
     # time.sleep(5)
-    # a.initialize()
+    a.initialize()
+
+    # time.sleep(5)
+    # a.aspirate(vol=30)
+    # time.sleep(5)
+    # a.dispense(vol=30,start=100,speed=50)
+    # time.sleep(15)
+
     # time.sleep(5)
     # print(a.get_speed_start(), a.get_speed_stop(),a.get_speed())
-    a.dispense(vol=25)
+    # a.dispense(vol=25)
     # time.sleep(5)
     # print(a.get_step())
     # a.dispense(vol=2)
