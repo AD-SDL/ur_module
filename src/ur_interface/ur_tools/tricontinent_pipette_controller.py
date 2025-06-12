@@ -131,7 +131,7 @@ class TricontinentPipetteController:
         safe_waypoint: list = None,
         sample_aspirate: list = None,
         sample_dispense: list = None,
-        vol: int = 10,
+        volume: int = 10,
         start_speed: float = 0,
         top_speed: float = 0,
     ):
@@ -153,13 +153,13 @@ class TricontinentPipetteController:
         )
         self.ur.movel(sample_aspirate, self.acceleration, self.speed_slow)
 
-        self.pipette.aspirate(vol=vol, start=start_speed, speed=top_speed)
+        self.pipette.aspirate(vol=volume, start=start_speed, speed=top_speed)
         sleep(5)
 
         if self.resource_client:
             self.resource_client.increase_quantity(
                 resource=self.pipette_resource_id,
-                amount=vol,
+                amount=volume,
             )
 
         self.ur.movel(sample_aspirate_above, self.acceleration, self.speed_slow)
@@ -177,12 +177,12 @@ class TricontinentPipetteController:
         )
         self.ur.movel(sample_dispense, self.acceleration, self.speed_slow)
 
-        self.pipette.dispense(vol=vol)
+        self.pipette.dispense(vol=volume, start=start_speed, speed=top_speed)
         sleep(5)
         if self.resource_client:
             self.resource_client.decrease_quantity(
                 resource=self.pipette_resource_id,
-                amount=vol,
+                amount=volume,
             )
         self.ur.movel(
             sample_dispense_above,
@@ -202,7 +202,7 @@ class TricontinentPipetteController:
         volume: int = 10,
         start_speed: float = 0,
         top_speed: float = 0,
-        pipette_delay: float = 0,
+        delay: float = 0,
     ):
         """
         Description:
@@ -220,10 +220,10 @@ class TricontinentPipetteController:
         )
         self.ur.movel(sample_loc, self.acceleration, self.speed_slow)
 
-        if pipette_delay > 0:
+        if delay > 0:
             for i in range(0, volume, 1):  # noqa
                 self.pipette.aspirate(vol=1, start=start_speed, speed=top_speed)
-                sleep(pipette_delay)
+                sleep(delay)
         else:
             self.pipette.aspirate(vol=volume, start=start_speed, speed=top_speed)
             sleep(5)
@@ -260,7 +260,7 @@ class TricontinentPipetteController:
         volume: int = 10,
         start_speed: float = 0,
         top_speed: float = 0,
-        pipette_delay: float = 0,
+        delay: float = 0,
     ):
         """
         Description:
@@ -269,10 +269,10 @@ class TricontinentPipetteController:
         """
         self.ur.movel(target, self.acceleration, self.speed_slow)
 
-        if pipette_delay > 0:
+        if delay > 0:
             for i in range(0, volume, 1):  # noqa
                 self.pipette.dispense(vol=1, start=start_speed, speed=top_speed)
-                sleep(pipette_delay)
+                sleep(delay)
         else:
             self.pipette.dispense(vol=volume, start=start_speed, speed=top_speed)
             sleep(5)

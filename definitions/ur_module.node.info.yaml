@@ -21,6 +21,7 @@ capabilities:
   - get_location
   - lock
   - reset
+  - safety_stop
   - shutdown
   - unlock
 commands: {}
@@ -567,6 +568,12 @@ actions:
         argument_type: int
         required: false
         default: 10
+      safe_waypoint:
+        name: safe_waypoint
+        description: Safe waypoint in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
       tip_loc:
         name: tip_loc
         description: Tip location
@@ -606,6 +613,12 @@ actions:
         argument_type: int
         required: false
         default: 10
+      safe_waypoint:
+        name: safe_waypoint
+        description: Safe waypoint in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
       tip_trash:
         name: tip_trash
         description: Tip trash location
@@ -777,6 +790,15 @@ actions:
   set_digital_io:
     name: set_digital_io
     description: Sets a channel IO output on the UR
+    args: {}
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  e_stop:
+    name: e_stop
+    description: Emergency stop the UR robot
     args: {}
     locations: {}
     files: {}
