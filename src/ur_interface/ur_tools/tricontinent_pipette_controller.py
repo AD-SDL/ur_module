@@ -128,9 +128,12 @@ class TricontinentPipetteController:
     def transfer_sample(
         self,
         home: list = None,
+        safe_waypoint: list = None,
         sample_aspirate: list = None,
         sample_dispense: list = None,
         vol: int = 10,
+        start_speed: float = 0,
+        top_speed: float = 0,
     ):
         """
         Description:
@@ -139,8 +142,6 @@ class TricontinentPipetteController:
             - In order to mix the liquids together, pipette performs aspirate and dispense operation multiple times in the well that contains both the liquids.
         """
         print("Making a sample using two liquids...")
-
-        # MOVE TO THE FIRT SAMPLE LOCATION
 
         sample_aspirate_above = deepcopy(sample_aspirate)
         sample_aspirate_above[2] += 0.05
@@ -152,8 +153,7 @@ class TricontinentPipetteController:
         )
         self.ur.movel(sample_aspirate, self.acceleration, self.speed_slow)
 
-        # ASPIRATE FIRST SAMPLE
-        self.pipette.aspirate(vol=vol)
+        self.pipette.aspirate(vol=vol, start=start_speed, speed=top_speed)
         sleep(5)
 
         if self.resource_client:
@@ -163,7 +163,10 @@ class TricontinentPipetteController:
             )
 
         self.ur.movel(sample_aspirate_above, self.acceleration, self.speed_slow)
-        self.ur.movej(home, 1, 1)
+        if safe_waypoint:
+            self.ur.movel(safe_waypoint, self.acceleration, self.speed_fast)
+        else:
+            self.ur.movej(home, self.acceleration, self.speed_fast)
 
         sample_dispense_above = deepcopy(sample_dispense)
         sample_dispense_above[2] += 0.02
@@ -186,14 +189,20 @@ class TricontinentPipetteController:
             self.acceleration,
             self.speed_slow,
         )
-        self.ur.movej(home, 1, 1)
+        if safe_waypoint:
+            self.ur.movel(safe_waypoint, self.acceleration, self.speed_fast)
+        else:
+            self.ur.movej(home, self.acceleration, self.speed_fast)
 
     def pick_and_move(
         self,
         safe_waypoint: list = None,
         sample_loc: list = None,
         target: list = None,
-        vol: int = 10,
+        volume: int = 10,
+        start_speed: float = 0,
+        top_speed: float = 0,
+        pipette_delay: float = 0,
     ):
         """
         Description:
@@ -211,14 +220,18 @@ class TricontinentPipetteController:
         )
         self.ur.movel(sample_loc, self.acceleration, self.speed_slow)
 
-        # ASPIRATE FIRST SAMPLE
-        self.pipette.aspirate(vol=vol)
-        sleep(5)
+        if pipette_delay > 0:
+            for i in range(0, volume, 1):  # noqa
+                self.pipette.aspirate(vol=1, start=start_speed, speed=top_speed)
+                sleep(pipette_delay)
+        else:
+            self.pipette.aspirate(vol=volume, start=start_speed, speed=top_speed)
+            sleep(5)
 
         if self.resource_client:
             self.resource_client.increase_quantity(
                 resource=self.pipette_resource_id,
-                amount=vol,
+                amount=volume,
             )
 
         self.ur.movel(sample_loc_above, self.acceleration, self.speed_fast)
@@ -244,7 +257,10 @@ class TricontinentPipetteController:
         self,
         safe_waypoint: list = None,
         target: list = None,
-        vol: int = 10,
+        volume: int = 10,
+        start_speed: float = 0,
+        top_speed: float = 0,
+        pipette_delay: float = 0,
     ):
         """
         Description:
@@ -253,13 +269,18 @@ class TricontinentPipetteController:
         """
         self.ur.movel(target, self.acceleration, self.speed_slow)
 
-        # DISPENSE FIRST SAMPLE
-        self.pipette.dispense(vol=vol)
-        sleep(5)
+        if pipette_delay > 0:
+            for i in range(0, volume, 1):  # noqa
+                self.pipette.dispense(vol=1, start=start_speed, speed=top_speed)
+                sleep(pipette_delay)
+        else:
+            self.pipette.dispense(vol=volume, start=start_speed, speed=top_speed)
+            sleep(5)
+
         if self.resource_client:
             self.resource_client.decrease_quantity(
                 resource=self.pipette_resource_id,
-                amount=vol,
+                amount=volume,
             )
 
         target_above = deepcopy(target)
