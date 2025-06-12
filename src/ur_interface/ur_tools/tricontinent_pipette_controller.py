@@ -219,7 +219,7 @@ class TricontinentPipetteController:
 
         self.pipette.set_speed(start=speed, top=speed, stop=speed)
         self.pipette.aspirate(vol=volume)
-
+        sleep(5)
         if self.resource_client:
             self.resource_client.increase_quantity(
                 resource=self.pipette_resource_id,
@@ -262,7 +262,7 @@ class TricontinentPipetteController:
 
         self.pipette.set_speed(start=speed, top=speed, stop=speed)
         self.pipette.dispense(vol=volume)
-        # sleep(5)
+        sleep(3 * (150 / speed))  # Adjust sleep time based on speed
 
         if self.resource_client:
             self.resource_client.decrease_quantity(

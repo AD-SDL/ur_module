@@ -586,6 +586,12 @@ actions:
         argument_type: bool
         required: false
         default: true
+      pipette_speed:
+        name: pipette_speed
+        description: Pipette speed in m/s
+        argument_type: int
+        required: false
+        default: 150
     locations: {}
     files: {}
     results: {}
@@ -631,6 +637,12 @@ actions:
         argument_type: bool
         required: false
         default: true
+      pipette_speed:
+        name: pipette_speed
+        description: Pipette speed in m/s
+        argument_type: int
+        required: false
+        default: 150
     locations: {}
     files: {}
     results: {}
