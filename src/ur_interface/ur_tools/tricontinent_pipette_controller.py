@@ -68,7 +68,7 @@ class TricontinentPipetteController:
                 print("Pipette connection error: ", err)
 
             else:
-                print("Pipette is connected after {} tries".format(i))
+                print("Pipette is connected after {} tries".format(i + 1))
                 break
 
     def initialize_pipette(self):
