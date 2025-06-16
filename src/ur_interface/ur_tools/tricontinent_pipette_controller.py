@@ -45,7 +45,7 @@ class TricontinentPipetteController:
         self.pipette_dispense_value = -2.0
         self.droplet_value = 0.3
 
-    def connect_pipette(self):
+    def connect_pipette(self, speed: int = 150):
         """
         Connects to the pipette by first setting the correct tool communication parameters
         """
@@ -64,6 +64,20 @@ class TricontinentPipetteController:
                 sleep(2)
                 self.pipette.connect(hostname=self.IP)
 
+                error = True
+                timout = 0
+                while error:
+                    try:
+                        sleep(1)
+                        timout += 1
+                        self.pipette.set_speed(start=speed, top=speed, stop=speed)
+                    except Exception as e:
+                        print("Error in setting speed:", e)
+                    else:
+                        error = False
+                    if timout > 30:
+                        raise TimeoutError("Timeout while setting pipette speed")
+
             except Exception as err:
                 print("Pipette connection error: ", err)
 
@@ -78,7 +92,7 @@ class TricontinentPipetteController:
         """
         try:
             self.pipette.initialize()
-            sleep(2)
+            # sleep(5)
 
         except Exception as err:
             print("Pipette initialization error: ", err)
@@ -199,7 +213,6 @@ class TricontinentPipetteController:
         sample_loc: list = None,
         target: list = None,
         volume: int = 10,
-        speed: int = 150,
     ):
         """
         Description:
@@ -217,9 +230,8 @@ class TricontinentPipetteController:
         )
         self.ur.movel(sample_loc, self.acceleration, self.speed_slow)
 
-        self.pipette.set_speed(start=speed, top=speed, stop=speed)
         self.pipette.aspirate(vol=volume)
-        sleep(5)
+        # sleep(5)
         if self.resource_client:
             self.resource_client.increase_quantity(
                 resource=self.pipette_resource_id,
@@ -251,7 +263,6 @@ class TricontinentPipetteController:
         safe_waypoint: list = None,
         target: list = None,
         volume: int = 10,
-        speed: int = 150,
     ):
         """
         Description:
@@ -260,9 +271,8 @@ class TricontinentPipetteController:
         """
         self.ur.movel(target, self.acceleration, self.speed_slow)
 
-        self.pipette.set_speed(start=speed, top=speed, stop=speed)
         self.pipette.dispense(vol=volume)
-        sleep(3 * (150 / speed))  # Adjust sleep time based on speed
+        # sleep(3 * (150 / speed))  # Adjust sleep time based on speed
 
         if self.resource_client:
             self.resource_client.decrease_quantity(

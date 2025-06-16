@@ -703,7 +703,7 @@ class UR:
                 resource_client=self.resource_client,
                 pipette_resource_id=self.tool_resource_id,
             )
-            pipette.connect_pipette()
+            pipette.connect_pipette(speed=pipette_speed)
             pipette.initialize_pipette()
             if tip_loc:
                 pipette.pick_tip(tip_loc=tip_loc)
@@ -714,7 +714,6 @@ class UR:
                 sample_loc=sample_loc,
                 target=target,
                 volume=volume,
-                speed=pipette_speed,
             )
             pipette.disconnect_pipette()
             print("Disconnecting from the pipette")
@@ -749,12 +748,11 @@ class UR:
                 resource_client=self.resource_client,
                 pipette_resource_id=self.tool_resource_id,
             )
-            pipette.connect_pipette()
+            pipette.connect_pipette(speed=pipette_speed)
             pipette.dispense_and_retrieve(
                 target=target,
                 safe_waypoint=safe_waypoint,
                 volume=volume,
-                speed=pipette_speed,
             )
             if tip_trash:
                 pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")

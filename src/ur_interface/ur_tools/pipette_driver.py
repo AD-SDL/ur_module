@@ -266,6 +266,7 @@ class PipetteDriver:
     def initialize(self):
         """Initializes the pipette motor"""
         self.send_command("z1600A0A10z0", wait=True)
+        time.sleep(10)
 
     def set_speed(self, start, top=100, stop=100):
         """Sets the speed
@@ -274,6 +275,8 @@ class PipetteDriver:
             top: Top value
             stop: Stop value
         """
+        # self.reconnect()
+        # time.sleep(1)
         self._set_vars({"v": start, "V": top, "c": stop})
 
     def set_motorcurrent(self, value=50):
@@ -489,8 +492,10 @@ class PipetteDriver:
                 val = str(value)
             cmd += f"{variable}{val}"
         cmd += "R\r"  # R for execution and new line is required for the command to finish
+        # print("COMMAND:", cmd)
         # atomic commands send/rcv
         status, val, data = self.query(cmd)
+        # print(f"Data: {data}, Status: {status}, Value: {val}")
         errcheck, notbusy = self._status_check(status)
         #         with self.command_lock:
         #             self.socket.sendall(cmd.encode(self.ENCODING))
@@ -551,6 +556,10 @@ class PipetteDriver:
             except ConnectionAbortedError:
                 self.connect()
                 time.sleep(0.1 * cnt)
+            except Exception as err:
+                self.connect()
+                time.sleep(0.1 * cnt)
+                print(err)
             cnt = cnt + 1
         if cnt == timeout:
             raise CommunicationException("Time out.")
@@ -583,6 +592,9 @@ class PipetteDriver:
                     return "", "", data
                 except BrokenPipeError as err2:
                     print(err2)
+                    self.reconnect()
+                except Exception as err:
+                    print("Pipette query error:", err)
                     self.reconnect()
                 cnt = cnt + 1
             if cnt == trial:
@@ -755,28 +767,42 @@ class PipetteDriver:
 
 
 if __name__ == "__main__":
-    a = PipetteDriver()
-    # a.connect(hostname="164.54.116.129")
-    a.connect(hostname="192.168.100.109")
-    # time.sleep(5)
-    a.initialize()
+    for i in range(10):  # noqa
+        a = PipetteDriver()
+        # a.connect(hostname="164.54.116.129")
+        a.connect(hostname="192.168.100.109")
+        # time.sleep(5)
+        a.initialize()
+        # time.sleep(15)
+        speed = 111
+        # a.set_speed(start=speed, top=speed, stop=speed)
+        # time.sleep(5)
+        error = True
+        while error:
+            try:
+                a.set_speed(start=speed, top=speed, stop=speed)
+            except Exception as e:
+                print("Error in setting speed:", e)
+            else:
+                error = False
+        # time.sleep(10)
+        # time.sleep(5)
+        # a.aspirate(vol=40)
+        # a.dispense(vol=40)
+        # time.sleep(5)
+        # a.dispense(vol=30,start=100,speed=50)
+        # time.sleep(15)
 
-    # time.sleep(5)
-    # a.aspirate(vol=30)
-    # time.sleep(5)
-    # a.dispense(vol=30,start=100,speed=50)
-    # time.sleep(15)
-
-    # time.sleep(5)
-    # print(a.get_speed_start(), a.get_speed_stop(),a.get_speed())
-    # a.dispense(vol=25)
-    # time.sleep(5)
-    # print(a.get_step())
-    # a.dispense(vol=2)
-    # cmd = '/1'
-    # if len(sys.argv)<2:
-    #     cmd += 'z1600A0A10z0R'
-    # else:
-    #     cmd += sys.argv[1]
-    # print(a.send_command("z1600A0A10z0R"))
-    a.disconnect()
+        # time.sleep(5)
+        # print(a.get_speed_start(), a.get_speed_stop(),a.get_speed())
+        # a.dispense(vol=25)
+        # time.sleep(5)
+        # print(a.get_step())
+        # a.dispense(vol=2)
+        # cmd = '/1'
+        # if len(sys.argv)<2:
+        #     cmd += 'z1600A0A10z0R'
+        # else:
+        #     cmd += sys.argv[1]
+        # print(a.send_command("z1600A0A10z0R"))
+        a.disconnect()
