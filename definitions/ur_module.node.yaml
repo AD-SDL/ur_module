@@ -28,7 +28,8 @@ is_template: false
 config_defaults:
   host: localhost
   port: 3030
-  ur_ip: 146.137.240.38
+  ur_ip: 192.168.100.109
+  ur_model: UR5e
   tcp_pose:
   - 0
   - 0
