@@ -119,7 +119,7 @@ class UR:
 
         return movement_state, current_location
 
-    def home(self, home_location: Union[LocationArgument, list]) -> None:
+    def home(self, home_location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
         """Moves the robot to the home location.
 
         Args: home_location: 6 joint value location
@@ -130,7 +130,10 @@ class UR:
             home_loc = home_location.location
         else:
             home_loc = home_location
-        self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
+        if linear_motion:
+            self.ur_connection.movel(home_loc, self.velocity, self.acceleration)
+        else:
+            self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
         print("Robot homed")
 
     def pick_tool(
@@ -626,19 +629,20 @@ class UR:
         source: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
         volume: int = 10,
+        pipette_speed: int = 150,
     ) -> None:
         """
         Make a liquid transfer using the pipette. This function uses linear motions to perform the pick and place movements.
 
         Args
-            home (Union[LocationArgument, list]): Home location
+            home (Union[LocationArgument, list]): Home location joint values
             tip_loc (Union[LocationArgument, list]): Pipette tip location
             tip_trash (Union[LocationArgument, list]): Tip trash location
             source (str): Source location
             target (str): Target location
             volume (int): Pipette transfer volume. Unit number of steps. Each step is 1 mL
         """
-        if not tip_loc or not source:
+        if not source or not target:
             raise Exception("Please provide both the source and target loactions to make a transfer")
 
         try:
@@ -650,11 +654,110 @@ class UR:
                 pipette_resource_id=self.tool_resource_id,
             )
             pipette.connect_pipette()
-            pipette.pick_tip(tip_loc=tip_loc)
+            if tip_loc:
+                pipette.pick_tip(tip_loc=tip_loc)
             self.home(home)
-            pipette.transfer_sample(home=home, sample_aspirate=source, sample_dispense=target, vol=volume)
-            pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
+            pipette.transfer_sample(
+                home=home,
+                sample_aspirate=source,
+                sample_dispense=target,
+                volume=volume,
+                speed=pipette_speed,
+            )
+            if tip_trash:
+                pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
+            print("Disconnecting from the pipette")
+        except Exception as err:
+            print(err)
+
+    def pipette_pick_and_move_sample(
+        self,
+        home: Union[LocationArgument, list] = None,
+        linear_motion: bool = False,
+        safe_waypoint: Union[LocationArgument, list] = None,
+        tip_loc: Union[LocationArgument, list] = None,
+        sample_loc: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+        volume: int = 10,
+        pipette_speed: int = 150,
+    ) -> None:
+        """Pipette pick sample from the source location and transfer it to the target location
+
+        Args
+            home (Union[LocationArgument, list]): Home location use Linear motions if needed
+            safe_waypoint (Union[LocationArgument, list]): Safe waypoint location to move the pipette
+            tip_loc (Union[LocationArgument, list]): Pipette tip location
+            sample_loc (Union[LocationArgument, list]): Sample location
+            target (Union[LocationArgument, list]): Target location
+            volume (int): Pipette transfer volume. Unit number of steps. Each step is 1 mL
+        """
+        if not sample_loc or not target:
+            raise Exception("Please provide both the sample and target loactions to make a transfer")
+
+        try:
+            pipette = TricontinentPipetteController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                pipette_ip=self.hostname,
+                resource_client=self.resource_client,
+                pipette_resource_id=self.tool_resource_id,
+            )
+            pipette.connect_pipette(speed=pipette_speed)
+            pipette.initialize_pipette()
+            if tip_loc:
+                pipette.pick_tip(tip_loc=tip_loc)
+            if home:
+                self.home(home, linear_motion=linear_motion)
+            pipette.pick_and_move(
+                safe_waypoint=safe_waypoint,
+                sample_loc=sample_loc,
+                target=target,
+                volume=volume,
+            )
+            pipette.disconnect_pipette()
+            print("Disconnecting from the pipette")
+        except Exception as err:
+            print(err)
+
+    def pipette_dispense_and_retrieve(
+        self,
+        home: Union[LocationArgument, list] = None,
+        linear_motion: bool = False,
+        safe_waypoint: Union[LocationArgument, list] = None,
+        tip_trash: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+        volume: int = 10,
+        pipette_speed: int = 150,
+    ) -> None:
+        """Dispense a sample using the pipette. This function uses linear motions to perform the pick and place movements.
+        Args
+            home (Union[LocationArgument, list]): Home location joint values
+            tip_trash (Union[LocationArgument, list]): Tip trash location
+            target (Union[LocationArgument, list]): Target location
+            volume (int): Pipette transfer volume. Unit number of steps. Each step is 1 mL
+        """
+        if not target:
+            raise Exception("Please provide the target loaction to make a dispense")
+
+        try:
+            pipette = TricontinentPipetteController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                pipette_ip=self.hostname,
+                resource_client=self.resource_client,
+                pipette_resource_id=self.tool_resource_id,
+            )
+            pipette.connect_pipette(speed=pipette_speed)
+            pipette.dispense_and_retrieve(
+                target=target,
+                safe_waypoint=safe_waypoint,
+                volume=volume,
+            )
+            if tip_trash:
+                pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
+            pipette.disconnect_pipette()
+            self.home(home, linear_motion=linear_motion)
             print("Disconnecting from the pipette")
         except Exception as err:
             print(err)

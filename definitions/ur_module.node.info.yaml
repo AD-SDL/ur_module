@@ -21,6 +21,7 @@ capabilities:
   - get_location
   - lock
   - reset
+  - safety_stop
   - shutdown
   - unlock
 commands: {}
@@ -28,7 +29,8 @@ is_template: false
 config_defaults:
   host: localhost
   port: 3030
-  ur_ip: 146.137.240.38
+  ur_ip: 192.168.100.109
+  ur_model: UR5e
   tcp_pose:
   - 0
   - 0
@@ -538,6 +540,114 @@ actions:
     results: {}
     blocking: false
     asynchronous: true
+  pipette_pick_and_move_sample:
+    name: pipette_pick_and_move_sample
+    description: Picks and moves a sample using the pipette
+    args:
+      home:
+        name: home
+        description: Home location in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      sample_loc:
+        name: sample_loc
+        description: Sample location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location of the object
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      volume:
+        name: volume
+        description: Set a volume in micro liters
+        argument_type: int
+        required: false
+        default: 10
+      safe_waypoint:
+        name: safe_waypoint
+        description: Safe waypoint in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
+      tip_loc:
+        name: tip_loc
+        description: Tip location
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+      pipette_speed:
+        name: pipette_speed
+        description: Pipette speed in m/s
+        argument_type: int
+        required: false
+        default: 150
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
+  pipette_dispense_and_retrieve:
+    name: pipette_dispense_and_retrieve
+    description: Dispenses a sample and retrieves the pipette tip
+    args:
+      home:
+        name: home
+        description: Home location in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location of the object
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      volume:
+        name: volume
+        description: Set a volume in micro liters
+        argument_type: int
+        required: false
+        default: 10
+      safe_waypoint:
+        name: safe_waypoint
+        description: Safe waypoint in joint angles
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
+      tip_trash:
+        name: tip_trash
+        description: Tip trash location
+        argument_type: Union[LocationArgument, list]
+        required: false
+        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+      pipette_speed:
+        name: pipette_speed
+        description: Pipette speed in m/s
+        argument_type: int
+        required: false
+        default: 150
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
   pick_and_flip_object:
     name: pick_and_flip_object
     description: Picks and flips an object 180 degrees
@@ -698,15 +808,25 @@ actions:
     results: {}
     blocking: false
     asynchronous: true
+  e_stop:
+    name: e_stop
+    description: Emergency stop the UR robot
+    args: {}
+    locations: {}
+    files: {}
+    results: {}
+    blocking: false
+    asynchronous: true
 config:
   status_update_interval: 2.0
   state_update_interval: 2.0
   event_client_config: null
   resource_server_url: null
+  minio_client_config: null
   host: localhost
   port: 3030
   protocol: http
-  ur_ip: 146.137.240.38
+  ur_ip: 192.168.100.109
   tcp_pose:
   - 0
   - 0
@@ -714,6 +834,7 @@ config:
   - 0
   - 0
   - 0
+  ur_model: UR5e
 config_schema:
   $defs:
     EventClientConfig:
@@ -734,10 +855,12 @@ config_schema:
           description: The URL of the event server.
           title: Event Server URL
         log_level:
+          anyOf:
+          - type: integer
+          - $ref: '#/$defs/EventLogLevel'
           default: 20
           description: The log level of the event client.
           title: Event Client Log Level
-          type: integer
         source:
           $ref: '#/$defs/OwnershipInfo'
           description: Information about the source of the event client.
@@ -750,6 +873,49 @@ config_schema:
           description: The directory to store logs in.
           title: Log Directory
       title: EventClientConfig
+      type: object
+    EventLogLevel:
+      description: The log level of an event.
+      enum:
+      - 0
+      - 10
+      - 20
+      - 30
+      - 40
+      - 50
+      title: EventLogLevel
+      type: integer
+    ObjectStorageDefinition:
+      description: Configuration for S3-compatible object storage.
+      properties:
+        endpoint:
+          title: Endpoint
+          type: string
+        access_key:
+          title: Access Key
+          type: string
+        secret_key:
+          title: Secret Key
+          type: string
+        secure:
+          default: false
+          title: Secure
+          type: boolean
+        default_bucket:
+          default: madsci-data
+          title: Default Bucket
+          type: string
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Region
+      required:
+      - endpoint
+      - access_key
+      - secret_key
+      title: ObjectStorageDefinition
       type: object
     OwnershipInfo:
       description: Information about the ownership of a MADSci object.
@@ -817,6 +983,13 @@ config_schema:
           default: null
           description: The ID of the workflow that owns the object.
           title: Workflow ID
+        manager_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: The ID of the manager that owns the object.
+          title: Manager ID
       title: OwnershipInfo
       type: object
   additionalProperties: true
@@ -852,13 +1025,20 @@ config_schema:
       default: null
       description: The URL of the resource server for this node to use.
       title: Resource Client URL
+    minio_client_config:
+      anyOf:
+      - $ref: '#/$defs/ObjectStorageDefinition'
+      - type: 'null'
+      default: null
+      description: Configuration for S3-compatible object storage using MinIO.
+      title: Object Storage Configuration
     host:
       default: 127.0.0.1
       description: The host of the REST API.
       title: Host
       type: string
     port:
-      default: 8000
+      default: 2000
       description: The port of the REST API.
       title: Port
       type: integer
@@ -881,6 +1061,10 @@ config_schema:
       items: {}
       title: Tcp Pose
       type: array
+    ur_model:
+      default: UR5e
+      title: Ur Model
+      type: string
   required:
   - ur_ip
   title: URNodeConfig
