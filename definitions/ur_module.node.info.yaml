@@ -74,6 +74,12 @@ actions:
     name: set_movement_params
     description: Set speed and acceleration parameters
     args:
+      tcp_pose:
+        name: tcp_pose
+        description: ''
+        argument_type: list
+        required: false
+        default: null
       velocity:
         name: velocity
         description: ''
@@ -107,6 +113,12 @@ actions:
     name: movej
     description: Move the robot using joint angles
     args:
+      joints:
+        name: joints
+        description: Joint angles to move to
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       acceleration:
         name: acceleration
         description: Acceleration
@@ -119,13 +131,7 @@ actions:
         argument_type: float
         required: false
         default: 0.6
-    locations:
-      joints:
-        name: joints
-        description: Joint angles to move to
-        argument_type: location
-        required: true
-        default: null
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -134,6 +140,12 @@ actions:
     name: movel
     description: Move the robot using linar motion
     args:
+      target:
+        name: target
+        description: Linear location to move to
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       acceleration:
         name: acceleration
         description: Acceleration
@@ -146,13 +158,7 @@ actions:
         argument_type: float
         required: false
         default: 0.6
-    locations:
-      target:
-        name: target
-        description: Linear location to move to
-        argument_type: location
-        required: true
-        default: null
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -183,6 +189,24 @@ actions:
     description: Execute a transfer in between source and target locations using Robotiq
       grippers
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      source:
+        name: source
+        description: Location to transfer sample from
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location to transfer sample to
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       source_approach_axis:
         name: source_approach_axis
         description: Source location approach axis, (X/Y/Z)
@@ -219,25 +243,13 @@ actions:
         argument_type: int
         required: false
         default: 255
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      source:
-        name: source
-        description: Location to transfer sample from
-        argument_type: location
-        required: true
-        default: null
-      target:
-        name: target
-        description: Location to transfer sample to
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -246,6 +258,18 @@ actions:
     name: gripper_pick
     description: Use the gripper to pick a piece of labware from the specified source
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      source:
+        name: source
+        description: Location to transfer sample from
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       source_approach_axis:
         name: source_approach_axis
         description: Source location approach axis, (X/Y/Z)
@@ -264,19 +288,13 @@ actions:
         argument_type: int
         required: false
         default: 255
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      source:
-        name: source
-        description: Location to transfer sample from
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -285,6 +303,18 @@ actions:
     name: gripper_place
     description: Use the gripper to place a piece of labware at the target.
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location to transfer sample to
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       target_approach_axis:
         name: target_approach_axis
         description: Source location approach axis, (X/Y/Z)
@@ -303,19 +333,13 @@ actions:
         argument_type: int
         required: false
         default: 0
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      target:
-        name: target
-        description: Location to transfer sample to
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -324,6 +348,18 @@ actions:
     name: pick_tool
     description: Picks up a tool using the provided tool location
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      tool_loc:
+        name: tool_loc
+        description: Tool location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       docking_axis:
         name: docking_axis
         description: Docking axis, (X/Y/Z)
@@ -342,19 +378,13 @@ actions:
         argument_type: str
         required: false
         default: null
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      tool_loc:
-        name: tool_loc
-        description: Tool location
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -363,6 +393,18 @@ actions:
     name: Place_tool
     description: Places the attached tool back to the provided tool docking location
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      tool_docking:
+        name: tool_docking
+        description: Tool docking location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       docking_axis:
         name: docking_axis
         description: Docking axis, (X/Y/Z)
@@ -375,19 +417,13 @@ actions:
         argument_type: str
         required: false
         default: null
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      tool_docking:
-        name: tool_docking
-        description: Tool docking location
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -397,6 +433,30 @@ actions:
     description: Performs a screw transfer using the Robotiq gripper and custom screwdriving
       bits
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      screwdriver_loc:
+        name: screwdriver_loc
+        description: Screwdriver location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      screw_loc:
+        name: screw_loc
+        description: Screw location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location where the srewdriving will be performed
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       screw_time:
         name: screw_time
         description: Srew time in seconds
@@ -415,31 +475,13 @@ actions:
         argument_type: int
         required: false
         default: 255
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      screwdriver_loc:
-        name: screwdriver_loc
-        description: Screwdriver location
-        argument_type: location
-        required: true
-        default: null
-      screw_loc:
-        name: screw_loc
-        description: Screw location
-        argument_type: location
-        required: true
-        default: null
-      target:
-        name: target
-        description: Location where the srewdriving will be performed
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -449,43 +491,49 @@ actions:
     description: Make a pipette transfer to transfer sample liquids in between two
       locations
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      source:
+        name: source
+        description: Initial location of the sample
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Target location of the sample
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      tip_loc:
+        name: tip_loc
+        description: New tip location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      tip_trash:
+        name: tip_trash
+        description: Tip trash location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       volume:
         name: volume
         description: Set a volume in micro liters
         argument_type: float
         required: true
         default: null
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      source:
-        name: source
-        description: Initial location of the sample
-        argument_type: location
-        required: true
-        default: null
-      target:
-        name: target
-        description: Target location of the sample
-        argument_type: location
-        required: true
-        default: null
-      tip_loc:
-        name: tip_loc
-        description: New tip location
-        argument_type: location
-        required: true
-        default: null
-      tip_trash:
-        name: tip_trash
-        description: Tip trash location
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -494,6 +542,18 @@ actions:
     name: pick_and_flip_object
     description: Picks and flips an object 180 degrees
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location of the object
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       approach_axis:
         name: approach_axis
         description: Approach axis, (X/Y/Z)
@@ -518,19 +578,13 @@ actions:
         argument_type: int
         required: false
         default: 255
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      target:
-        name: target
-        description: Location of the object
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -539,6 +593,25 @@ actions:
     name: remove_cap
     description: Removes caps from sample vials
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      source:
+        name: source
+        description: Location of the vial cap
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: Location of where the cap will be placed after it is removed
+          from the vail
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       gripper_open:
         name: gripper_open
         description: Set a max value for the gripper open state
@@ -551,26 +624,13 @@ actions:
         argument_type: int
         required: false
         default: 255
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      source:
-        name: source
-        description: Location of the vial cap
-        argument_type: location
-        required: true
-        default: null
-      target:
-        name: target
-        description: Location of where the cap will be placed after it is removed
-          from the vail
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -579,6 +639,24 @@ actions:
     name: place_cap
     description: Places caps back to sample vials
     args:
+      home:
+        name: home
+        description: Home location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      source:
+        name: source
+        description: Vail cap initial location
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
+      target:
+        name: target
+        description: The vail location where the cap will installed
+        argument_type: Union[LocationArgument, list]
+        required: true
+        default: null
       gripper_open:
         name: gripper_open
         description: Set a max value for the gripper open state
@@ -591,25 +669,13 @@ actions:
         argument_type: int
         required: false
         default: 255
-    locations:
-      home:
-        name: home
-        description: Home location
-        argument_type: location
-        required: true
-        default: null
-      source:
-        name: source
-        description: Vail cap initial location
-        argument_type: location
-        required: true
-        default: null
-      target:
-        name: target
-        description: The vail location where the cap will installed
-        argument_type: location
-        required: true
-        default: null
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for all the locations
+        argument_type: bool
+        required: false
+        default: true
+    locations: {}
     files: {}
     results: {}
     blocking: false
@@ -668,12 +734,10 @@ config_schema:
           description: The URL of the event server.
           title: Event Server URL
         log_level:
-          anyOf:
-          - type: integer
-          - $ref: '#/$defs/EventLogLevel'
           default: 20
           description: The log level of the event client.
           title: Event Client Log Level
+          type: integer
         source:
           $ref: '#/$defs/OwnershipInfo'
           description: Information about the source of the event client.
@@ -687,17 +751,6 @@ config_schema:
           title: Log Directory
       title: EventClientConfig
       type: object
-    EventLogLevel:
-      description: The log level of an event.
-      enum:
-      - 0
-      - 10
-      - 20
-      - 30
-      - 40
-      - 50
-      title: EventLogLevel
-      type: integer
     OwnershipInfo:
       description: Information about the ownership of a MADSci object.
       properties:
@@ -764,13 +817,6 @@ config_schema:
           default: null
           description: The ID of the workflow that owns the object.
           title: Workflow ID
-        manager_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
-          description: The ID of the manager that owns the object.
-          title: Manager ID
       title: OwnershipInfo
       type: object
   additionalProperties: true
@@ -812,7 +858,7 @@ config_schema:
       title: Host
       type: string
     port:
-      default: 2000
+      default: 8000
       description: The port of the REST API.
       title: Port
       type: integer
