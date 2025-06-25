@@ -125,16 +125,16 @@ class UR:
 
         # Start with identity rotation
         rotation = m3.Orientation()  # Identity rotation
-        
+
         # Apply only non-zero rotations in order
         if rx_deg != 0:
             rx_rad = radians(rx_deg)
             rotation = rotation * m3.Orientation.new_rot_x(rx_rad)
-        
+
         if ry_deg != 0:
             ry_rad = radians(ry_deg)
             rotation = rotation * m3.Orientation.new_rot_y(ry_rad)
-        
+
         if rz_deg != 0:
             rz_rad = radians(rz_deg)
             rotation = rotation * m3.Orientation.new_rot_z(rz_rad)
