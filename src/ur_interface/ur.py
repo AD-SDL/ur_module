@@ -2,9 +2,11 @@
 """Interface for UR Driver"""
 
 import socket
+from math import radians
 from time import sleep
 from typing import Union
 
+import math3d as m3
 import numpy as np
 from madsci.client.resource_client import ResourceClient
 from madsci.common.types.auth_types import OwnershipInfo
@@ -68,6 +70,7 @@ class UR:
         resource_owner: OwnershipInfo = None,
         tool_resource_id: str = None,
         tcp_pose: list = [0, 0, 0, 0, 0, 0],
+        base_reference_frame: list = None,
     ):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
@@ -93,6 +96,8 @@ class UR:
         self.gripper_force = 255
 
         self.ur_connection.set_tcp(tcp_pose)
+        if base_reference_frame:
+            self.set_base_reference_frame(base_reference_frame)
         self.get_movement_state()
 
     def disconnect(self):
@@ -100,6 +105,37 @@ class UR:
         self.ur.disconnect_ur()
         self.ur_dashboard.clear_operational_mode()
         self.ur_dashboard.disconnect()
+
+    def set_base_reference_frame(self, base_reference_frame: list) -> None:
+        """Sets the base reference frame for the robot.
+        Args:
+            base_reference_frame (list): 6 element reference frame. [x, y, z, rx, ry, rz]. Rotation values are in degrees, later converted to radians in the function.
+        """
+        if not isinstance(base_reference_frame, list) or len(base_reference_frame) != 6:
+            raise ValueError("Base reference frame must be a list of 6 values")
+
+        # Extract position and rotation components
+        x, y, z, rx_deg, ry_deg, rz_deg = base_reference_frame
+
+        # Convert rotation from degrees to radians
+        rx_rad = radians(rx_deg)
+        ry_rad = radians(ry_deg)
+        rz_rad = radians(rz_deg)
+
+        # Create translation vector
+        translation = m3.Vector(x, y, z)
+
+        # Create rotation matrix from Euler angles (ZYX convention)
+        # This matches the typical robot convention
+        rotation = m3.Orientation.new_euler((rz_rad, ry_rad, rx_rad))
+
+        # Create the transform
+        transform = m3.Transform(rotation, translation)
+
+        # Set the coordinate system
+        self.ur_connection.set_csys(transform)
+
+        print(f"Base reference frame set to: {base_reference_frame}")
 
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.

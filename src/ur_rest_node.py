@@ -26,6 +26,7 @@ class URNodeConfig(RestNodeConfig):
 
     ur_ip: str
     tcp_pose: list = [0, 0, 0, 0, 0, 0]
+    base_reference_frame: list = None
     ur_model: str = "UR5e"
 
 
@@ -50,6 +51,7 @@ class URNode(RestNode):
                 hostname=self.config.ur_ip,
                 resource_client=self.resource_client,
                 tcp_pose=self.config.tcp_pose,
+                base_reference_frame=self.config.base_reference_frame,
             )
             self.tool_resource = None
 
