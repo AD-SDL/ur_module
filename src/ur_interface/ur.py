@@ -117,18 +117,27 @@ class UR:
         # Extract position and rotation components
         x, y, z, rx_deg, ry_deg, rz_deg = base_reference_frame
 
-        # Convert rotation from degrees to radians
-        rx_rad = radians(rx_deg)
-        ry_rad = radians(ry_deg)
-        rz_rad = radians(rz_deg)
+        # Create translation vector (only if any translation values are non-zero)
+        if any([x, y, z]):
+            translation = m3.Vector(x, y, z)
+        else:
+            translation = m3.Vector(0, 0, 0)
 
-        # Create translation vector
-        translation = m3.Vector(x, y, z)
-
-        # Create rotation matrix from Euler angles (ZYX convention)
-        # This matches the typical robot convention
-        rotation = m3.Orientation.new_euler((rz_rad, ry_rad, rx_rad))
-
+        # Start with identity rotation
+        rotation = m3.Orientation()  # Identity rotation
+        
+        # Apply only non-zero rotations in order
+        if rx_deg != 0:
+            rx_rad = radians(rx_deg)
+            rotation = rotation * m3.Orientation.new_rot_x(rx_rad)
+        
+        if ry_deg != 0:
+            ry_rad = radians(ry_deg)
+            rotation = rotation * m3.Orientation.new_rot_y(ry_rad)
+        
+        if rz_deg != 0:
+            rz_rad = radians(rz_deg)
+            rotation = rotation * m3.Orientation.new_rot_z(rz_rad)
         # Create the transform
         transform = m3.Transform(rotation, translation)
 

@@ -48,10 +48,12 @@ parser = argparse.ArgumentParser(description="Terminal-based UR Robot Control")
 parser.add_argument("-u", "--url", default="146.137.240.38", help="UR robot IP address")
 parser.add_argument("-s", "--step", default=0.01, type=float, help="Step size in meters or radians")
 parser.add_argument("-j", "--joint_step", default=0.05, type=float, help="Step size for joint rotations in radians")
-parser.add_argument("--speed", default=2.0, type=float, help="Speed for movements (m/s or rad/s)")
+parser.add_argument("--speed", default=0.5, type=float, help="Speed for movements (m/s or rad/s)")
+parser.add_argument("-tcp", default=[0,0,0,0,0,0], type=list, help="Set tcp settings in rad")
+parser.add_argument("-base", default=[0,0,0,0,0,0], type=list, help="Set base reference frame")
 args = parser.parse_args()
-
-robot = UR(args.url)
+print(args.base)
+robot = UR(args.url,tcp_pose=args.tcp, base_reference_frame=args.base)
 step = args.step
 if step >= 0.1:
     print("Warning: Step size is large, may cause abrupt movements! Setting to 0.1")
