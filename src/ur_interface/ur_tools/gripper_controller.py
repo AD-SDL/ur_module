@@ -437,6 +437,198 @@ class FingerGripperController:
         self.place(place_goal=screwdriver_loc)  # Place the screwdriver bit
         self.home_robot(home=home)
 
+    def disconnect_joint(
+        self,
+        home: list = None,
+        joint_location: list = None,
+        approach_axis: str = None,
+        approach_distance: float = None,
+        depth: float = 0.008,
+        delay: float = 1,
+    ):
+        """Release joint at joint location"""
+
+        if not joint_location:
+            raise Exception("Please provide the joint location")
+
+        if not approach_distance:
+            approach_distance = 0.05
+
+        axis = None
+
+        if not approach_axis or approach_axis.lower() == "z":
+            axis = 2
+        elif approach_axis.lower() == "y":
+            axis = 1
+        elif approach_axis.lower() == "-y":
+            axis = 1
+            approach_distance = -approach_distance
+        elif approach_axis.lower() == "x":
+            axis = 0
+        elif approach_axis.lower() == "-x":
+            axis = 0
+            approach_distance = -approach_distance
+
+        above_goal = deepcopy(joint_location)
+        above_goal[axis] += approach_distance
+
+        below_goal = deepcopy(joint_location)
+        below_goal[2] -= depth
+
+        self.home_robot(home=home)
+
+        self.open_gripper()
+
+        print("Moving to above joint position")
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print("Moving to joint position")
+        self.ur.movel(joint_location, self.acceleration, self.velocity)
+
+        print("Closing gripper")
+        self.close_gripper()
+
+        print("Pausing...")
+        sleep(delay)
+
+        print("Moving back to below joint position")
+        self.ur.movel(below_goal, self.acceleration, 0.25)
+
+        print("Pausing...")
+        sleep(delay)
+
+        print("Opening gripper")
+        self.open_gripper()
+
+        self.home_robot(home=home)
+        
+    def pull_disconnect_joint(
+        self,
+        home: list = None,
+        joint_location: list = None,
+        approach_axis: str = None,
+        approach_distance: float = None,
+        depth: float = 0.008,
+        delay: float = 1,
+    ):
+        """Release joint at joint location"""
+
+        if not joint_location:
+            raise Exception("Please provide the joint location")
+
+        if not approach_distance:
+            approach_distance = 0.05
+
+        axis = None
+
+        if not approach_axis or approach_axis.lower() == "z":
+            axis = 2
+        elif approach_axis.lower() == "y":
+            axis = 1
+        elif approach_axis.lower() == "-y":
+            axis = 1
+            approach_distance = -approach_distance
+        elif approach_axis.lower() == "x":
+            axis = 0
+        elif approach_axis.lower() == "-x":
+            axis = 0
+            approach_distance = -approach_distance
+
+        above_goal = deepcopy(joint_location)
+        above_goal[axis] += approach_distance
+
+        below_goal = deepcopy(joint_location)
+        below_goal[2] -= depth
+
+        self.home_robot(home=home)
+
+        self.open_gripper()
+
+        print("Moving to above joint position")
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print("Moving to joint position")
+        self.ur.movel(joint_location, self.acceleration, self.velocity)
+
+        print("Closing gripper")
+        self.close_gripper()
+
+        print("Pausing...")
+        sleep(delay)
+
+        print("Moving back to below joint position")
+        self.ur.movel(below_goal, self.acceleration, 0.25)
+
+        print("Pausing...")
+        sleep(delay)
+        
+    def recover_gripper(self,home: list = None):
+        print("Opening gripper")
+        self.open_gripper()
+
+        self.home_robot(home=home)
+    
+    def hold_hose(
+        self,
+        home: list = None,
+        joint_location: list = None,
+        approach_axis: str = None,
+        approach_distance: float = None,
+    ):
+        """Release joint at joint location"""
+
+        if not joint_location:
+            raise Exception("Please provide the joint location")
+
+        if not approach_distance:
+            approach_distance = 0.05
+
+        axis = None
+
+        if not approach_axis or approach_axis.lower() == "z":
+            axis = 2
+        elif approach_axis.lower() == "y":
+            axis = 1
+        elif approach_axis.lower() == "-y":
+            axis = 1
+            approach_distance = -approach_distance
+        elif approach_axis.lower() == "x":
+            axis = 0
+        elif approach_axis.lower() == "-x":
+            axis = 0
+            approach_distance = -approach_distance
+
+        above_goal = deepcopy(joint_location)
+        above_goal[axis] += approach_distance
+
+
+        self.home_robot(home=home)
+
+        self.open_gripper()
+
+        print("Moving to above joint position")
+        self.ur.movel(above_goal, self.acceleration, self.velocity)
+
+        print("Moving to joint position")
+        self.ur.movel(joint_location, self.acceleration, self.velocity)
+
+        print("Closing gripper")
+        self.close_gripper()
+        
+    def recover_hose(self,home: list = None, above_target:list=None):
+        
+        self.ur.movel(above_target,0.1,0.1)
+
+        self.home_robot(home=home)
+        
+    def place_hose(self,home: list = None, above_target:list=None, hose_target:list=None):
+        
+        self.ur.movel(above_target,0.1,0.1)
+        self.ur.movel(hose_target,0.1,0.1)
+        # self.open_gripper()
+        # self.ur.movel(above_target,0.1,0.1)
+        # self.home_robot(home=home)
+
 
 class VacuumGripperController:
     """Robotiq Vacuum Gripper Controller"""
