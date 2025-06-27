@@ -945,3 +945,112 @@ class UR:
         finally:
             gripper_controller.disconnect_gripper()
             self.home(home)
+    def hose_transfer(
+        self,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+        source_approach_axis: str = None,
+        target_approach_axis: str = None,
+        source_approach_distance: float = None,
+        target_approach_distance: float = None,
+        gripper_open: int = 0,
+        gripper_close: int = 255,
+    ) -> None:
+        """Make a transfer of the hose using the finger gripper. This function uses linear motions to perform the pick and place movements.
+
+        Args
+            home (Union[LocationArgument, list]): Home location
+            source (Union[LocationArgument, list]): Source location
+            target(Union[LocationArgument, list]): Target location
+            source_approach_axis (str): Source approach axis (X/Y/Z)
+            target_approach_axis (str): Target approach axis (X/Y/Z)
+            source_approach_distance (float): Source approach distance. Unit meters.
+            target_approach_distance(float): Target approach distance. Unit meters.
+            gripper_open (int): Gripper max open value (0-255)
+            gripper_close (int): Gripper min close value (0-255)
+
+        """
+
+        if not source or not target:
+            raise Exception("Please provide both the source and target locations to make a transfer")
+
+        self.home(home)
+
+        try:
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.tool_resource_id,
+            )
+            gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            if not source_approach_axis or source_approach_axis.lower() == "z":
+                axis1 = 2
+            elif source_approach_axis.lower() == "y":
+                axis1 = 1
+            elif source_approach_axis.lower() == "-y":
+                axis1 = 1
+                source_approach_distance = -source_approach_distance
+            elif source_approach_axis.lower() == "x":
+                axis1 = 0
+            elif source_approach_axis.lower() == "-x":
+                axis1 = 0
+                source_approach_distance = -source_approach_distance
+
+            above_goal1 = deepcopy(source)
+            above_goal1[axis1] += source_approach_distance
+
+            if not target_approach_axis or target_approach_axis.lower() == "z":
+                axis2 = 2
+            elif target_approach_axis.lower() == "y":
+                axis2 = 1
+            elif target_approach_axis.lower() == "-y":
+                axis2 = 1
+                target_approach_distance = -target_approach_distance
+            elif target_approach_axis.lower() == "x":
+                axis2 = 0
+            elif target_approach_axis.lower() == "-x":
+                axis2 = 0
+                target_approach_distance = -target_approach_distance
+
+            above_goal2 = deepcopy(target)
+            above_goal2[axis2] += target_approach_distance
+
+            gripper_controller.hold_hose(
+                home: list = home,
+                joint_location = source,
+                approach_axis = source_approach_axis,
+                approach_distance = source_approach_distance,
+            )
+            print("holding hose")
+            gripper_controller.recover_hose(
+                home = home, 
+                above_target = above_goal1,
+            )
+            print("recovered hose")
+            gripper_controller.place_hose(
+                home = home, 
+                above_target = above_goal2, 
+                hose_target = target,
+            )
+            print("placed hose")
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+
+        except Exception as err:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+            raise err
+
+        
