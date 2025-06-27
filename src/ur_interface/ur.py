@@ -334,13 +334,12 @@ class UR:
             )
             print("Finished transfer")
             gripper_controller.disconnect_gripper()
+            self.home(home)
 
         except Exception as err:
-            print(err)
-
-        finally:
             gripper_controller.disconnect_gripper()
             self.home(home)
+            raise err
 
     def gripper_pick(
         self,
