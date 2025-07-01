@@ -501,7 +501,7 @@ class FingerGripperController:
         self.open_gripper()
 
         self.home_robot(home=home)
-        
+
     def pull_disconnect_joint(
         self,
         home: list = None,
@@ -561,13 +561,14 @@ class FingerGripperController:
 
         print("Pausing...")
         sleep(delay)
-        
-    def recover_gripper(self,home: list = None):
+
+    def recover_gripper(self, home: list = None):
+        """Release joint at joint location"""
         print("Opening gripper")
         self.open_gripper()
 
         self.home_robot(home=home)
-    
+
     def hold_hose(
         self,
         home: list = None,
@@ -601,7 +602,6 @@ class FingerGripperController:
         above_goal = deepcopy(joint_location)
         above_goal[axis] += approach_distance
 
-
         self.home_robot(home=home)
 
         self.open_gripper()
@@ -614,20 +614,20 @@ class FingerGripperController:
 
         print("Closing gripper")
         self.close_gripper()
-        
-    def recover_hose(self,home: list = None, above_target:list=None):
-        
-        self.ur.movel(above_target,0.1,0.1)
+
+    def recover_hose(self, home: list = None, above_target: list = None):
+        """Release joint at joint location"""
+        self.ur.movel(above_target, 0.1, 0.1)
 
         self.home_robot(home=home)
-        
-    def place_hose(self,home: list = None, above_target:list=None, hose_target:list=None):
-        
-        self.ur.movel(above_target,0.1,0.1)
-        self.ur.movel(hose_target,0.1,0.1)
-        # self.open_gripper()
-        # self.ur.movel(above_target,0.1,0.1)
-        # self.home_robot(home=home)
+
+    def place_hose(self, home: list = None, above_target: list = None, hose_target: list = None):
+        """Release joint at joint location"""
+        self.ur.movel(above_target, 0.1, 0.1)
+        self.ur.movel(hose_target, 0.1, 0.1)
+        self.open_gripper()
+        self.ur.movel(above_target, 0.1, 0.1)
+        self.home_robot(home=home)
 
 
 class VacuumGripperController:

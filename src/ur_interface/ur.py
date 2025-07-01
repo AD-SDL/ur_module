@@ -2,6 +2,7 @@
 """Interface for UR Driver"""
 
 import socket
+from copy import deepcopy
 from math import radians
 from time import sleep
 from typing import Union
@@ -945,6 +946,7 @@ class UR:
         finally:
             gripper_controller.disconnect_gripper()
             self.home(home)
+
     def hose_transfer(
         self,
         home: Union[LocationArgument, list] = None,
@@ -1028,21 +1030,21 @@ class UR:
             above_goal2[axis2] += target_approach_distance
 
             gripper_controller.hold_hose(
-                home: list = home,
-                joint_location = source,
-                approach_axis = source_approach_axis,
-                approach_distance = source_approach_distance,
+                home=home,
+                joint_location=source,
+                approach_axis=source_approach_axis,
+                approach_distance=source_approach_distance,
             )
             print("holding hose")
             gripper_controller.recover_hose(
-                home = home, 
-                above_target = above_goal1,
+                home=home,
+                above_target=above_goal1,
             )
             print("recovered hose")
             gripper_controller.place_hose(
-                home = home, 
-                above_target = above_goal2, 
-                hose_target = target,
+                home=home,
+                above_target=above_goal2,
+                hose_target=target,
             )
             print("placed hose")
             gripper_controller.disconnect_gripper()
@@ -1052,5 +1054,3 @@ class UR:
             gripper_controller.disconnect_gripper()
             self.home(home)
             raise err
-
-        
