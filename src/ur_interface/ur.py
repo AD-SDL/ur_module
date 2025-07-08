@@ -880,7 +880,7 @@ class UR:
 
         return program_log
 
-    def gripper_disconnect_joint(
+    def gripper_unlock_joint(
         self,
         home: list = None,
         joint_location: list = None,

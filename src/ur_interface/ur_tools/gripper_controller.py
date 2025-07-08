@@ -718,9 +718,6 @@ class FingerGripperController:
 
         self.ur.movel(above_goal, 0.1, 0.1)
         self.ur.movel(target, 0.1, 0.1)
-        self.open_gripper()
-        self.ur.movel(above_goal, 0.1, 0.1)
-        self.home_robot(home=home)
 
 
 class VacuumGripperController:
