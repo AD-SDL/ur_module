@@ -10,42 +10,79 @@ Now tuned for maximum speed and responsiveness.
 import argparse
 import math
 import sys
-import termios
-import tty
 
 from urx.urrobot import RobotException
 
 from ur_interface.ur import UR
 
+try:
+    # Try to use termios first (works on Unix/Linux/macOS and over SSH)
+    import termios
+    import tty
 
-def get_key():
-    """Get a key including arrow keys"""
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
+    # for Unix-based systems
+    def get_key():
+        """Get a key including arrow keys using termios"""
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            char = sys.stdin.read(1)
+            # Handle arrow keys (escape sequences)
+            if char == "\x1b":  # ESC sequence
+                char += sys.stdin.read(2)
+                if char == "\x1b[A":
+                    return "UP"
+                elif char == "\x1b[B":
+                    return "DOWN"
+                elif char == "\x1b[C":
+                    return "RIGHT"
+                elif char == "\x1b[D":
+                    return "LEFT"
+                else:
+                    return "ESC"
+            return char
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    USING_TERMIOS = True
+except ImportError:
+    # Fallback for Windows without termios - won't work over SSH but better than nothing
     try:
-        tty.setraw(sys.stdin.fileno())
-        char = sys.stdin.read(1)
-        # Handle arrow keys (escape sequences)
-        if char == "\x1b":  # ESC sequence
-            char += sys.stdin.read(2)
-            if char == "\x1b[A":
-                return "UP"
-            elif char == "\x1b[B":
-                return "DOWN"
-            elif char == "\x1b[C":
-                return "RIGHT"
-            elif char == "\x1b[D":
-                return "LEFT"
-            else:
+        import msvcrt
+
+        def get_key():
+            """Get a key including arrow keys on Windows (local console only)"""
+            char = msvcrt.getch()
+            # Handle special keys (arrow keys, etc.)
+            if char == b"\xe0":  # Special key prefix on Windows
+                char = msvcrt.getch()
+                if char == b"H":
+                    return "UP"
+                elif char == b"P":
+                    return "DOWN"
+                elif char == b"M":
+                    return "RIGHT"
+                elif char == b"K":
+                    return "LEFT"
+                else:
+                    return "SPECIAL"
+            elif char == b"\x1b":  # ESC
                 return "ESC"
-        return char
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return char
+            elif char == b"\x03":  # Ctrl+C
+                return "\x03"
+            else:
+                return char.decode("utf-8", errors="ignore")
+
+        USING_TERMIOS = False
+
+    except Exception as err:
+        print(f"Error importing msvcrt: {err}")
+        sys.exit(1)
 
 
 parser = argparse.ArgumentParser(description="Terminal-based UR Robot Control")
-parser.add_argument("-u", "--url", default="192.168.56.101", help="UR robot IP address")
+parser.add_argument("-u", "--url", default="192.168.56.250", help="UR robot IP address")
 parser.add_argument("-s", "--step", default=0.01, type=float, help="Step size in meters or radians")
 parser.add_argument("-j", "--joint_step", default=0.05, type=float, help="Step size for joint rotations in radians")
 parser.add_argument("--speed", default=0.5, type=float, help="Speed for movements (m/s or rad/s)")
