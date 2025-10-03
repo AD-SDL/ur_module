@@ -1,13 +1,18 @@
+# flake8: noqa
 """
-Dims: 6 
+Dims: 6
 Right -> Left [-2, 2]; unbounded?
 
 """
 
-import cv2, numpy as np, threading, time
+import threading
 from contextlib import AbstractContextManager
-from pathlib import Path
+
+import cv2
+import numpy as np
+
 from ur_interface.ur import UR
+
 
 class CameraRecorder(AbstractContextManager):
     """
@@ -36,7 +41,7 @@ class CameraRecorder(AbstractContextManager):
     def __enter__(self):
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
-        return self                    # you could expose helpers here if desired
+        return self  # you could expose helpers here if desired
 
     def __exit__(self, exc_type, exc, tb):
         self._stop.set()
@@ -56,11 +61,7 @@ class CameraRecorder(AbstractContextManager):
         fps = cap.get(cv2.CAP_PROP_FPS) or 30
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        writer = (
-            cv2.VideoWriter(self.out_mp4, fourcc, fps, (w, h))
-            if self.out_mp4
-            else None
-        )
+        writer = cv2.VideoWriter(self.out_mp4, fourcc, fps, (w, h)) if self.out_mp4 else None
 
         i = 0
         while not self._stop.is_set():
@@ -81,29 +82,33 @@ class CameraRecorder(AbstractContextManager):
         if writer:
             writer.release()
         cv2.destroyAllWindows()
-        
+
+
 robot = UR("146.137.240.38")
 
 with CameraRecorder(
-        src_url="rtsp://146.137.240.5:554/s0",
-        out_mp4="video_capture.mp4",
-        save_npy="video_frames.npy",
+    src_url="rtsp://146.137.240.5:554/s0",
+    out_mp4="video_capture.mp4",
+    save_npy="video_frames.npy",
 ) as rec:
-
     # start pose
     robot.home([0, -1.57, 0, 0, 0, 0])
-    # mid pose 
+    # mid pose
     robot.home([1.57, -1.75, 0, 1.57, 0, 0])
-    # end pose 
+    # end pose
     robot.home([1.57, -1.57, 0, 0, 0, 0])
-    
+
 robot.disconnect()
 breakpoint()
 # robot = UR(hostname="146.137.240.38")
 # robot.disconnect()
 robot = UR("146.137.240.38")
 robot.ur_connection.movej([])
-print(robot.ur_connection.getl([0, -1.7813765011229457, -0.20698441565036774, -2.1579276523985804, -0.32857066789735967, -0.26535207429994756]))
+print(
+    robot.ur_connection.getl(
+        [0, -1.7813765011229457, -0.20698441565036774, -2.1579276523985804, -0.32857066789735967, -0.26535207429994756]
+    )
+)
 robot.disconnect()
 breakpoint()
 
@@ -111,7 +116,7 @@ breakpoint()
 breakpoint()
 robot.home([0, 0, 0, 0, 0, 0])
 robot.home([0, 0, 0, -1.57, 0, 0])
-robot.home([0, 1.57, 0, -1.57, 0, 0]) # (l,r)
+robot.home([0, 1.57, 0, -1.57, 0, 0])  # (l,r)
 robot.disconnect()
 
 breakpoint()
