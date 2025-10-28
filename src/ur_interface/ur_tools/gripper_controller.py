@@ -323,6 +323,10 @@ class FingerGripperController:
 
         self.close_gripper()
 
+        if self.resource_client and isinstance(source, LocationArgument):  # Handle resources if configured
+            popped_object, updated_resource = self.resource_client.pop(resource=source.resource_id)
+            self.resource_client.push(resource=self.gripper_resource_id, child=popped_object)
+
         target_pose = [0, 0, -0.001, 0, 0, -3.14]  # Setting the screw drive motion
         print("Removing cap")
         screw_time = 7
@@ -368,6 +372,11 @@ class FingerGripperController:
         sleep(screw_time)
 
         self.open_gripper()
+
+        if self.resource_client and isinstance(target, LocationArgument):  # Handle resources if configured
+            popped_object, updated_resource = self.resource_client.pop(resource=self.gripper_resource_id)
+            self.resource_client.push(resource=target.resource_id, child=popped_object)
+
         self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
         self.home_robot(home)
 
