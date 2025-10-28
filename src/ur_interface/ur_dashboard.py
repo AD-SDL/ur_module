@@ -90,7 +90,7 @@ class UR_DASHBOARD:
         """Get robot status"""
         self.robot_mode = self.get_robot_mode().upper()
         self.operational_mode = self.get_operational_mode().upper()
-        self.safety_status = self.get_safety_status()
+        self.safety_status = self.get_safety_status().upper()
         self.remote_control_status = self.is_in_remote_control()
 
     def initialize(self) -> None:
