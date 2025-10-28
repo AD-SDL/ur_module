@@ -105,7 +105,7 @@ class FingerGripperController:
         if not home:
             return
         if isinstance(home, LocationArgument):
-            home_location = home.location
+            home_location = home.representation
         elif isinstance(home, list):
             home_location = home
         self.ur.movej(home_location, self.acceleration, self.velocity)
@@ -161,7 +161,7 @@ class FingerGripperController:
         """Pick up from first goal position"""
 
         if isinstance(source, LocationArgument):
-            source_location = source.location
+            source_location = source.representation
         elif isinstance(source, list):
             source_location = source
         else:
@@ -213,7 +213,7 @@ class FingerGripperController:
         """Handles the pick screw request"""
 
         if isinstance(screw_loc, LocationArgument):
-            source_location = screw_loc.location
+            source_location = screw_loc.representation
         elif isinstance(screw_loc, list):
             source_location = screw_loc
 
@@ -232,7 +232,7 @@ class FingerGripperController:
         """Place down at second goal position"""
 
         if isinstance(target, LocationArgument):
-            target_location = target.location
+            target_location = target.representation
         elif isinstance(target, list):
             target_location = target
         else:
@@ -283,7 +283,7 @@ class FingerGripperController:
         # Move to the target location
 
         if isinstance(target, LocationArgument):
-            target_location = target.location
+            target_location = target.representation
         elif isinstance(target, list):
             target_location = target
 
@@ -312,7 +312,7 @@ class FingerGripperController:
         """Handles the remove cap request"""
         self.open_gripper()
         if isinstance(source, LocationArgument):
-            source_location = source.location
+            source_location = source.representation
         elif isinstance(source, list):
             source_location = source
 
@@ -352,7 +352,7 @@ class FingerGripperController:
         self.home_robot(home)
 
         if isinstance(target, LocationArgument):
-            target_location = target.location
+            target_location = target.representation
         elif isinstance(target, list):
             target_location = target
 

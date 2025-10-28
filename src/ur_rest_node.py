@@ -222,8 +222,8 @@ class URNode(RestNode):
     ):
         """Move the robot using joint angles"""
         try:
-            self.logger.log(f"Move joints: {joints.location}")
-            self.ur_interface.ur_connection.movej(joints=joints.location, acc=acceleration, vel=velocity)
+            self.logger.log(f"Move joints: {joints.representation}")
+            self.ur_interface.ur_connection.movej(joints=joints.representation, acc=acceleration, vel=velocity)
 
         except Exception as err:
             self.logger.log_error(err)
@@ -237,8 +237,8 @@ class URNode(RestNode):
     ):
         """Move the robot using linear motion"""
         try:
-            self.logger.log(f"Move location: {target.location}")
-            self.ur_interface.ur_connection.movel(tpose=target.location, acc=acceleration, vel=velocity)
+            self.logger.log(f"Move location: {target.representation}")
+            self.ur_interface.ur_connection.movel(tpose=target.representation, acc=acceleration, vel=velocity)
 
         except Exception as err:
             self.logger.log_error(err)
@@ -292,8 +292,12 @@ class URNode(RestNode):
         self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
@@ -325,7 +329,9 @@ class URNode(RestNode):
         self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
 
@@ -352,7 +358,9 @@ class URNode(RestNode):
         self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(target, list):
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
@@ -379,7 +387,9 @@ class URNode(RestNode):
     ):
         """Pick a tool with the UR"""
         if joint_angle_locations and isinstance(tool_loc, LocationArgument):
-            tool_loc.location = get_pose_from_joint_angles(joints=tool_loc.location, robot_model=self.config.ur_model)
+            tool_loc.representation = get_pose_from_joint_angles(
+                joints=tool_loc.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(tool_loc, list):
             tool_loc = get_pose_from_joint_angles(joints=tool_loc, robot_model=self.config.ur_model)
 
@@ -402,8 +412,8 @@ class URNode(RestNode):
     ):
         """Place a tool with the UR"""
         if joint_angle_locations and isinstance(tool_docking, LocationArgument):
-            tool_docking.location = get_pose_from_joint_angles(
-                joints=tool_docking.location, robot_model=self.config.ur_model
+            tool_docking.representation = get_pose_from_joint_angles(
+                joints=tool_docking.representation, robot_model=self.config.ur_model
             )
         elif joint_angle_locations and isinstance(tool_docking, list):
             tool_docking = get_pose_from_joint_angles(joints=tool_docking, robot_model=self.config.ur_model)
@@ -433,11 +443,15 @@ class URNode(RestNode):
         """Make a screwdriving transfer using Robotiq gripper and custom screwdriving bits with UR"""
 
         if joint_angle_locations and isinstance(screwdriver_loc, LocationArgument):
-            screwdriver_loc.location = get_pose_from_joint_angles(
-                joints=screwdriver_loc.location, robot_model=self.config.ur_model
+            screwdriver_loc.representation = get_pose_from_joint_angles(
+                joints=screwdriver_loc.representation, robot_model=self.config.ur_model
             )
-            screw_loc.location = get_pose_from_joint_angles(joints=screw_loc.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            screw_loc.representation = get_pose_from_joint_angles(
+                joints=screw_loc.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(screwdriver_loc, list):
             screwdriver_loc = get_pose_from_joint_angles(joints=screwdriver_loc, robot_model=self.config.ur_model)
             screw_loc = get_pose_from_joint_angles(joints=screw_loc, robot_model=self.config.ur_model)
@@ -470,10 +484,18 @@ class URNode(RestNode):
         """Make a pipette transfer for the defined volume with UR"""
 
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
-            tip_loc.location = get_pose_from_joint_angles(joints=tip_loc.location, robot_model=self.config.ur_model)
-            tip_trash.location = get_pose_from_joint_angles(joints=tip_trash.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
+            tip_loc.representation = get_pose_from_joint_angles(
+                joints=tip_loc.representation, robot_model=self.config.ur_model
+            )
+            tip_trash.representation = get_pose_from_joint_angles(
+                joints=tip_trash.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
@@ -507,12 +529,14 @@ class URNode(RestNode):
         """Picks and moves a sample with UR"""
 
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
-            sample_loc.location = get_pose_from_joint_angles(
-                joints=sample_loc.location, robot_model=self.config.ur_model
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
             )
-            tip_loc.location = (
-                get_pose_from_joint_angles(joints=tip_loc.location, robot_model=self.config.ur_model)
+            sample_loc.representation = get_pose_from_joint_angles(
+                joints=sample_loc.representation, robot_model=self.config.ur_model
+            )
+            tip_loc.representation = (
+                get_pose_from_joint_angles(joints=tip_loc.representation, robot_model=self.config.ur_model)
                 if tip_loc
                 else None
             )
@@ -549,9 +573,11 @@ class URNode(RestNode):
     ):
         """Dispenses a sample and retrieves the pipette with UR"""
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
-            tip_trash.location = (
-                get_pose_from_joint_angles(joints=tip_trash.location, robot_model=self.config.ur_model)
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
+            tip_trash.representation = (
+                get_pose_from_joint_angles(joints=tip_trash.representation, robot_model=self.config.ur_model)
                 if tip_trash
                 else None
             )
@@ -589,7 +615,9 @@ class URNode(RestNode):
         """Picks and flips an object 180 degrees with UR"""
 
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(target, list):
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
@@ -622,8 +650,12 @@ class URNode(RestNode):
     ):
         """Remove caps from sample vials with UR"""
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
@@ -653,8 +685,12 @@ class URNode(RestNode):
     ):
         """Places caps back to sample vials with UR"""
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
