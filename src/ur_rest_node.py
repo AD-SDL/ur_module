@@ -2,16 +2,11 @@
 
 from typing import Optional, Union
 
-from madsci.client.resource_client import ResourceClient
 from madsci.common.types.action_types import ActionFailed, ActionSucceeded
 from madsci.common.types.admin_command_types import AdminCommandResponse
-from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from madsci.common.types.node_types import RestNodeConfig
-from madsci.common.types.resource_types.definitions import (
-    PoolResourceDefinition,
-    SlotResourceDefinition,
-)
+from madsci.common.types.resource_types import Pool, Slot
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
@@ -39,12 +34,8 @@ class URNode(RestNode):
     def startup_handler(self) -> None:
         """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
         try:
-            if self.config.resource_server_url:
-                self.resource_client = ResourceClient(self.config.resource_server_url)
-                self.resource_owner = OwnershipInfo(node_id=self.node_definition.node_id)
-
-            else:
-                self.resource_client = None
+            # Create templates
+            self._create_ur_templates()
 
             self.logger.log("Node initializing...")
             self.ur_interface = UR(
@@ -61,6 +52,70 @@ class URNode(RestNode):
         else:
             self.startup_has_run = True
             self.logger.log("UR node initialized!")
+
+    def _create_ur_templates(self) -> None:
+        """Create all UR-specific resource templates."""
+
+        # 1. Gripper slot template
+        gripper_slot = Slot(
+            resource_name="robotiq_finger_gripper",
+            resource_class="URGripper",
+            capacity=1,
+            attributes={
+                "gripper_type": "robotiq_finger",
+                "max_grip_force": 235.0,
+                "min_grip_position": 0,
+                "max_grip_position": 255,
+                "description": "UR Robotiq finger gripper slot",
+            },
+        )
+
+        self.resource_client.init_template(
+            resource=gripper_slot,
+            template_name="robotiq_finger_gripper_slot",
+            description="Template for UR Robotiq finger gripper slot. Used to track what the gripper is holding.",
+            required_overrides=["resource_name"],
+            tags=["ur", "gripper", "slot", "robotiq"],
+            created_by=self.node_definition.node_id,
+            version="1.0.0",
+        )
+
+        # Initialize gripper resource from template
+        self.gripper_resource = self.resource_client.create_resource_from_template(
+            template_name="robotiq_finger_gripper_slot",
+            resource_name=f"ur_gripper_{self.node_definition.node_name}",
+            add_to_database=True,
+        )
+
+        # 2. Pipette pool template
+        pipette_pool = Pool(
+            resource_name="tricontinent_pipette",
+            resource_class="URPipette",
+            capacity=1000.0,
+            attributes={
+                "pipette_type": "tricontinent",
+                "min_volume": 1.0,
+                "max_volume": 1000.0,
+                "default_speed": 150,
+                "description": "Tricontinent pipette pool for tracking tips and aspirated liquid",
+            },
+        )
+
+        self.resource_client.init_template(
+            resource=pipette_pool,
+            template_name="tricontinent_pipette_pool",
+            description="Template for Tricontinent pipette pool. Tracks pipette tips and aspirated liquids.",
+            required_overrides=["resource_name"],
+            tags=["ur", "pipette", "pool", "liquid-handling"],
+            created_by=self.node_definition.node_id,
+            version="1.0.0",
+        )
+        # Initialize pipette resource from template
+        self.pipette_resource = self.resource_client.create_resource_from_template(
+            template_name="tricontinent_pipette_pool",
+            resource_name=f"ur_pipette_{self.node_definition.node_name}",
+            add_to_database=True,
+        )
 
     def shutdown_handler(self) -> None:
         """Called to shutdown the node. Should be used to close connections to devices or release any other resources."""
@@ -234,15 +289,7 @@ class URNode(RestNode):
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
 
-        if self.resource_client:
-            # If the gripper resource is not initialized, initialize it
-            self.tool_resource = self.resource_client.init_resource(
-                SlotResourceDefinition(
-                    resource_name="ur_gripper",
-                    owner=self.resource_owner,
-                )
-            )
-            self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         if joint_angle_locations and isinstance(source, LocationArgument):
             source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
@@ -274,15 +321,8 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
-        if self.resource_client:
-            # If the gripper resource is not initialized, initialize it
-            self.tool_resource = self.resource_client.init_resource(
-                SlotResourceDefinition(
-                    resource_name="ur_gripper",
-                    owner=self.resource_owner,
-                )
-            )
-            self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         if joint_angle_locations and isinstance(source, LocationArgument):
             source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
@@ -308,15 +348,8 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to place a piece of labware at the target."""
-        if self.resource_client:
-            # If the gripper resource is not initialized, initialize it
-            self.tool_resource = self.resource_client.init_resource(
-                SlotResourceDefinition(
-                    resource_name="ur_gripper",
-                    owner=self.resource_owner,
-                )
-            )
-            self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         if joint_angle_locations and isinstance(target, LocationArgument):
             target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
@@ -447,16 +480,6 @@ class URNode(RestNode):
             tip_loc = get_pose_from_joint_angles(joints=tip_loc, robot_model=self.config.ur_model)
             tip_trash = get_pose_from_joint_angles(joints=tip_trash, robot_model=self.config.ur_model)
 
-        if self.resource_client:
-            # If the pipette resource is not initialized, initialize it
-            self.tool_resource = self.resource_client.init_resource(
-                PoolResourceDefinition(
-                    resource_name="ur_pipette",
-                    owner=self.resource_owner,
-                )
-            )
-            self.ur_interface.tool_resource_id = self.tool_resource.resource_id
-
         self.ur_interface.pipette_transfer(
             home=home,
             tip_loc=tip_loc,
@@ -498,6 +521,8 @@ class URNode(RestNode):
             sample_loc = get_pose_from_joint_angles(joints=sample_loc, robot_model=self.config.ur_model)
             tip_loc = get_pose_from_joint_angles(joints=tip_loc, robot_model=self.config.ur_model) if tip_loc else None
 
+        self.ur_interface.tool_resource_id = self.pipette_resource.resource_id
+
         self.ur_interface.pipette_pick_and_move_sample(
             home=home,
             safe_waypoint=safe_waypoint,
@@ -536,6 +561,8 @@ class URNode(RestNode):
                 get_pose_from_joint_angles(joints=tip_trash, robot_model=self.config.ur_model) if tip_trash else None
             )
 
+        self.ur_interface.tool_resource_id = self.pipette_resource.resource_id
+
         self.ur_interface.pipette_dispense_and_retrieve(
             home=home,
             safe_waypoint=safe_waypoint,
@@ -565,6 +592,8 @@ class URNode(RestNode):
             target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
         elif joint_angle_locations and isinstance(target, list):
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
+
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         self.ur_interface.pick_and_flip_object(
             home=home,
@@ -599,6 +628,8 @@ class URNode(RestNode):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+
         self.ur_interface.remove_cap(
             home=home,
             source=source,
@@ -627,6 +658,8 @@ class URNode(RestNode):
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
+
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
         self.ur_interface.place_cap(
             home=home,
