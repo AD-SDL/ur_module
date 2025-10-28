@@ -19,9 +19,9 @@ from ur_interface.ur_tools.gripper_controller import FingerGripperController
 class URNodeConfig(RestNodeConfig):
     """Configuration for the UR node module."""
 
-    ur_ip: str
+    ur_ip: Optional[str] = None
     tcp_pose: list = [0, 0, 0, 0, 0, 0]
-    base_reference_frame: list = None
+    base_reference_frame: Optional[list] = None
     ur_model: str = "UR5e"
 
 
@@ -29,6 +29,7 @@ class URNode(RestNode):
     """A Rest Node object to control UR robots"""
 
     ur_interface: UR = None
+    config: URNodeConfig = URNodeConfig()
     config_model = URNodeConfig
 
     def startup_handler(self) -> None:
