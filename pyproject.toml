@@ -13,12 +13,13 @@ dependencies = [
     "paramiko",
     "scp",
     "sockets",
-    "pynput",
+    "pynput>=1.8.1",
     "pyepics",
     "numpy>=2.0.0",
     "urx@git+https://github.com/Dozgulbas/python-urx.git",
-    "madsci.node_module>=0.2.1",
-]
+    "madsci-node-module~=0.5.0",
+    "madsci-client~=0.5.0",
+    "madsci-common~=0.5.0",]
 
 requires-python = ">=3.9.21"
 readme = "README.md"
