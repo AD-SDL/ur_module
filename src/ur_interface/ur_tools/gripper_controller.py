@@ -105,7 +105,7 @@ class FingerGripperController:
         if not home:
             return
         if isinstance(home, LocationArgument):
-            home_location = home.location
+            home_location = home.representation
         elif isinstance(home, list):
             home_location = home
         self.ur.movej(home_location, self.acceleration, self.velocity)
@@ -161,7 +161,7 @@ class FingerGripperController:
         """Pick up from first goal position"""
 
         if isinstance(source, LocationArgument):
-            source_location = source.location
+            source_location = source.representation
         elif isinstance(source, list):
             source_location = source
         else:
@@ -213,7 +213,7 @@ class FingerGripperController:
         """Handles the pick screw request"""
 
         if isinstance(screw_loc, LocationArgument):
-            source_location = screw_loc.location
+            source_location = screw_loc.representation
         elif isinstance(screw_loc, list):
             source_location = screw_loc
 
@@ -232,7 +232,7 @@ class FingerGripperController:
         """Place down at second goal position"""
 
         if isinstance(target, LocationArgument):
-            target_location = target.location
+            target_location = target.representation
         elif isinstance(target, list):
             target_location = target
         else:
@@ -283,7 +283,7 @@ class FingerGripperController:
         # Move to the target location
 
         if isinstance(target, LocationArgument):
-            target_location = target.location
+            target_location = target.representation
         elif isinstance(target, list):
             target_location = target
 
@@ -312,7 +312,7 @@ class FingerGripperController:
         """Handles the remove cap request"""
         self.open_gripper()
         if isinstance(source, LocationArgument):
-            source_location = source.location
+            source_location = source.representation
         elif isinstance(source, list):
             source_location = source
 
@@ -322,6 +322,10 @@ class FingerGripperController:
         self.ur.movel(source_location, 0.2, 0.2)
 
         self.close_gripper()
+
+        if self.resource_client and isinstance(source, LocationArgument):  # Handle resources if configured
+            popped_object, updated_resource = self.resource_client.pop(resource=source.resource_id)
+            self.resource_client.push(resource=self.gripper_resource_id, child=popped_object)
 
         target_pose = [0, 0, -0.001, 0, 0, -3.14]  # Setting the screw drive motion
         print("Removing cap")
@@ -348,7 +352,7 @@ class FingerGripperController:
         self.home_robot(home)
 
         if isinstance(target, LocationArgument):
-            target_location = target.location
+            target_location = target.representation
         elif isinstance(target, list):
             target_location = target
 
@@ -368,6 +372,11 @@ class FingerGripperController:
         sleep(screw_time)
 
         self.open_gripper()
+
+        if self.resource_client and isinstance(target, LocationArgument):  # Handle resources if configured
+            popped_object, updated_resource = self.resource_client.pop(resource=self.gripper_resource_id)
+            self.resource_client.push(resource=target.resource_id, child=popped_object)
+
         self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
         self.home_robot(home)
 
