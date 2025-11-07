@@ -239,6 +239,7 @@ class URNode(RestNode):
         """Move the robot using linear motion"""
         try:
             self.logger.log(f"Move location: {target.representation}")
+            target.representation = get_pose_from_joint_angles(target.representation)
             self.ur_interface.ur_connection.movel(tpose=target.representation, acc=acceleration, vel=velocity)
 
         except Exception as err:
