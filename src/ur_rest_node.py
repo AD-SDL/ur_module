@@ -217,7 +217,7 @@ class URNode(RestNode):
     @action(name="movej", description="Move the robot using joint angles")
     def movej(
         self,
-        joints: Annotated[Union[LocationArgument, list], "Joint angles to move to"],
+        joints: Annotated[LocationArgument, "Joint angles to move to"],
         acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
         velocity: Annotated[Optional[float], "Velocity"] = 0.6,
     ):
@@ -232,7 +232,7 @@ class URNode(RestNode):
     @action(name="movel", description="Move the robot using linar motion")
     def movel(
         self,
-        target: Annotated[Union[LocationArgument, list], "Linear location to move to"],
+        target: Annotated[LocationArgument, "Linear location to move to"],
         acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
         velocity: Annotated[Optional[float], "Velocity"] = 0.6,
     ):
@@ -318,8 +318,8 @@ class URNode(RestNode):
     @action()
     def gripper_pick(
         self,
-        home: Annotated[Union[LocationArgument, list], "Home location"],
-        source: Annotated[Union[LocationArgument, list], "Location to transfer sample from"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Location to transfer sample from"],
         source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
@@ -347,8 +347,8 @@ class URNode(RestNode):
     @action()
     def gripper_place(
         self,
-        home: Annotated[Union[LocationArgument, list], "Home location"],
-        target: Annotated[Union[LocationArgument, list], "Location to transfer sample to"],
+        home: Annotated[LocationArgument, "Home location"],
+        target: Annotated[LocationArgument, "Location to transfer sample to"],
         target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
