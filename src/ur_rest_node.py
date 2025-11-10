@@ -158,7 +158,6 @@ class URNode(RestNode):
             self.logger.info("BUSY")
         elif movement_state == "READY":
             self.node_status.busy = False
-            self.node_status.ready = True
 
     def state_handler(self) -> None:
         """Periodically called to update the current state of the node."""
