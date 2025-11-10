@@ -23,6 +23,7 @@ class URNodeConfig(RestNodeConfig):
     tcp_pose: list = [0, 0, 0, 0, 0, 0]
     base_reference_frame: Optional[list] = None
     ur_model: str = "UR5e"
+    use_resources: bool = True
 
 
 class URNode(RestNode):
@@ -36,17 +37,18 @@ class URNode(RestNode):
         """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
         try:
             # Create templates
-            self._create_ur_templates()
+            if self.config.use_resources:
+                self._create_ur_templates()
 
             self.logger.log("Node initializing...")
             self.ur_interface = UR(
                 hostname=self.config.ur_ip,
-                resource_client=self.resource_client,
+                resource_client=self.resource_client if self.config.use_resources else None,
                 tcp_pose=self.config.tcp_pose,
                 base_reference_frame=self.config.base_reference_frame,
             )
             self.tool_resource = None
-
+            self.current_location = None
         except Exception as err:
             self.logger.log_error(f"Error starting the UR Node: {err}")
             self.startup_has_run = False
@@ -130,48 +132,39 @@ class URNode(RestNode):
         except Exception as err:
             self.logger.log_error(f"Error shutting down the UR Node: {err}")
 
-    def state_handler(self) -> None:
-        """Periodically called to update the current state of the node."""
+    def status_handler(self):
+        """Periodically called to update the current status of the node."""
         if self.ur_interface:
             # Getting robot state
             self.ur_interface.ur_dashboard.get_overall_robot_status()
-            movement_state, current_location = self.ur_interface.get_movement_state()
+            movement_state, self.current_location = self.ur_interface.get_movement_state()
         else:
             self.logger.log_error("UR interface is not initialized")
             return
 
-        # TEST Protective Stop
         if "PROTECTIVE_STOP" in self.ur_interface.ur_dashboard.safety_status:
-            self.node_state = {
-                "ur_status_code": "SAFETY_STOP",
-                "current_joint_angles": current_location,
-            }
-            self.logger.log_error("UR is in SAFETY_STOP state.")
-        # --------------------------------
+            self.node_status.stopped = True
+            self.logger.log_error("UR is in PROTECTIVE_STOP")
 
         if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
-            self.node_state = {
-                "ur_status_code": "ERROR",
-                "current_joint_angles": current_location,
-            }
+            self.node_status.errored = True
             self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
-
-        elif movement_state == "BUSY":
-            self.node_state = {
-                "ur_status_code": "BUSY",
-                "current_joint_angles": current_location,
-            }
-            self.logger.info("BUSY")
-
-        elif movement_state == "READY":
-            self.node_state = {
-                "ur_status_code": "READY",
-                "current_joint_angles": current_location,
-            }
         else:
+            self.node_status.errored = False
+            self.node_status.stopped = False
+
+        if movement_state == "BUSY":
+            self.node_status.busy = True
+            self.logger.info("BUSY")
+        elif movement_state == "READY":
+            self.node_status.busy = False
+            self.node_status.ready = True
+
+    def state_handler(self) -> None:
+        """Periodically called to update the current state of the node."""
+        if self.ur_interface:
             self.node_state = {
-                "ur_status_code": "UNKOWN",
-                "current_joint_angles": current_location,
+                "current_joint_angles": self.current_location,
             }
 
     @action(name="getj", description="Get joint angles")
@@ -291,16 +284,23 @@ class URNode(RestNode):
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
 
-        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+        if self.config.use_resources and isinstance(source, LocationArgument) and isinstance(target, LocationArgument):
+            self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+            source_resource = self.resource_client.get_resource(source.resource_id)
+            target_resource = self.resource_client.get_resource(target.resource_id)
+            if source_resource.quantity == 0:
+                raise Exception("Resource manager: Source location is empty!")
+            if target_resource.quantity != 0:
+                raise Exception("Resource manager: Target is occupied!")
 
-        if joint_angle_locations and isinstance(source, LocationArgument):
+        if joint_angle_locations and isinstance(source, LocationArgument) and isinstance(target, LocationArgument):
             source.representation = get_pose_from_joint_angles(
                 joints=source.representation, robot_model=self.config.ur_model
             )
             target.representation = get_pose_from_joint_angles(
                 joints=target.representation, robot_model=self.config.ur_model
             )
-        elif joint_angle_locations and isinstance(source, list):
+        elif joint_angle_locations and isinstance(source, list) and isinstance(target, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
@@ -327,8 +327,11 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
-
-        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+        if self.config.use_resources:
+            self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+            source_resource = self.resource_client.get_resource(source.resource_id)
+            if source_resource.quantity == 0:
+                raise Exception("Resource manager: Source location is empty!")
 
         if joint_angle_locations and isinstance(source, LocationArgument):
             source.representation = get_pose_from_joint_angles(
@@ -357,7 +360,11 @@ class URNode(RestNode):
     ):
         """Use the gripper to place a piece of labware at the target."""
 
-        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+        if self.config.use_resources and isinstance(target, LocationArgument):
+            self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+            target_resource = self.resource_client.get_resource(target.resource_id)
+            if target_resource.quantity != 0:
+                raise Exception("Resource manager: Target is occupied!")
 
         if joint_angle_locations and isinstance(target, LocationArgument):
             target.representation = get_pose_from_joint_angles(
