@@ -336,7 +336,7 @@ class URNode(RestNode):
             )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
-
+        self.logger.log_info(f"Picking from source: {source.representation}")
         self.ur_interface.gripper_pick(
             home=home,
             source=source,
