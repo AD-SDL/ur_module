@@ -162,11 +162,10 @@ class URNode(RestNode):
 
     def state_handler(self) -> None:
         """Periodically called to update the current state of the node."""
-
-        self.node_state = {
-            "ur_status_code": "SAFETY_STOP",
-            "current_joint_angles": self.current_location,
-        }
+        if self.ur_interface:
+            self.node_state = {
+                "current_joint_angles": self.current_location,
+            }
 
     @action(name="getj", description="Get joint angles")
     def getj(self):
