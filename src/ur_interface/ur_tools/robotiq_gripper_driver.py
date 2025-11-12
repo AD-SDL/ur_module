@@ -309,5 +309,7 @@ class RobotiqGripper:
 
 if __name__ == "__main__":
     gripper = RobotiqGripper()
-    gripper.connect(hostname="192.168.56.101", port=63352)
-    gripper.activate(auto_calibrate=True)
+    gripper.connect("192.168.56.250", 63352)
+    gripper.activate()
+    gripper.move_and_wait_for_pos(100, 100, 100)
+    print(gripper.is_active())

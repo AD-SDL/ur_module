@@ -334,13 +334,12 @@ class UR:
             )
             print("Finished transfer")
             gripper_controller.disconnect_gripper()
+            self.home(home)
 
         except Exception as err:
-            print(err)
-
-        finally:
             gripper_controller.disconnect_gripper()
             self.home(home)
+            raise err
 
     def gripper_pick(
         self,
@@ -880,3 +879,285 @@ class UR:
         }
 
         return program_log
+
+    def gripper_unlock_joint(
+        self,
+        home: list = None,
+        joint_location: list = None,
+        joint_approach_axis: str = "x",
+        joint_approach_distance: float = None,
+        depth: float = 0.008,
+        delay: float = 1.0,
+        gripper_open: int = 0,
+        gripper_close: int = 255,
+    ) -> None:
+        """Disconnect joint using the finger gripper. This function uses linear motions to perform the movements.
+
+        Args
+            home (list): Home location
+            joint_location (list): Joint location
+            joint_approach_axis (str): Joint approach axis (X/Y/Z)
+            joint_approach_distance (float): Joint approach distance. Unit meters.
+            depth (float): Distance moved down to disconnect joint. Unit meters.
+            delay (float) : Seconds to pause before disconnecting joint.
+            gripper_open (int): Gripper max open value (0-255)
+            gripper_close (int): Gripper min close value (0-255)
+
+        """
+
+        if not joint_location:
+            raise Exception("Please provide the joint location for disconnect.")
+
+        print("home: ", home, type(home))
+        print("joint location: ", joint_location, type(joint_location))
+        print("joint approach axis: ", joint_approach_axis, type(joint_approach_axis))
+        print("joint approach distance: ", joint_approach_distance, type(joint_approach_distance))
+        print("depth: ", depth, type(depth))
+        print("delay: ", delay, type(delay))
+        print("gripper open: ", gripper_open, type(gripper_open))
+        print("gripper close: ", gripper_close, type(gripper_close))
+
+        try:
+            gripper_controller = FingerGripperController(hostname=self.hostname, ur=self.ur_connection)
+            gripper_controller.connect_gripper()
+
+            if gripper_open:
+                gripper_controller.gripper_open = int(gripper_open)
+            if gripper_close:
+                gripper_controller.gripper_close = int(gripper_close)
+
+            gripper_controller.pull_disconnect_joint(
+                home=home,
+                joint_location=joint_location,
+                approach_axis=joint_approach_axis,
+                approach_distance=joint_approach_distance,
+                depth=depth,
+                delay=delay,
+            )
+            print("Finished disconnect")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+            raise err
+
+    def hold_hose(
+        self,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        source_approach_axis: str = None,
+        source_approach_distance: float = None,
+        gripper_open: int = None,
+        gripper_close: int = None,
+    ) -> None:
+        """Make a transfer of the hose using the finger gripper. This function uses linear motions to perform the pick and place movements.
+
+        Args
+            home (Union[LocationArgument, list]): Home location
+            source (Union[LocationArgument, list]): Source location
+            source_approach_axis (str): Source approach axis (X/Y/Z)
+            source_approach_distance (float): Source approach distance. Unit meters.
+            gripper_open (int): Gripper max open value (0-255)
+            gripper_close (int): Gripper min close value (0-255)
+
+        """
+
+        if not source:
+            raise Exception("Please provide both the source and target locations to make a transfer")
+
+        try:
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.tool_resource_id,
+            )
+            gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.hold_hose(
+                home=home,
+                source=source,
+                approach_axis=source_approach_axis,
+                approach_distance=source_approach_distance,
+            )
+            print("holding hose")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+            raise err
+
+    def recover_gripper(
+        self,
+        home: Union[LocationArgument, list] = None,
+        joint_location: Union[LocationArgument, list] = None,
+        joint_approach_axis: str = "x",
+        joint_approach_distance: float = 0.05,
+        gripper_open: int = 0,
+        gripper_close: int = 255,
+    ):
+        """Release joint at joint location
+
+        Args:
+            home (Union[LocationArgument, list]): Home location
+            joint_location (Union[LocationArgument, list]): Joint location
+            joint_approach_axis (str): Approach axis (X/Y/Z)
+            joint_approach_distance (float): Approach distance. Unit meters.
+        """
+
+        if not joint_location:
+            raise Exception("Please provide the joint location")
+
+        try:
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.tool_resource_id,
+            )
+            gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.recover_gripper(
+                home=home,
+                joint_location=joint_location,
+                approach_axis=joint_approach_axis,
+                approach_distance=joint_approach_distance,
+            )
+            print("recovering gripper")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+            raise err
+
+    def recover_hose(
+        self,
+        home: Union[LocationArgument, list] = None,
+        source: Union[LocationArgument, list] = None,
+        source_approach_axis: str = "x",
+        source_approach_distance: float = 0.05,
+        gripper_open: int = 0,
+        gripper_close: int = 255,
+    ):
+        """Release hose at joint location
+
+        Args:
+            home (Union[LocationArgument, list]): Home location
+            source_location (Union[LocationArgument, list]): Joint location
+            source_approach_axis (str): Approach axis (X/Y/Z)
+            source_approach_distance (float): Approach distance. Unit meters.
+            gripper_open (int): Gripper max open value (0-255)
+            gripper_close (int): Gripper min close value (0-255)
+        """
+
+        if not source:
+            raise Exception("Please provide the joint location")
+
+        try:
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.tool_resource_id,
+            )
+            gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.recover_hose(
+                home=home,
+                source=source,
+                approach_axis=source_approach_axis,
+                approach_distance=source_approach_distance,
+            )
+            print("recovering hose")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+            raise err
+
+    def place_hose(
+        self,
+        home: Union[LocationArgument, list] = None,
+        target: Union[LocationArgument, list] = None,
+        target_approach_axis: str = "z",
+        target_approach_distance: float = 0.05,
+        gripper_open: int = 0,
+        gripper_close: int = 255,
+    ):
+        """
+        Place hose at target location
+
+        Args:
+            home (Union[LocationArgument, list]): _description_. Defaults to None.
+            target (Union[LocationArgument, list]): _description_. Defaults to None.
+            target_approach_axis (str, optional): Approach(linear motion) of the UR arm placing the hose. Defaults to "z".
+            target_approach_distance (float, optional): Distance from which the target approaches from. Defaults to 0.05.
+            gripper_open (int, optional): Integer value for the open position of the gripper. Defaults to 0.
+            gripper_close (int, optional): Integer value for the closed position of the gripper. Defaults to 255.
+        """
+
+        if not target:
+            raise Exception("Please provide the target location")
+
+        try:
+            gripper_controller = FingerGripperController(
+                hostname=self.hostname,
+                ur=self.ur_connection,
+                resource_client=self.resource_client,
+                gripper_resource_id=self.tool_resource_id,
+            )
+            gripper_controller.connect_gripper()
+            gripper_controller.velocity = self.velocity
+            gripper_controller.acceleration = self.acceleration
+            gripper_controller.gripper_speed = self.gripper_speed
+            gripper_controller.gripper_force = self.gripper_force
+
+            if gripper_open:
+                gripper_controller.gripper_open = gripper_open
+            if gripper_close:
+                gripper_controller.gripper_close = gripper_close
+
+            gripper_controller.place_hose(
+                home=home,
+                target=target,
+                approach_axis=target_approach_axis,
+                approach_distance=target_approach_distance,
+            )
+            print("placing hose")
+            gripper_controller.disconnect_gripper()
+
+        except Exception as err:
+            gripper_controller.disconnect_gripper()
+            self.home(home)
+            raise err
