@@ -26,7 +26,7 @@ class URNodeConfig(RestNodeConfig):
 
     ur_ip: str
     tcp_pose: list = [0, 0, 0, 0, 0, 0]
-    base_reference_frame: list = None
+    base_reference_frame: list = [0, 0, 0, 0, 0, 0]
     ur_model: str = "UR5e"
 
 

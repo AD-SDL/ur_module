@@ -305,3 +305,9 @@ class RobotiqGripper:
         final_pos = self._get_var(self.POS)
         final_obj = cur_obj
         return final_pos, RobotiqGripper.ObjectStatus(final_obj)
+
+
+if __name__ == "__main__":
+    gripper = RobotiqGripper()
+    gripper.connect(hostname="192.168.56.101", port=63352)
+    gripper.activate(auto_calibrate=True)

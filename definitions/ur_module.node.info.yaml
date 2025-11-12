@@ -29,7 +29,7 @@ is_template: false
 config_defaults:
   host: localhost
   port: 3030
-  ur_ip: 192.168.100.109
+  ur_ip: ur5one.cels.anl.gov
   ur_model: UR5e
   tcp_pose:
   - 0
@@ -826,8 +826,15 @@ config:
   host: localhost
   port: 3030
   protocol: http
-  ur_ip: 192.168.100.109
+  ur_ip: ur5one.cels.anl.gov
   tcp_pose:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  base_reference_frame:
   - 0
   - 0
   - 0
@@ -1060,6 +1067,17 @@ config_schema:
       - 0
       items: {}
       title: Tcp Pose
+      type: array
+    base_reference_frame:
+      default:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      items: {}
+      title: Base Reference Frame
       type: array
     ur_model:
       default: UR5e
