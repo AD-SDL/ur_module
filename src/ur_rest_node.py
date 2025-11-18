@@ -750,7 +750,7 @@ class URNode(RestNode):
         """Reset the ur robot"""
         self.logger.log("Resetting node...")
         # If resetting startup handler does not work, try re-initializing the dashboard
-        # self.ur_interface.ur_dashboard.initialize()
+        self.ur_interface.disconnect()
         result = super().reset()
         self.logger.log("Node reset.")
         return result
