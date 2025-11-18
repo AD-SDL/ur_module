@@ -293,6 +293,7 @@ class URNode(RestNode):
                 raise Exception("Resource manager: Target is occupied!")
 
         if joint_angle_locations and isinstance(source, LocationArgument) and isinstance(target, LocationArgument):
+            self.logger.log_info("running kinematics")
             source.representation = get_pose_from_joint_angles(
                 joints=source.representation, robot_model=self.config.ur_model
             )
@@ -326,6 +327,7 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
+        self.logger.log_info(f"Picking from source: {source.representation}")
         if self.config.use_resources:
             self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
             source_resource = self.resource_client.get_resource(source.resource_id)
