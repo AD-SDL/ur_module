@@ -137,30 +137,34 @@ class URNode(RestNode):
 
     def status_handler(self):
         """Periodically called to update the current status of the node."""
-        if self.ur_interface:
-            # Getting robot state
-            self.ur_interface.ur_dashboard.get_overall_robot_status()
-            movement_state, self.current_location = self.ur_interface.get_movement_state()
+        if not self.node_status.busy:
+            if self.ur_interface:
+                # Getting robot state
+                self.ur_interface.ur_dashboard.get_overall_robot_status()
+                movement_state, self.current_location = self.ur_interface.get_movement_state()
+            else:
+                self.logger.log_error("UR interface is not initialized")
+                return
+
+            if "PROTECTIVE_STOP" in self.ur_interface.ur_dashboard.safety_status:
+                self.node_status.stopped = True
+                self.logger.log_error("UR is in PROTECTIVE_STOP")
+
+            if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
+                self.node_status.errored = True
+                self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
+            else:
+                self.node_status.errored = False
+                self.node_status.stopped = False
+
+            if movement_state == "BUSY":
+                self.node_status.busy = True
+                self.logger.info("BUSY")
+            elif movement_state == "READY":
+                self.node_status.busy = False
         else:
-            self.logger.log_error("UR interface is not initialized")
-            return
-
-        if "PROTECTIVE_STOP" in self.ur_interface.ur_dashboard.safety_status:
-            self.node_status.stopped = True
-            self.logger.log_error("UR is in PROTECTIVE_STOP")
-
-        if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
-            self.node_status.errored = True
-            self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
-        else:
-            self.node_status.errored = False
-            self.node_status.stopped = False
-
-        if movement_state == "BUSY":
-            self.node_status.busy = True
-            self.logger.info("BUSY")
-        elif movement_state == "READY":
-            self.node_status.busy = False
+            if len(self.node_status.running_actions) == 0:
+                self.node_status.busy = False
 
     def state_handler(self) -> None:
         """Periodically called to update the current state of the node."""
@@ -230,11 +234,13 @@ class URNode(RestNode):
         target: Annotated[LocationArgument, "Linear location to move to"],
         acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
         velocity: Annotated[Optional[float], "Velocity"] = 0.6,
+        joint_angle_locations: Annotated[bool, "Use joint angles for the location"] = True,
     ):
         """Move the robot using linear motion"""
         try:
             self.logger.log(f"Move location: {target.representation}")
-            target.representation = get_pose_from_joint_angles(target.representation)
+            if joint_angle_locations:
+                target.representation = get_pose_from_joint_angles(target.representation)
             self.ur_interface.ur_connection.movel(tpose=target.representation, acc=acceleration, vel=velocity)
 
         except Exception as err:
@@ -247,25 +253,20 @@ class URNode(RestNode):
         close: Annotated[bool, "Close?"] = False,
     ):
         """Open or close the robot gripper."""
-        try:
-            gripper = FingerGripperController(hostname=self.config.ur_ip, ur=self.ur_interface)
-            self.logger.log("Connecting to gripper...")
-            gripper.connect_gripper()
-            self.logger.log("Gripper connected")
-            if open:
-                gripper.open_gripper()
-                self.logger.log("Gripper opened")
-            elif close:
-                gripper.close_gripper()
-                self.logger.log("Gripper closed")
-            else:
-                self.logger.log("No action taken")
-
-        except Exception as err:
-            self.logger.log_error(err)
+        gripper = FingerGripperController(hostname=self.config.ur_ip, ur=self.ur_interface, logger=self.logger)
+        self.logger.log("Connecting to gripper...")
+        gripper.connect_gripper()
+        self.logger.log("Gripper connected")
+        if open:
+            gripper.open_gripper()
+            self.logger.log("Gripper opened")
+        elif close:
+            gripper.close_gripper()
+            self.logger.log("Gripper closed")
         else:
-            gripper.disconnect_gripper()
-            self.logger.log("Gripper disconnected")
+            self.logger.log("No action taken")
+        gripper.disconnect_gripper()
+        self.logger.log("Gripper disconnected")
 
     @action(
         name="gripper_transfer",

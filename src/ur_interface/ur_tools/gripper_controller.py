@@ -71,7 +71,7 @@ class FingerGripperController:
                 self.gripper = RobotiqGripper()
 
                 self.logger.debug(f"Attempting socket connection to {self.host}:{self.PORT}")
-                self.gripper.connect(hostname=self.host, port=self.PORT)
+                self.gripper.connect(hostname=self.host, port=self.PORT, socket_timeout=5)
 
                 if self.gripper.is_active():
                     self.logger.info("Gripper already active")
