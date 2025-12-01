@@ -254,19 +254,19 @@ class URNode(RestNode):
     ):
         """Open or close the robot gripper."""
         gripper = FingerGripperController(hostname=self.config.ur_ip, ur=self.ur_interface, logger=self.logger)
-        self.logger.log("Connecting to gripper...")
+        self.logger.info("Toggle gripper: Connecting to gripper...")
         gripper.connect_gripper()
-        self.logger.log("Gripper connected")
+        self.logger.info("Toggle gripper: Gripper connected")
         if open:
             gripper.open_gripper()
-            self.logger.log("Gripper opened")
+            self.logger.info("Toggle gripper: Gripper opened")
         elif close:
             gripper.close_gripper()
-            self.logger.log("Gripper closed")
+            self.logger.info("Toggle gripper: Gripper closed")
         else:
-            self.logger.log("No action taken")
+            self.logger.info("Toggle gripper: No action taken")
         gripper.disconnect_gripper()
-        self.logger.log("Gripper disconnected")
+        self.logger.info("Toggle gripper: Gripper disconnected")
 
     @action(
         name="gripper_transfer",

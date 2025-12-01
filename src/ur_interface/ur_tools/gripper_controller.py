@@ -60,6 +60,14 @@ class FingerGripperController:
         self.blend_radius_m = 0.001
         self.ref_frame = [0, 0, 0, 0, 0, 0]
 
+    def __del__(self):
+        """Destructor for the FingerGripperController class."""
+        try:
+            self.disconnect_gripper()
+        except Exception as e:
+            self.logger.error(f"Error during gripper disconnection in destructor: {e}\n{traceback.format_exc()}")
+            raise e
+
     def connect_gripper(self, max_retries: int = 2):
         """
         Connect to the gripper
