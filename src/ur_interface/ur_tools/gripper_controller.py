@@ -60,6 +60,14 @@ class FingerGripperController:
         self.blend_radius_m = 0.001
         self.ref_frame = [0, 0, 0, 0, 0, 0]
 
+    def __del__(self):
+        """Destructor for the FingerGripperController class."""
+        try:
+            self.disconnect_gripper()
+        except Exception as e:
+            self.logger.error(f"Error during gripper disconnection in destructor: {e}\n{traceback.format_exc()}")
+            raise e
+
     def connect_gripper(self, max_retries: int = 2):
         """
         Connect to the gripper
@@ -71,7 +79,7 @@ class FingerGripperController:
                 self.gripper = RobotiqGripper()
 
                 self.logger.debug(f"Attempting socket connection to {self.host}:{self.PORT}")
-                self.gripper.connect(hostname=self.host, port=self.PORT)
+                self.gripper.connect(hostname=self.host, port=self.PORT, socket_timeout=5)
 
                 if self.gripper.is_active():
                     self.logger.info("Gripper already active")
