@@ -1,11 +1,16 @@
 """Controls Various Type of Gripper End Effectors"""
 
+import logging
+import socket
+import traceback
 from copy import deepcopy
 from math import radians
 from time import sleep
 from typing import Union
 
 from madsci.common.types.location_types import LocationArgument
+
+from ur_interface.ur_error_types import GripperConnectionError, GripperOperationError
 
 from .robotiq_gripper_driver import RobotiqGripper
 
@@ -20,6 +25,7 @@ class FingerGripperController:
         ur=None,
         resource_client=None,
         gripper_resource_id: str = None,
+        logger: logging.Logger = None,
     ):
         """
         Constructor for the FingerGripperController class.
@@ -32,6 +38,7 @@ class FingerGripperController:
         self.PORT = port
         self.resource_client = resource_client
         self.gripper_resource_id = gripper_resource_id
+        self.logger = logger
 
         if not ur:
             raise Exception("UR connection is not established")
@@ -53,52 +60,75 @@ class FingerGripperController:
         self.blend_radius_m = 0.001
         self.ref_frame = [0, 0, 0, 0, 0, 0]
 
-    def connect_gripper(self):
+    def connect_gripper(self, max_retries: int = 2):
         """
         Connect to the gripper
         """
-        retry_count = 5
-        for i in range(5):
+        for attempt in range(max_retries):
             try:
                 # GRIPPER SETUP:
+                self.logger.info(f"Connecting to gripper (attempt {attempt + 1}/{max_retries})...")
                 self.gripper = RobotiqGripper()
-                print("Connecting to gripper...")
+
+                self.logger.debug(f"Attempting socket connection to {self.host}:{self.PORT}")
                 self.gripper.connect(hostname=self.host, port=self.PORT)
 
                 if self.gripper.is_active():
-                    print("Gripper already active")
+                    self.logger.info("Gripper already active")
                 else:
-                    print("Activating gripper...")
+                    self.logger.info("Activating gripper...")
                     self.gripper.activate()
-                    print("Opening gripper...")
+                    self.logger.info("Opening gripper...")
                     self.open_gripper()
 
-            except Exception as err:
-                print("Gripper connection failed on retry {}: {} ".format(i + 1, err))
-                self.ur.set_tool_communication(
-                    baud_rate=115200,
-                    parity=0,
-                    stop_bits=1,
-                    rx_idle_chars=1.5,
-                    tx_idle_chars=3.5,
+                self.logger.info("Gripper is ready")
+                return
+
+            except socket.timeout as e:
+                self.logger.error(f"Socket timeout on attempt {attempt + 1}: {e}")
+                if attempt < max_retries - 1:
+                    self.logger.info("Attempting to reset tool communication...")
+                    try:
+                        self.ur.set_tool_communication(
+                            baud_rate=115200,
+                            parity=0,
+                            stop_bits=1,
+                            rx_idle_chars=1.5,
+                            tx_idle_chars=3.5,
+                        )
+                        sleep(4)
+                    except Exception as reset_error:
+                        self.logger.error(
+                            f"Error resetting tool communication: {reset_error}\n{traceback.format_exc()}"
+                        )
+
+            except socket.error as e:
+                self.logger.error(f"Socket error on attempt {attempt + 1}: {e}\n{traceback.format_exc()}")
+                if attempt < max_retries - 1:
+                    self.logger.info("Retrying connection...")
+                    sleep(2)
+
+            except Exception as e:
+                self.logger.error(
+                    f"Unexpected error connecting to gripper on attempt {attempt + 1}: {e}\n{traceback.format_exc()}"
                 )
-                sleep(4)
-                if i == retry_count - 1:
-                    raise Exception("Gripper connection failed after {} retries".format(retry_count)) from err
-            else:
-                print("Gripper is ready!")
+                if attempt < max_retries - 1:
+                    sleep(2)
+
+            raise GripperConnectionError(f"Failed to connect to gripper after {max_retries} attempts")  # noqa
 
     def disconnect_gripper(self):
         """
         Discconect from the gripper
         """
         try:
-            self.gripper.disconnect()
-        except Exception as err:
-            print("Gripper error: ", err)
-
-        else:
-            print("Gripper connection is closed")
+            if self.gripper:
+                self.logger.info("Disconnecting gripper...")
+                self.gripper.disconnect()
+                self.logger.info("Gripper connection closed")
+        except Exception as e:
+            self.logger.error(f"Error disconnecting gripper: {e}\n{traceback.format_exc()}")
+            raise
 
     def home_robot(self, home: Union[LocationArgument, list] = None) -> None:
         """
@@ -106,11 +136,20 @@ class FingerGripperController:
         """
         if not home:
             return
-        if isinstance(home, LocationArgument):
-            home_location = home.representation
-        elif isinstance(home, list):
-            home_location = home
-        self.ur.movej(home_location, self.acceleration, self.velocity)
+        try:
+            self.logger.info("Homing robot to specified position...")
+            if isinstance(home, LocationArgument):
+                home_location = home.representation
+            elif isinstance(home, list):
+                home_location = home
+            else:
+                raise Exception("Please provide an accurate home location")
+
+            self.logger.debug(f"Homing robot to: {home_location}")
+            self.ur.movej(home_location, self.acceleration, self.velocity)
+        except Exception as e:
+            self.logger.error(f"Error homing robot: {e}\n{traceback.format_exc()}")
+            raise
 
     def open_gripper(
         self,
@@ -119,19 +158,31 @@ class FingerGripperController:
         force: float = None,
     ) -> None:
         """Opens the gripper using pose, speed and force variables"""
-        if pose:
-            self.gripper_open = pose
-        if force:
-            self.gripper_force = force
-        if speed:
-            self.gripper_speed = speed
+        try:
+            if pose:
+                self.gripper_open = pose
+            if force:
+                self.gripper_force = force
+            if speed:
+                self.gripper_speed = speed
 
-        self.gripper.move_and_wait_for_pos(
-            self.gripper_open,
-            self.gripper_speed,
-            self.gripper_force,
-        )
-        sleep(0.5)
+            self.logger.info(f"Opening gripper to position: {self.gripper_open}")
+
+            self.gripper.move_and_wait_for_pos(
+                self.gripper_open,
+                self.gripper_speed,
+                self.gripper_force,
+            )
+            sleep(0.5)
+            self.logger.debug("Gripper opened successfully")
+
+        except socket.timeout as e:
+            self.logger.error(f"Timeout while opening gripper: {e}")
+            raise GripperOperationError(f"Gripper open operation timed out: {e}")  # noqa
+
+        except Exception as e:
+            self.logger.error(f"Error opening gripper: {e}\n{traceback.format_exc()}")
+            raise GripperOperationError(f"Failed to open gripper: {e}")  # noqa
 
     def close_gripper(
         self,
@@ -140,19 +191,30 @@ class FingerGripperController:
         force: float = None,
     ) -> None:
         """Closes the gripper using pose, speed and force variables"""
-        if pose:
-            self.gripper_close = pose
-        if force:
-            self.gripper_force = force
-        if speed:
-            self.gripper_speed = speed
+        try:
+            if pose:
+                self.gripper_close = pose
+            if force:
+                self.gripper_force = force
+            if speed:
+                self.gripper_speed = speed
+            self.logger.info(f"Closing gripper to position: {self.gripper_close}")
 
-        self.gripper.move_and_wait_for_pos(
-            self.gripper_close,
-            self.gripper_speed,
-            self.gripper_force,
-        )
-        sleep(0.5)
+            self.gripper.move_and_wait_for_pos(
+                self.gripper_close,
+                self.gripper_speed,
+                self.gripper_force,
+            )
+            sleep(0.5)
+            self.logger.debug("Gripper closed successfully")
+
+        except socket.timeout as e:
+            self.logger.error(f"Timeout while closing gripper: {e}")
+            raise GripperOperationError(f"Gripper close operation timed out: {e}")  # noqa
+
+        except Exception as e:
+            self.logger.error(f"Error closing gripper: {e}\n{traceback.format_exc()}")
+            raise GripperOperationError(f"Failed to close gripper: {e}")  # noqa
 
     def pick(
         self,
@@ -161,52 +223,63 @@ class FingerGripperController:
         approach_distance: float = None,
     ):
         """Pick up from first goal position"""
+        try:
+            if isinstance(source, LocationArgument):
+                source_location = source.representation
+            elif isinstance(source, list):
+                source_location = source
+            else:
+                raise Exception("Please provide an accurate source location")
 
-        if isinstance(source, LocationArgument):
-            source_location = source.representation
-        elif isinstance(source, list):
-            source_location = source
-        else:
-            raise Exception("Please provide an accurate source loaction")
+            if not approach_distance:
+                approach_distance = 0.05
 
-        if not approach_distance:
-            approach_distance = 0.05
+            axis = None
 
-        axis = None
+            if not approach_axis or approach_axis.lower() == "z":
+                axis = 2
+            elif approach_axis.lower() == "y":
+                axis = 1
+            elif approach_axis.lower() == "-y":
+                axis = 1
+                approach_distance = -approach_distance
+            elif approach_axis.lower() == "x":
+                axis = 0
+            elif approach_axis.lower() == "-x":
+                axis = 0
+                approach_distance = -approach_distance
 
-        if not approach_axis or approach_axis.lower() == "z":
-            axis = 2
-        elif approach_axis.lower() == "y":
-            axis = 1
-        elif approach_axis.lower() == "-y":
-            axis = 1
-            approach_distance = -approach_distance
-        elif approach_axis.lower() == "x":
-            axis = 0
-        elif approach_axis.lower() == "-x":
-            axis = 0
-            approach_distance = -approach_distance
+            above_goal = deepcopy(source_location)
+            above_goal[axis] += approach_distance
 
-        above_goal = deepcopy(source_location)
-        above_goal[axis] += approach_distance
+            self.logger.info(f"Starting pick operation from source: {source_location}")
 
-        self.open_gripper()
+            self.open_gripper()
 
-        print("Moving to above goal position")
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+            self.logger.debug("Moving to above goal position")
+            self.ur.movel(above_goal, self.acceleration, self.velocity)
 
-        print("Moving to goal position")
-        self.ur.movel(source_location, self.acceleration, self.velocity)
+            self.logger.debug("Moving to goal position")
+            self.ur.movel(source_location, self.acceleration, self.velocity)
 
-        print("Closing gripper")
-        self.close_gripper()
+            self.close_gripper()
 
-        if self.resource_client and isinstance(source, LocationArgument):  # Handle resources if configured
-            popped_object, updated_resource = self.resource_client.pop(resource=source.resource_id)
-            self.resource_client.push(resource=self.gripper_resource_id, child=popped_object)
+            if self.resource_client and isinstance(source, LocationArgument):  # Handle resources if configured
+                try:
+                    popped_object, updated_resource = self.resource_client.pop(resource=source.resource_id)
+                    self.resource_client.push(resource=self.gripper_resource_id, child=popped_object)
+                except Exception as e:
+                    self.logger.error(f"Resource client error during pick: {e}\n{traceback.format_exc()}")
 
-        print("Moving back to above goal position")
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+            self.logger.debug("Moving back to above goal position")
+            self.ur.movel(above_goal, self.acceleration, self.velocity)
+            self.logger.info("Pick operation completed successfully")
+
+        except GripperOperationError:
+            raise
+        except Exception as e:
+            self.logger.error(f"Error during pick operation: {e}\n{traceback.format_exc()}")
+            raise GripperOperationError(f"Pick operation failed: {e}")  # noqa
 
     def pick_screw(
         self,
@@ -232,49 +305,60 @@ class FingerGripperController:
         approach_distance: float = None,
     ):
         """Place down at second goal position"""
+        try:
+            if isinstance(target, LocationArgument):
+                target_location = target.representation
+            elif isinstance(target, list):
+                target_location = target
+            else:
+                raise ValueError("Please provide an accurate target location")
 
-        if isinstance(target, LocationArgument):
-            target_location = target.representation
-        elif isinstance(target, list):
-            target_location = target
-        else:
-            raise Exception("Please provide an accurate target loaction")
+            if not approach_distance:
+                approach_distance = 0.05
 
-        if not approach_distance:
-            approach_distance = 0.05
+            axis = None
 
-        axis = None
+            if not approach_axis or approach_axis.lower() == "z":
+                axis = 2
+            elif approach_axis.lower() == "y":
+                axis = 1
+            elif approach_axis.lower() == "-y":
+                axis = 1
+                approach_distance = -approach_distance
+            elif approach_axis.lower() == "x":
+                axis = 0
+            elif approach_axis.lower() == "-x":
+                axis = 0
+                approach_distance = -approach_distance
 
-        if not approach_axis or approach_axis.lower() == "z":
-            axis = 2
-        elif approach_axis.lower() == "y":
-            axis = 1
-        elif approach_axis.lower() == "-y":
-            axis = 1
-            approach_distance = -approach_distance
-        elif approach_axis.lower() == "x":
-            axis = 0
-        elif approach_axis.lower() == "-x":
-            axis = 0
-            approach_distance = -approach_distance
+            above_goal = deepcopy(target_location)
+            above_goal[axis] += approach_distance
 
-        above_goal = deepcopy(target_location)
-        above_goal[axis] += approach_distance
+            self.logger.info(f"Starting place operation to target: {target_location}")
+            self.logger.debug("Moving to above goal position")
+            self.ur.movel(above_goal, self.acceleration, self.velocity)
 
-        print("Moving to above goal position")
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+            self.logger.debug("Moving to goal position")
+            self.ur.movel(target_location, self.acceleration, self.velocity)
 
-        print("Moving to goal position")
-        self.ur.movel(target_location, self.acceleration, self.velocity)
+            self.open_gripper()
 
-        print("Opennig gripper")
-        self.open_gripper()
+            if self.resource_client and isinstance(target, LocationArgument):  # Handle resources if configured
+                try:
+                    popped_object, updated_resource = self.resource_client.pop(resource=self.gripper_resource_id)
+                    self.resource_client.push(resource=target.resource_id, child=popped_object)
+                except Exception as e:
+                    self.logger.error(f"Resource client error during place: {e}\n{traceback.format_exc()}")
 
-        if self.resource_client and isinstance(target, LocationArgument):  # Handle resources if configured
-            popped_object, updated_resource = self.resource_client.pop(resource=self.gripper_resource_id)
-            self.resource_client.push(resource=target.resource_id, child=popped_object)
-        print("Moving back to above goal position")
-        self.ur.movel(above_goal, self.acceleration, self.velocity)
+            self.logger.debug("Moving back to above goal position")
+            self.ur.movel(above_goal, self.acceleration, self.velocity)
+            self.logger.info("Place operation completed successfully")
+
+        except GripperOperationError:
+            raise
+        except Exception as e:
+            self.logger.error(f"Error during place operation: {e}\n{traceback.format_exc()}")
+            raise GripperOperationError(f"Place operation failed: {e}")  # noqa
 
     def place_screw(
         self,
@@ -295,13 +379,13 @@ class FingerGripperController:
         self.ur.movel(target_location, 0.2, 0.2)
 
         target_pose = [0, 0, 0.00021, 0, 0, 3.14]  # Setting the screw drive motion
-        print("Screwing down")
+        self.logger.info("Screwing down")
 
         self.ur.speedl_tool(
             target_pose, 2, screw_time
         )  # This will perform screw driving motion for defined number of seconds
         sleep(screw_time)
-        print("Screw drive motion completed")
+        self.logger.info("Screw drive motion completed")
 
         self.ur.translate_tool([0, 0, -0.03], 0.5, 0.5)
 
@@ -330,7 +414,7 @@ class FingerGripperController:
             self.resource_client.push(resource=self.gripper_resource_id, child=popped_object)
 
         target_pose = [0, 0, -0.001, 0, 0, -3.14]  # Setting the screw drive motion
-        print("Removing cap")
+        self.logger.info("Removing cap")
         screw_time = 7
         self.ur.speedl_tool(
             target_pose, 2, screw_time
@@ -366,7 +450,7 @@ class FingerGripperController:
         # self.close_gripper()
 
         target_pose = [0, 0, 0.0001, 0, 0, 2.10]  # Setting the screw drive motion
-        print("Placing cap")
+        self.logger.info("Placing cap")
         screw_time = 6
         self.ur.speedl_tool(
             target_pose, 2, screw_time
@@ -414,19 +498,27 @@ class FingerGripperController:
         target_approach_distance: float = None,
     ) -> None:
         """Handles the transfer request"""
-        self.pick(
-            source=source,
-            approach_axis=source_approach_axis,
-            approach_distance=source_approach_distance,
-        )
-        print("Pick up completed")
-        self.home_robot(home=home)
-        self.place(
-            target=target,
-            approach_axis=target_approach_axis,
-            approach_distance=target_approach_distance,
-        )
-        print("Place completed")
+        try:
+            self.logger.info("Starting transfer operation")
+            self.pick(
+                source=source,
+                approach_axis=source_approach_axis,
+                approach_distance=source_approach_distance,
+            )
+            self.logger.info("Pick completed")
+
+            self.home_robot(home=home)
+
+            self.place(
+                target=target,
+                approach_axis=target_approach_axis,
+                approach_distance=target_approach_distance,
+            )
+            self.logger.info("Place completed")
+
+        except Exception as e:
+            self.logger.error(f"Error during transfer operation: {e}\n{traceback.format_exc()}")
+            raise
 
     def screw_transfer(
         self,

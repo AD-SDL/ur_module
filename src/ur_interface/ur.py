@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Interface for UR Driver"""
 
+import logging
 import socket
+import traceback
 from math import radians
 from time import sleep
-from typing import Union
+from typing import Optional, Union
 
 import math3d as m3
 import numpy as np
@@ -14,6 +16,7 @@ from madsci.common.types.location_types import LocationArgument
 from urx import Robot
 
 from ur_interface.ur_dashboard import UR_DASHBOARD
+from ur_interface.ur_error_types import GripperError, URConnectionError, URMovementError
 from ur_interface.ur_tools.gripper_controller import FingerGripperController
 from ur_interface.ur_tools.ot_pipette_controller import OTPipetteController
 from ur_interface.ur_tools.screwdriver_controller import ScrewdriverController
@@ -24,36 +27,44 @@ from ur_interface.ur_tools.wm_tool_changer_controller import WMToolChangerContro
 class Connection:
     """Connection to the UR robot to be shared within UR driver"""
 
-    def __init__(self, hostname: str = "146.137.240.38") -> None:
+    def __init__(self, hostname: str = "146.137.240.38", logger: logging.Logger = None) -> None:
         """Connection class that creates a connection with the robot using URx Library"""
         self.hostname = hostname
-
+        self.logger = logger
         self.connection = None
         self.connect_ur()
 
     def connect_ur(self):
-        """
-        Description: Create conenction to the UR robot
-        """
-
-        for i in range(10):
+        """Create connection to the UR robot"""
+        for attempt in range(10):
             try:
+                self.logger.info(f"Attempting robot connection (attempt {attempt + 1}/10)...")
                 self.connection = Robot(self.hostname)
 
-            except socket.error:
-                print("Trying robot connection {}...".format(i))
+            except socket.error as e:
+                self.logger.warning(f"Robot connection attempt {attempt + 1} failed: {e}")
+                sleep(1)
+
+            except Exception as e:
+                self.logger.error(f"Unexpected error during robot connection: {e}\n{traceback.format_exc()}")
                 sleep(1)
 
             else:
-                print("Successful ur connection")
-                break
+                self.logger.info("Successful UR connection")
+                return
+
+        raise URConnectionError(f"Failed to connect to UR robot at {self.hostname} after 10 attempts")
 
     def disconnect_ur(self):
         """
         Description: Disconnects the socket connection with the UR robot
         """
-        self.connection.close()
-        print("Robot connection is closed.")
+        try:
+            if self.connection:
+                self.connection.close()
+                self.logger.info("Robot connection closed successfully")
+        except Exception as e:
+            self.logger.error(f"Error closing robot connection: {e}\n{traceback.format_exc()}")
 
 
 class UR:
@@ -71,9 +82,11 @@ class UR:
         tool_resource_id: str = None,
         tcp_pose: list = [0, 0, 0, 0, 0, 0],
         base_reference_frame: list = None,
+        logger: Optional[logging.Logger] = None,
     ):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
+        :param logger: Logger object for logging messages
         """
 
         if not hostname:
@@ -83,28 +96,49 @@ class UR:
         self.resource_client = resource_client
         self.tool_resource_id = tool_resource_id
         self.resource_owner = resource_owner
+        self.logger = logger or self._setup_logger()
 
         self.acceleration = 0.5
         self.velocity = 0.5
         self.robot_current_joint_angles = None
 
-        self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
-        self.ur = Connection(hostname=self.hostname)
-        self.ur_connection = self.ur.connection
+        try:
+            self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
+            self.ur = Connection(hostname=self.hostname, logger=self.logger)
+            self.ur_connection = self.ur.connection
 
-        self.gripper_speed = 255
-        self.gripper_force = 255
+            self.gripper_speed = 255
+            self.gripper_force = 255
 
-        self.ur_connection.set_tcp(tcp_pose)
-        if base_reference_frame:
-            self._set_base_reference_frame(base_reference_frame)
-        self.get_movement_state()
+            self.ur_connection.set_tcp(tcp_pose)
+            if base_reference_frame:
+                self._set_base_reference_frame(base_reference_frame)
+            self.get_movement_state()
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
+            raise
+
+    def _setup_logger(self) -> logging.Logger:
+        """Setup default logger if none provided"""
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
+        if not logger.handlers:
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+        return logger
 
     def disconnect(self):
-        "Disconnects the robot from URX and UR Dahsboard connections"
-        self.ur.disconnect_ur()
-        self.ur_dashboard.clear_operational_mode()
-        self.ur_dashboard.disconnect()
+        """Disconnects the robot from URX and UR Dashboard connections"""
+        try:
+            self.ur.disconnect_ur()
+            self.ur_dashboard.clear_operational_mode()
+            self.ur_dashboard.disconnect()
+            self.logger.info("UR disconnected successfully")
+        except Exception as e:
+            self.logger.error(f"Error during UR disconnect: {e}\n{traceback.format_exc()}")
 
     def _set_base_reference_frame(self, base_reference_frame: list) -> None:
         """Sets the base reference frame for the robot.
@@ -114,72 +148,84 @@ class UR:
         if not isinstance(base_reference_frame, list) or len(base_reference_frame) != 6:
             raise ValueError("Base reference frame must be a list of 6 values")
 
-        # Extract position and rotation components
-        x, y, z, rx_deg, ry_deg, rz_deg = base_reference_frame
+        try:
+            # Extract position and rotation components
+            x, y, z, rx_deg, ry_deg, rz_deg = base_reference_frame
 
-        # Create translation vector (only if any translation values are non-zero)
-        if any([x, y, z]):
-            translation = m3.Vector(x, y, z)
-        else:
-            translation = m3.Vector(0, 0, 0)
+            # Create translation vector (only if any translation values are non-zero)
+            if any([x, y, z]):
+                translation = m3.Vector(x, y, z)
+            else:
+                translation = m3.Vector(0, 0, 0)
 
-        # Start with identity rotation
-        rotation = m3.Orientation()  # Identity rotation
+            # Start with identity rotation
+            rotation = m3.Orientation()  # Identity rotation
 
-        # Apply only non-zero rotations in order
-        if rx_deg != 0:
-            rx_rad = radians(rx_deg)
-            rotation = rotation * m3.Orientation.new_rot_x(rx_rad)
+            # Apply only non-zero rotations in order
+            if rx_deg != 0:
+                rx_rad = radians(rx_deg)
+                rotation = rotation * m3.Orientation.new_rot_x(rx_rad)
 
-        if ry_deg != 0:
-            ry_rad = radians(ry_deg)
-            rotation = rotation * m3.Orientation.new_rot_y(ry_rad)
+            if ry_deg != 0:
+                ry_rad = radians(ry_deg)
+                rotation = rotation * m3.Orientation.new_rot_y(ry_rad)
 
-        if rz_deg != 0:
-            rz_rad = radians(rz_deg)
-            rotation = rotation * m3.Orientation.new_rot_z(rz_rad)
-        # Create the transform
-        transform = m3.Transform(rotation, translation)
+            if rz_deg != 0:
+                rz_rad = radians(rz_deg)
+                rotation = rotation * m3.Orientation.new_rot_z(rz_rad)
+            # Create the transform
+            transform = m3.Transform(rotation, translation)
 
-        # Set the coordinate system
-        self.ur_connection.set_csys(transform)
+            # Set the coordinate system
+            self.ur_connection.set_csys(transform)
 
-        print(f"Base reference frame set to: {base_reference_frame}")
+            self.logger.info(f"Base reference frame set to: {base_reference_frame}")
+        except Exception as e:
+            self.logger.error(f"Error setting base reference frame: {e}\n{traceback.format_exc()}")
+            raise
 
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.
         Return (str) READY if robot is not moving
                      BUSY if robot is moving
         """
-        current_location = self.ur_connection.getj()
-        if self.robot_current_joint_angles is None:
-            movement_state = "READY"
-        else:
-            if np.linalg.norm(np.array(current_location) - np.array(self.robot_current_joint_angles)) < 1e-3:
+        try:
+            current_location = self.ur_connection.getj()
+            if self.robot_current_joint_angles is None:
                 movement_state = "READY"
             else:
-                movement_state = "BUSY"
+                if np.linalg.norm(np.array(current_location) - np.array(self.robot_current_joint_angles)) < 1e-3:
+                    movement_state = "READY"
+                else:
+                    movement_state = "BUSY"
 
-        self.robot_current_joint_angles = current_location
+            self.robot_current_joint_angles = current_location
 
-        return movement_state, current_location
+            return movement_state, current_location
+
+        except Exception as e:
+            self.logger.error(f"Error getting movement state: {e}\n{traceback.format_exc()}")
+            raise URMovementError("Failed to get robot movement state")  # noqa
 
     def home(self, home_location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
         """Moves the robot to the home location.
 
         Args: home_location: 6 joint value location
         """
-
-        print("Homing the robot...")
-        if isinstance(home_location, LocationArgument):
-            home_loc = home_location.location
-        else:
-            home_loc = home_location
-        if linear_motion:
-            self.ur_connection.movel(home_loc, self.velocity, self.acceleration)
-        else:
-            self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
-        print("Robot homed")
+        try:
+            self.logger.info("Homing the robot...")
+            if isinstance(home_location, LocationArgument):
+                home_loc = home_location.location
+            else:
+                home_loc = home_location
+            if linear_motion:
+                self.ur_connection.movel(home_loc, self.velocity, self.acceleration)
+            else:
+                self.ur_connection.movej(home_loc, self.velocity, self.acceleration)
+            self.logger.info("Robot homed")
+        except Exception as e:
+            self.logger.error(f"Error in homing the robot: {e}\n{traceback.format_exc()}")
+            raise URMovementError("Failed to home the robot")  # noqa
 
     def pick_tool(
         self,
@@ -221,7 +267,7 @@ class UR:
             self.home(home)
 
         except Exception as err:
-            print("Error in picking tool: ", err)
+            self.logger.error(f"Error in picking tool: {err}\n{traceback.format_exc()}")
 
     def place_tool(
         self,
@@ -259,7 +305,7 @@ class UR:
             self.home(home)
 
         except Exception as err:
-            print("Error in placing tool: ", err)
+            self.logger.error(f"Error in placing tool: {err}\n{traceback.format_exc()}")
 
     def set_digital_io(self, channel: int = None, value: bool = None) -> None:
         """Sets digital I/O outputs to open an close the channel. This helps controlling the external tools
@@ -269,7 +315,7 @@ class UR:
             value (bool): False for close, True for open
         """
         if channel is None or value is None:
-            print("Channel or value is not specified")
+            self.logger.error("Channel or value is not specified")
             return
         self.ur_connection.set_digital_out(channel, value)
 
@@ -301,17 +347,22 @@ class UR:
         """
 
         if not source or not target:
-            raise Exception("Please provide both the source and target locations to make a transfer")
-
-        self.home(home)
+            raise ValueError("Please provide both the source and target locations to make a transfer")
+        gripper_controller = None
 
         try:
+            self.logger.info(f"Starting gripper transfer from {source} to {target}")
+            self.home(home)
+
+            self.logger.info("Initializing gripper controller")
             gripper_controller = FingerGripperController(
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
                 gripper_resource_id=self.tool_resource_id,
+                logger=self.logger,
             )
+            self.logger.info("Connecting to gripper...")
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
             gripper_controller.acceleration = self.acceleration
@@ -323,6 +374,7 @@ class UR:
             if gripper_close:
                 gripper_controller.gripper_close = gripper_close
 
+            self.logger.info("Executing gripper transfer...")
             gripper_controller.transfer(
                 home=home,
                 source=source,
@@ -332,15 +384,27 @@ class UR:
                 source_approach_distance=source_approach_distance,
                 target_approach_distance=target_approach_distance,
             )
-            print("Finished transfer")
-            gripper_controller.disconnect_gripper()
+            self.logger.info("Gripper transfer completed successfully")
+        except socket.timeout as e:
+            self.logger.error(f"Socket timeout during gripper transfer: {e}\n{traceback.format_exc()}")
+            raise GripperError(f"Gripper communication timed out: {e}")  # noqa
 
-        except Exception as err:
-            print(err)
+        except Exception as e:
+            self.logger.error(f"Error in gripper transfer action: {e}\n{traceback.format_exc()}")
+            raise GripperError(f"Gripper transfer failed: {e}")  # noqa
 
         finally:
-            gripper_controller.disconnect_gripper()
-            self.home(home)
+            if gripper_controller:
+                try:
+                    self.logger.info("Disconnecting gripper...")
+                    gripper_controller.disconnect_gripper()
+                except Exception as e:
+                    self.logger.error(f"Error disconnecting gripper: {e}\n{traceback.format_exc()}")
+
+            try:
+                self.home(home)
+            except Exception as e:
+                self.logger.error(f"Error returning to home after gripper transfer: {e}\n{traceback.format_exc()}")
 
     def gripper_pick(
         self,
@@ -360,20 +424,25 @@ class UR:
             gripper_close (int): Gripper min close value (0-255)
 
         """
-
         if not source:
-            raise Exception("Please provide the source location to make a pick")
+            raise ValueError("Please provide the source location to make a pick")
 
-        self.home(home)
+        gripper_controller = None
 
         try:
+            self.logger.info(f"Starting gripper pick from {source}")
+            self.home(home)
+
+            self.logger.info("Initializing gripper controller...")
             gripper_controller = FingerGripperController(
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
                 gripper_resource_id=self.tool_resource_id,
+                logger=self.logger,
             )
 
+            self.logger.info("Connecting to gripper...")
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
             gripper_controller.acceleration = self.acceleration
@@ -383,20 +452,34 @@ class UR:
             if gripper_close:
                 gripper_controller.gripper_close = gripper_close
 
+            self.logger.info("Executing gripper pick...")
             gripper_controller.pick(
                 source=source,
                 approach_axis=source_approach_axis,
                 approach_distance=source_approach_distance,
             )
-            print("Finished gripper pick")
-            gripper_controller.disconnect_gripper()
+            self.logger.info("Gripper pick completed successfully")
 
-        except Exception as err:
-            print(err)
+        except socket.timeout as e:
+            self.logger.error(f"Socket timeout during gripper pick: {e}\n{traceback.format_exc()}")
+            raise GripperError(f"Gripper communication timed out during pick: {e}")  # noqa
+
+        except Exception as e:
+            self.logger.error(f"Error in gripper pick action: {e}\n{traceback.format_exc()}")
+            raise GripperError(f"Gripper pick failed: {e}")  # noqa
 
         finally:
-            gripper_controller.disconnect_gripper()
-            self.home(home)
+            if gripper_controller:
+                try:
+                    self.logger.info("Disconnecting gripper...")
+                    gripper_controller.disconnect_gripper()
+                except Exception as e:
+                    self.logger.error(f"Error disconnecting gripper: {e}\n{traceback.format_exc()}")
+
+            try:
+                self.home(home)
+            except Exception as e:
+                self.logger.error(f"Error returning to home after gripper pick: {e}\n{traceback.format_exc()}")
 
     def gripper_place(
         self,
@@ -418,17 +501,23 @@ class UR:
         """
 
         if not target:
-            raise Exception("Please provide the target location to make a place")
+            raise ValueError("Please provide the target location to make a place")
 
-        self.home(home)
+        gripper_controller = None
 
         try:
+            self.logger.info(f"Starting gripper place to {target}")
+            self.home(home)
+
             gripper_controller = FingerGripperController(
                 hostname=self.hostname,
                 ur=self.ur_connection,
                 resource_client=self.resource_client,
                 gripper_resource_id=self.tool_resource_id,
+                logger=self.logger,
             )
+
+            self.logger.info("Connecting to gripper...")
             gripper_controller.connect_gripper()
             gripper_controller.velocity = self.velocity
             gripper_controller.acceleration = self.acceleration
@@ -438,20 +527,34 @@ class UR:
             if gripper_open:
                 gripper_controller.gripper_open = gripper_open
 
+            self.logger.info("Executing gripper place...")
             gripper_controller.place(
                 target=target,
                 approach_axis=target_approach_axis,
                 approach_distance=target_approach_distance,
             )
-            print("Finished gripper place")
-            gripper_controller.disconnect_gripper()
+            self.logger.info("Gripper place completed successfully")
 
-        except Exception as err:
-            print(err)
+        except socket.timeout as e:
+            self.logger.error(f"Socket timeout during gripper place: {e}\n{traceback.format_exc()}")
+            raise GripperError(f"Gripper communication timed out during place: {e}")  # noqa
+
+        except Exception as e:
+            self.logger.error(f"Error in gripper place action: {e}\n{traceback.format_exc()}")
+            raise GripperError(f"Gripper place failed: {e}")  # noqa
 
         finally:
-            gripper_controller.disconnect_gripper()
-            self.home(home)
+            if gripper_controller:
+                try:
+                    self.logger.info("Disconnecting gripper...")
+                    gripper_controller.disconnect_gripper()
+                except Exception as e:
+                    self.logger.error(f"Error disconnecting gripper: {e}\n{traceback.format_exc()}")
+
+            try:
+                self.home(home)
+            except Exception as e:
+                self.logger.error(f"Error returning to home after gripper place: {e}\n{traceback.format_exc()}")
 
     def gripper_screw_transfer(
         self,
@@ -498,7 +601,9 @@ class UR:
             )
 
         except Exception as err:
-            print(err)
+            self.logger.error(
+                f"Error during gripper screw transfer: {err}\n{traceback.format_exc()}"
+            )  # Added exc_info=True for detailed logging
 
         finally:
             gripper_controller.disconnect_gripper()
@@ -541,7 +646,7 @@ class UR:
             gripper_controller.disconnect_gripper()
 
         except Exception as err:
-            print(err)
+            self.logger.error(f"{err}\n{traceback.format_exc()}")
 
     def place_cap(
         self,
@@ -574,7 +679,7 @@ class UR:
             gripper_controller.disconnect_gripper()
 
         except Exception as err:
-            print(err)
+            self.logger.error(f"{err}\n{traceback.format_exc()}")
 
     def pick_and_flip_object(
         self,
@@ -617,7 +722,7 @@ class UR:
             gripper_controller.disconnect_gripper()
             self.home(home)
         except Exception as er:
-            print(er)
+            self.logger.error(er)
         finally:
             gripper_controller.disconnect_gripper()
 
@@ -662,7 +767,7 @@ class UR:
             )
             sr.screwdriver.disconnect()
         except Exception as err:
-            print(err)
+            self.logger.error(err)
 
         self.home(home)
 
@@ -712,9 +817,9 @@ class UR:
             if tip_trash:
                 pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
-            print("Disconnecting from the pipette")
+            self.logger.info("Disconnecting from the pipette")
         except Exception as err:
-            print(err)
+            self.logger.error(err)
 
     def pipette_pick_and_move_sample(
         self,
@@ -761,9 +866,9 @@ class UR:
                 volume=volume,
             )
             pipette.disconnect_pipette()
-            print("Disconnecting from the pipette")
+            self.logger.info("Disconnecting from the pipette")
         except Exception as err:
-            print(err)
+            self.logger.error(err)
 
     def pipette_dispense_and_retrieve(
         self,
@@ -803,9 +908,9 @@ class UR:
                 pipette.eject_tip(eject_tip_loc=tip_trash, approach_axis="y")
             pipette.disconnect_pipette()
             self.home(home, linear_motion=linear_motion)
-            print("Disconnecting from the pipette")
+            self.logger.info("Disconnecting from the pipette")
         except Exception as err:
-            print(err)
+            self.logger.error(err)
 
     def run_droplet(
         self,
@@ -859,7 +964,7 @@ class UR:
         self.ur_dashboard.run_program()
         sleep(5)
 
-        print("Running the URP program: ", program_name)
+        self.logger.info(f"Running the URP program: {program_name}")
         time_elapsed = 0
 
         program_status = "BUSY"

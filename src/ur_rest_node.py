@@ -1,5 +1,6 @@
 """REST-based node for UR robots"""
 
+import traceback
 from typing import Optional, Union
 
 from madsci.common.types.action_types import ActionFailed, ActionSucceeded
@@ -12,6 +13,7 @@ from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
 
 from ur_interface.ur import UR
+from ur_interface.ur_error_types import GripperError, URMovementError
 from ur_interface.ur_kinematics import get_pose_from_joint_angles
 from ur_interface.ur_tools.gripper_controller import FingerGripperController
 
@@ -46,11 +48,12 @@ class URNode(RestNode):
                 resource_client=self.resource_client if self.config.use_resources else None,
                 tcp_pose=self.config.tcp_pose,
                 base_reference_frame=self.config.base_reference_frame,
+                logger=self.logger,
             )
             self.tool_resource = None
             self.current_location = None
         except Exception as err:
-            self.logger.log_error(f"Error starting the UR Node: {err}")
+            self.logger.log_error(f"Error starting the UR Node: {err}\n{traceback.format_exc()}")
             self.startup_has_run = False
         else:
             self.startup_has_run = True
@@ -282,38 +285,54 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
+        try:
+            if (
+                self.config.use_resources
+                and isinstance(source, LocationArgument)
+                and isinstance(target, LocationArgument)
+            ):
+                self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+                source_resource = self.resource_client.get_resource(source.resource_id)
+                target_resource = self.resource_client.get_resource(target.resource_id)
+                if source_resource.quantity == 0:
+                    raise ValueError("Resource manager: Source location is empty!")
+                if target_resource.quantity != 0:
+                    raise ValueError("Resource manager: Target is occupied!")
 
-        if self.config.use_resources and isinstance(source, LocationArgument) and isinstance(target, LocationArgument):
-            self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
-            source_resource = self.resource_client.get_resource(source.resource_id)
-            target_resource = self.resource_client.get_resource(target.resource_id)
-            if source_resource.quantity == 0:
-                raise Exception("Resource manager: Source location is empty!")
-            if target_resource.quantity != 0:
-                raise Exception("Resource manager: Target is occupied!")
+            if joint_angle_locations and isinstance(source, LocationArgument) and isinstance(target, LocationArgument):
+                source.representation = get_pose_from_joint_angles(
+                    joints=source.representation, robot_model=self.config.ur_model
+                )
+                target.representation = get_pose_from_joint_angles(
+                    joints=target.representation, robot_model=self.config.ur_model
+                )
+            elif joint_angle_locations and isinstance(source, list) and isinstance(target, list):
+                source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
+                target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
-        if joint_angle_locations and isinstance(source, LocationArgument) and isinstance(target, LocationArgument):
-            source.representation = get_pose_from_joint_angles(
-                joints=source.representation, robot_model=self.config.ur_model
+            self.ur_interface.gripper_transfer(
+                home=home,
+                source=source,
+                target=target,
+                source_approach_distance=source_approach_distance,
+                target_approach_distance=target_approach_distance,
+                source_approach_axis=source_approach_axis,
+                target_approach_axis=target_approach_axis,
+                gripper_open=gripper_open,
+                gripper_close=gripper_close,
             )
-            target.representation = get_pose_from_joint_angles(
-                joints=target.representation, robot_model=self.config.ur_model
-            )
-        elif joint_angle_locations and isinstance(source, list) and isinstance(target, list):
-            source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
-            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
-        self.ur_interface.gripper_transfer(
-            home=home,
-            source=source,
-            target=target,
-            source_approach_distance=source_approach_distance,
-            target_approach_distance=target_approach_distance,
-            source_approach_axis=source_approach_axis,
-            target_approach_axis=target_approach_axis,
-            gripper_open=gripper_open,
-            gripper_close=gripper_close,
-        )
+        except GripperError as err:
+            self.logger.log_error(f"Gripper error during transfer: {err}")
+            return ActionFailed(errors=str(err))
+
+        except URMovementError as err:
+            self.logger.log_error(f"Movement error during transfer: {err}")
+            return ActionFailed(errors=str(err))
+
+        except Exception as err:
+            self.logger.log_error(f"Unexpected error during gripper transfer: {err}")
+            return ActionFailed(errors=str(err))
 
     @action()
     def gripper_pick(
@@ -326,26 +345,39 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
-        if self.config.use_resources:
-            self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
-            source_resource = self.resource_client.get_resource(source.resource_id)
-            if source_resource.quantity == 0:
-                raise Exception("Resource manager: Source location is empty!")
+        try:
+            if self.config.use_resources:
+                self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+                source_resource = self.resource_client.get_resource(source.resource_id)
+                if source_resource.quantity == 0:
+                    raise ValueError("Resource manager: Source location is empty!")
 
-        if joint_angle_locations and isinstance(source, LocationArgument):
-            source.representation = get_pose_from_joint_angles(
-                joints=source.representation, robot_model=self.config.ur_model
+            if joint_angle_locations and isinstance(source, LocationArgument):
+                source.representation = get_pose_from_joint_angles(
+                    joints=source.representation, robot_model=self.config.ur_model
+                )
+            elif joint_angle_locations and isinstance(source, list):
+                source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
+            self.logger.log_info(f"Picking from source: {source.representation}")
+            self.ur_interface.gripper_pick(
+                home=home,
+                source=source,
+                source_approach_distance=source_approach_distance,
+                source_approach_axis=source_approach_axis,
+                gripper_close=gripper_close,
             )
-        elif joint_angle_locations and isinstance(source, list):
-            source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
-        self.logger.log_info(f"Picking from source: {source.representation}")
-        self.ur_interface.gripper_pick(
-            home=home,
-            source=source,
-            source_approach_distance=source_approach_distance,
-            source_approach_axis=source_approach_axis,
-            gripper_close=gripper_close,
-        )
+
+        except GripperError as err:
+            self.logger.log_error(f"Gripper error during pick: {err}")
+            return ActionFailed(errors=str(err))
+
+        except URMovementError as err:
+            self.logger.log_error(f"Movement error during pick: {err}")
+            return ActionFailed(errors=str(err))
+
+        except Exception as err:
+            self.logger.log_error(f"Unexpected error during gripper pick: {err}")
+            return ActionFailed(errors=str(err))
 
     @action()
     def gripper_place(
@@ -358,27 +390,38 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Use the gripper to place a piece of labware at the target."""
+        try:
+            if self.config.use_resources and isinstance(target, LocationArgument):
+                self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+                target_resource = self.resource_client.get_resource(target.resource_id)
+                if target_resource.quantity != 0:
+                    raise ValueError("Resource manager: Target is occupied!")
 
-        if self.config.use_resources and isinstance(target, LocationArgument):
-            self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
-            target_resource = self.resource_client.get_resource(target.resource_id)
-            if target_resource.quantity != 0:
-                raise Exception("Resource manager: Target is occupied!")
+            if joint_angle_locations and isinstance(target, LocationArgument):
+                target.representation = get_pose_from_joint_angles(
+                    joints=target.representation, robot_model=self.config.ur_model
+                )
+            elif joint_angle_locations and isinstance(target, list):
+                target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
-        if joint_angle_locations and isinstance(target, LocationArgument):
-            target.representation = get_pose_from_joint_angles(
-                joints=target.representation, robot_model=self.config.ur_model
+            self.ur_interface.gripper_place(
+                home=home,
+                target=target,
+                target_approach_distance=target_approach_distance,
+                target_approach_axis=target_approach_axis,
+                gripper_open=gripper_open,
             )
-        elif joint_angle_locations and isinstance(target, list):
-            target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
+        except GripperError as err:
+            self.logger.log_error(f"Gripper error during place: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
 
-        self.ur_interface.gripper_place(
-            home=home,
-            target=target,
-            target_approach_distance=target_approach_distance,
-            target_approach_axis=target_approach_axis,
-            gripper_open=gripper_open,
-        )
+        except URMovementError as err:
+            self.logger.log_error(f"Movement error during place: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
+
+        except Exception as err:
+            self.logger.log_error(f"Unexpected error during gripper place: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
 
     @action(
         name="pick_tool",
@@ -748,7 +791,7 @@ class URNode(RestNode):
         """Reset the ur robot"""
         self.logger.log("Resetting node...")
         # If resetting startup handler does not work, try re-initializing the dashboard
-        # self.ur_interface.ur_dashboard.initialize()
+        self.ur_interface.disconnect()
         result = super().reset()
         self.logger.log("Node reset.")
         return result
