@@ -1,22 +1,19 @@
 """REST-based node for UR robots"""
 
+import traceback
 from typing import Optional, Union
 
-from madsci.client.resource_client import ResourceClient
 from madsci.common.types.action_types import ActionFailed, ActionSucceeded
 from madsci.common.types.admin_command_types import AdminCommandResponse
-from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from madsci.common.types.node_types import RestNodeConfig
-from madsci.common.types.resource_types.definitions import (
-    PoolResourceDefinition,
-    SlotResourceDefinition,
-)
+from madsci.common.types.resource_types import Pool, Slot
 from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
 
 from ur_interface.ur import UR
+from ur_interface.ur_error_types import GripperError, URMovementError
 from ur_interface.ur_kinematics import get_pose_from_joint_angles
 from ur_interface.ur_tools.gripper_controller import FingerGripperController
 
@@ -24,43 +21,107 @@ from ur_interface.ur_tools.gripper_controller import FingerGripperController
 class URNodeConfig(RestNodeConfig):
     """Configuration for the UR node module."""
 
-    ur_ip: str
+    ur_ip: Optional[str] = None
     tcp_pose: list = [0, 0, 0, 0, 0, 0]
-    base_reference_frame: list = None
+    base_reference_frame: Optional[list] = None
     ur_model: str = "UR5e"
+    use_resources: bool = True
 
 
 class URNode(RestNode):
     """A Rest Node object to control UR robots"""
 
     ur_interface: UR = None
+    config: URNodeConfig = URNodeConfig()
     config_model = URNodeConfig
 
     def startup_handler(self) -> None:
         """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
         try:
-            if self.config.resource_server_url:
-                self.resource_client = ResourceClient(self.config.resource_server_url)
-                self.resource_owner = OwnershipInfo(node_id=self.node_definition.node_id)
-
-            else:
-                self.resource_client = None
+            # Create templates
+            if self.config.use_resources:
+                self._create_ur_templates()
 
             self.logger.log("Node initializing...")
             self.ur_interface = UR(
                 hostname=self.config.ur_ip,
-                resource_client=self.resource_client,
+                resource_client=self.resource_client if self.config.use_resources else None,
                 tcp_pose=self.config.tcp_pose,
                 base_reference_frame=self.config.base_reference_frame,
+                logger=self.logger,
             )
             self.tool_resource = None
-
+            self.current_location = None
         except Exception as err:
-            self.logger.log_error(f"Error starting the UR Node: {err}")
+            self.logger.log_error(f"Error starting the UR Node: {err}\n{traceback.format_exc()}")
             self.startup_has_run = False
         else:
             self.startup_has_run = True
             self.logger.log("UR node initialized!")
+
+    def _create_ur_templates(self) -> None:
+        """Create all UR-specific resource templates."""
+
+        # 1. Gripper slot template
+        gripper_slot = Slot(
+            resource_name="robotiq_finger_gripper",
+            resource_class="URGripper",
+            capacity=1,
+            attributes={
+                "gripper_type": "robotiq_finger",
+                "max_grip_force": 235.0,
+                "min_grip_position": 0,
+                "max_grip_position": 255,
+                "description": "UR Robotiq finger gripper slot",
+            },
+        )
+
+        self.resource_client.init_template(
+            resource=gripper_slot,
+            template_name="robotiq_finger_gripper_slot",
+            description="Template for UR Robotiq finger gripper slot. Used to track what the gripper is holding.",
+            required_overrides=["resource_name"],
+            tags=["ur", "gripper", "slot", "robotiq"],
+            created_by=self.node_definition.node_id,
+            version="1.0.0",
+        )
+
+        # Initialize gripper resource from template
+        self.gripper_resource = self.resource_client.create_resource_from_template(
+            template_name="robotiq_finger_gripper_slot",
+            resource_name=f"ur_gripper_{self.node_definition.node_name}",
+            add_to_database=True,
+        )
+
+        # 2. Pipette pool template
+        pipette_pool = Pool(
+            resource_name="tricontinent_pipette",
+            resource_class="URPipette",
+            capacity=1000.0,
+            attributes={
+                "pipette_type": "tricontinent",
+                "min_volume": 1.0,
+                "max_volume": 1000.0,
+                "default_speed": 150,
+                "description": "Tricontinent pipette pool for tracking tips and aspirated liquid",
+            },
+        )
+
+        self.resource_client.init_template(
+            resource=pipette_pool,
+            template_name="tricontinent_pipette_pool",
+            description="Template for Tricontinent pipette pool. Tracks pipette tips and aspirated liquids.",
+            required_overrides=["resource_name"],
+            tags=["ur", "pipette", "pool", "liquid-handling"],
+            created_by=self.node_definition.node_id,
+            version="1.0.0",
+        )
+        # Initialize pipette resource from template
+        self.pipette_resource = self.resource_client.create_resource_from_template(
+            template_name="tricontinent_pipette_pool",
+            resource_name=f"ur_pipette_{self.node_definition.node_name}",
+            add_to_database=True,
+        )
 
     def shutdown_handler(self) -> None:
         """Called to shutdown the node. Should be used to close connections to devices or release any other resources."""
@@ -74,38 +135,42 @@ class URNode(RestNode):
         except Exception as err:
             self.logger.log_error(f"Error shutting down the UR Node: {err}")
 
+    def status_handler(self):
+        """Periodically called to update the current status of the node."""
+        if not self.node_status.busy:
+            if self.ur_interface:
+                # Getting robot state
+                self.ur_interface.ur_dashboard.get_overall_robot_status()
+                movement_state, self.current_location = self.ur_interface.get_movement_state()
+            else:
+                self.logger.log_error("UR interface is not initialized")
+                return
+
+            if "PROTECTIVE_STOP" in self.ur_interface.ur_dashboard.safety_status:
+                self.node_status.stopped = True
+                self.logger.log_error("UR is in PROTECTIVE_STOP")
+
+            if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
+                self.node_status.errored = True
+                self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
+            else:
+                self.node_status.errored = False
+                self.node_status.stopped = False
+
+            if movement_state == "BUSY":
+                self.node_status.busy = True
+                self.logger.info("BUSY")
+            elif movement_state == "READY":
+                self.node_status.busy = False
+        else:
+            if len(self.node_status.running_actions) == 0:
+                self.node_status.busy = False
+
     def state_handler(self) -> None:
         """Periodically called to update the current state of the node."""
         if self.ur_interface:
-            # Getting robot state
-            self.ur_interface.ur_dashboard.get_overall_robot_status()
-            movement_state, current_location = self.ur_interface.get_movement_state()
-        else:
-            self.logger.log_error("UR interface is not initialized")
-            return
-        if "NORMAL" not in self.ur_interface.ur_dashboard.safety_status:
             self.node_state = {
-                "ur_status_code": "ERROR",
-                "current_joint_angles": current_location,
-            }
-            self.logger.log_error(f"UR ERROR: {self.ur_interface.ur_dashboard.safety_status}")
-
-        elif movement_state == "BUSY":
-            self.node_state = {
-                "ur_status_code": "BUSY",
-                "current_joint_angles": current_location,
-            }
-            self.logger.info("BUSY")
-
-        elif movement_state == "READY":
-            self.node_state = {
-                "ur_status_code": "READY",
-                "current_joint_angles": current_location,
-            }
-        else:
-            self.node_state = {
-                "ur_status_code": "UNKOWN",
-                "current_joint_angles": current_location,
+                "current_joint_angles": self.current_location,
             }
 
     @action(name="getj", description="Get joint angles")
@@ -126,7 +191,6 @@ class URNode(RestNode):
     def set_freedrive(self, timeout: Annotated[int, "how long to do freedrive"] = 60):
         """set the robot into freedrive"""
         self.ur_interface.ur_connection.set_freedrive(True, timeout)
-        return ActionSucceeded()
 
     @action(name="set_movement_params", description="Set speed and acceleration parameters")
     def set_movement_params(
@@ -134,8 +198,8 @@ class URNode(RestNode):
         tcp_pose: Optional[list] = None,
         velocity: Optional[float] = None,
         acceleration: Optional[float] = None,
-        gripper_speed: Optional[float] = None,
-        gripper_force: Optional[float] = None,
+        gripper_speed: Optional[int] = None,
+        gripper_force: Optional[int] = None,
     ):
         """Configure the robot's movement parameters for subsequent transfers"""
         if tcp_pose is not None:
@@ -148,41 +212,39 @@ class URNode(RestNode):
             self.ur_interface.gripper_speed = gripper_speed
         if gripper_force is not None:
             self.ur_interface.gripper_force = gripper_force
-        return ActionSucceeded()
 
     @action(name="movej", description="Move the robot using joint angles")
     def movej(
         self,
-        joints: Annotated[Union[LocationArgument, list], "Joint angles to move to"],
+        joints: Annotated[LocationArgument, "Joint angles to move to"],
         acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
         velocity: Annotated[Optional[float], "Velocity"] = 0.6,
     ):
         """Move the robot using joint angles"""
         try:
-            self.logger.log(f"Move joints: {joints.location}")
-            self.ur_interface.ur_connection.movej(joints=joints.location, acc=acceleration, vel=velocity)
+            self.logger.log(f"Move joints: {joints.representation}")
+            self.ur_interface.ur_connection.movej(joints=joints.representation, acc=acceleration, vel=velocity)
 
         except Exception as err:
             self.logger.log_error(err)
-
-        return ActionSucceeded()
 
     @action(name="movel", description="Move the robot using linar motion")
     def movel(
         self,
-        target: Annotated[Union[LocationArgument, list], "Linear location to move to"],
+        target: Annotated[LocationArgument, "Linear location to move to"],
         acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
         velocity: Annotated[Optional[float], "Velocity"] = 0.6,
+        joint_angle_locations: Annotated[bool, "Use joint angles for the location"] = True,
     ):
         """Move the robot using linear motion"""
         try:
-            self.logger.log(f"Move location: {target.location}")
-            self.ur_interface.ur_connection.movel(tpose=target.location, acc=acceleration, vel=velocity)
+            self.logger.log(f"Move location: {target.representation}")
+            if joint_angle_locations:
+                target.representation = get_pose_from_joint_angles(target.representation)
+            self.ur_interface.ur_connection.movel(tpose=target.representation, acc=acceleration, vel=velocity)
 
         except Exception as err:
             self.logger.log_error(err)
-
-        return ActionSucceeded()
 
     @action(name="toggle_gripper", description="Move the robot gripper")
     def toggle_gripper(
@@ -191,26 +253,20 @@ class URNode(RestNode):
         close: Annotated[bool, "Close?"] = False,
     ):
         """Open or close the robot gripper."""
-        try:
-            gripper = FingerGripperController(hostname=self.config.ur_ip, ur=self.ur_interface)
-            self.logger.log("Connecting to gripper...")
-            gripper.connect_gripper()
-            self.logger.log("Gripper connected")
-            if open:
-                gripper.open_gripper()
-                self.logger.log("Gripper opened")
-            elif close:
-                gripper.close_gripper()
-                self.logger.log("Gripper closed")
-            else:
-                self.logger.log("No action taken")
-
-        except Exception as err:
-            self.logger.log_error(err)
+        gripper = FingerGripperController(hostname=self.config.ur_ip, ur=self.ur_interface, logger=self.logger)
+        self.logger.info("Toggle gripper: Connecting to gripper...")
+        gripper.connect_gripper()
+        self.logger.info("Toggle gripper: Gripper connected")
+        if open:
+            gripper.open_gripper()
+            self.logger.info("Toggle gripper: Gripper opened")
+        elif close:
+            gripper.close_gripper()
+            self.logger.info("Toggle gripper: Gripper closed")
         else:
-            gripper.disconnect_gripper()
-            self.logger.log("Gripper disconnected")
-        return ActionSucceeded()
+            self.logger.info("Toggle gripper: No action taken")
+        gripper.disconnect_gripper()
+        self.logger.info("Toggle gripper: Gripper disconnected")
 
     @action(
         name="gripper_transfer",
@@ -231,24 +287,27 @@ class URNode(RestNode):
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
         try:
-            # Check if the source, target and home locations are provided
-            if not source or not target or not home:  # Return Fail
-                return ActionFailed(errors="Source, target and home locations must be provided")
+            if (
+                self.config.use_resources
+                and isinstance(source, LocationArgument)
+                and isinstance(target, LocationArgument)
+            ):
+                self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+                source_resource = self.resource_client.get_resource(source.resource_id)
+                target_resource = self.resource_client.get_resource(target.resource_id)
+                if source_resource.quantity == 0:
+                    raise ValueError("Resource manager: Source location is empty!")
+                if target_resource.quantity != 0:
+                    raise ValueError("Resource manager: Target is occupied!")
 
-            if self.resource_client:
-                # If the gripper resource is not initialized, initialize it
-                self.tool_resource = self.resource_client.init_resource(
-                    SlotResourceDefinition(
-                        resource_name="ur_gripper",
-                        owner=self.resource_owner,
-                    )
+            if joint_angle_locations and isinstance(source, LocationArgument) and isinstance(target, LocationArgument):
+                source.representation = get_pose_from_joint_angles(
+                    joints=source.representation, robot_model=self.config.ur_model
                 )
-                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
-
-            if joint_angle_locations and isinstance(source, LocationArgument):
-                source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-                target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
-            elif joint_angle_locations and isinstance(source, list):
+                target.representation = get_pose_from_joint_angles(
+                    joints=target.representation, robot_model=self.config.ur_model
+                )
+            elif joint_angle_locations and isinstance(source, list) and isinstance(target, list):
                 source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
                 target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
@@ -263,16 +322,24 @@ class URNode(RestNode):
                 gripper_open=gripper_open,
                 gripper_close=gripper_close,
             )
-        except Exception as err:
-            return ActionFailed(errors=err)
 
-        return ActionSucceeded()
+        except GripperError as err:
+            self.logger.log_error(f"Gripper error during transfer: {err}")
+            return ActionFailed(errors=str(err))
+
+        except URMovementError as err:
+            self.logger.log_error(f"Movement error during transfer: {err}")
+            return ActionFailed(errors=str(err))
+
+        except Exception as err:
+            self.logger.log_error(f"Unexpected error during gripper transfer: {err}")
+            return ActionFailed(errors=str(err))
 
     @action()
     def gripper_pick(
         self,
-        home: Annotated[Union[LocationArgument, list], "Home location"],
-        source: Annotated[Union[LocationArgument, list], "Location to transfer sample from"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Location to transfer sample from"],
         source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
@@ -280,21 +347,19 @@ class URNode(RestNode):
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
         try:
-            if self.resource_client:
-                # If the gripper resource is not initialized, initialize it
-                self.tool_resource = self.resource_client.init_resource(
-                    SlotResourceDefinition(
-                        resource_name="ur_gripper",
-                        owner=self.resource_owner,
-                    )
-                )
-                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+            if self.config.use_resources:
+                self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+                source_resource = self.resource_client.get_resource(source.resource_id)
+                if source_resource.quantity == 0:
+                    raise ValueError("Resource manager: Source location is empty!")
 
             if joint_angle_locations and isinstance(source, LocationArgument):
-                source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
+                source.representation = get_pose_from_joint_angles(
+                    joints=source.representation, robot_model=self.config.ur_model
+                )
             elif joint_angle_locations and isinstance(source, list):
                 source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
-
+            self.logger.log_info(f"Picking from source: {source.representation}")
             self.ur_interface.gripper_pick(
                 home=home,
                 source=source,
@@ -302,16 +367,24 @@ class URNode(RestNode):
                 source_approach_axis=source_approach_axis,
                 gripper_close=gripper_close,
             )
-        except Exception as err:
-            return ActionFailed(errors=err)
 
-        return ActionSucceeded()
+        except GripperError as err:
+            self.logger.log_error(f"Gripper error during pick: {err}")
+            return ActionFailed(errors=str(err))
+
+        except URMovementError as err:
+            self.logger.log_error(f"Movement error during pick: {err}")
+            return ActionFailed(errors=str(err))
+
+        except Exception as err:
+            self.logger.log_error(f"Unexpected error during gripper pick: {err}")
+            return ActionFailed(errors=str(err))
 
     @action()
     def gripper_place(
         self,
-        home: Annotated[Union[LocationArgument, list], "Home location"],
-        target: Annotated[Union[LocationArgument, list], "Location to transfer sample to"],
+        home: Annotated[LocationArgument, "Home location"],
+        target: Annotated[LocationArgument, "Location to transfer sample to"],
         target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
@@ -319,18 +392,16 @@ class URNode(RestNode):
     ):
         """Use the gripper to place a piece of labware at the target."""
         try:
-            if self.resource_client:
-                # If the gripper resource is not initialized, initialize it
-                self.tool_resource = self.resource_client.init_resource(
-                    SlotResourceDefinition(
-                        resource_name="ur_gripper",
-                        owner=self.resource_owner,
-                    )
-                )
-                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
+            if self.config.use_resources and isinstance(target, LocationArgument):
+                self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
+                target_resource = self.resource_client.get_resource(target.resource_id)
+                if target_resource.quantity != 0:
+                    raise ValueError("Resource manager: Target is occupied!")
 
             if joint_angle_locations and isinstance(target, LocationArgument):
-                target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+                target.representation = get_pose_from_joint_angles(
+                    joints=target.representation, robot_model=self.config.ur_model
+                )
             elif joint_angle_locations and isinstance(target, list):
                 target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
@@ -341,9 +412,17 @@ class URNode(RestNode):
                 target_approach_axis=target_approach_axis,
                 gripper_open=gripper_open,
             )
+        except GripperError as err:
+            self.logger.log_error(f"Gripper error during place: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
+
+        except URMovementError as err:
+            self.logger.log_error(f"Movement error during place: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
+
         except Exception as err:
-            return ActionFailed(errors=err)
-        return ActionSucceeded()
+            self.logger.log_error(f"Unexpected error during gripper place: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
 
     @action(
         name="pick_tool",
@@ -359,27 +438,20 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Pick a tool with the UR"""
-
-        if not tool_loc or not home:  # Return Fail
-            return ActionFailed(errors="tool_loc and home locations must be provided")
-
         if joint_angle_locations and isinstance(tool_loc, LocationArgument):
-            tool_loc.location = get_pose_from_joint_angles(joints=tool_loc.location, robot_model=self.config.ur_model)
+            tool_loc.representation = get_pose_from_joint_angles(
+                joints=tool_loc.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(tool_loc, list):
             tool_loc = get_pose_from_joint_angles(joints=tool_loc, robot_model=self.config.ur_model)
 
-        try:
-            self.ur_interface.pick_tool(
-                home=home,
-                tool_loc=tool_loc,
-                docking_axis=docking_axis,
-                payload=payload,
-                tool_name=tool_name,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
-
-        return ActionSucceeded()
+        self.ur_interface.pick_tool(
+            home=home,
+            tool_loc=tool_loc,
+            docking_axis=docking_axis,
+            payload=payload,
+            tool_name=tool_name,
+        )
 
     @action(name="Place_tool", description="Places the attached tool back to the provided tool docking location")
     def place_tool(
@@ -391,24 +463,19 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Place a tool with the UR"""
-        try:
-            if joint_angle_locations and isinstance(tool_docking, LocationArgument):
-                tool_docking.location = get_pose_from_joint_angles(
-                    joints=tool_docking.location, robot_model=self.config.ur_model
-                )
-            elif joint_angle_locations and isinstance(tool_docking, list):
-                tool_docking = get_pose_from_joint_angles(joints=tool_docking, robot_model=self.config.ur_model)
-
-            self.ur_interface.place_tool(
-                home=home,
-                tool_loc=tool_docking,
-                docking_axis=docking_axis,
-                tool_name=tool_name,
+        if joint_angle_locations and isinstance(tool_docking, LocationArgument):
+            tool_docking.representation = get_pose_from_joint_angles(
+                joints=tool_docking.representation, robot_model=self.config.ur_model
             )
-        except Exception as err:
-            return ActionFailed(errors=err)
+        elif joint_angle_locations and isinstance(tool_docking, list):
+            tool_docking = get_pose_from_joint_angles(joints=tool_docking, robot_model=self.config.ur_model)
 
-        return ActionSucceeded()
+        self.ur_interface.place_tool(
+            home=home,
+            tool_loc=tool_docking,
+            docking_axis=docking_axis,
+            tool_name=tool_name,
+        )
 
     @action(
         name="gripper_screw_transfer",
@@ -427,34 +494,30 @@ class URNode(RestNode):
     ):
         """Make a screwdriving transfer using Robotiq gripper and custom screwdriving bits with UR"""
 
-        if not home or not screwdriver_loc or not screw_loc or not target:
-            return ActionFailed(errors="screwdriver_loc, screw_loc and home locations must be provided")
-
         if joint_angle_locations and isinstance(screwdriver_loc, LocationArgument):
-            screwdriver_loc.location = get_pose_from_joint_angles(
-                joints=screwdriver_loc.location, robot_model=self.config.ur_model
+            screwdriver_loc.representation = get_pose_from_joint_angles(
+                joints=screwdriver_loc.representation, robot_model=self.config.ur_model
             )
-            screw_loc.location = get_pose_from_joint_angles(joints=screw_loc.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            screw_loc.representation = get_pose_from_joint_angles(
+                joints=screw_loc.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(screwdriver_loc, list):
             screwdriver_loc = get_pose_from_joint_angles(joints=screwdriver_loc, robot_model=self.config.ur_model)
             screw_loc = get_pose_from_joint_angles(joints=screw_loc, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
-        try:
-            self.ur_interface.gripper_screw_transfer(
-                home=home,
-                screwdriver_loc=screwdriver_loc,
-                screw_loc=screw_loc,
-                screw_time=screw_time,
-                target=target,
-                gripper_open=gripper_open,
-                gripper_close=gripper_close,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
-
-        return ActionSucceeded()
+        self.ur_interface.gripper_screw_transfer(
+            home=home,
+            screwdriver_loc=screwdriver_loc,
+            screw_loc=screw_loc,
+            screw_time=screw_time,
+            target=target,
+            gripper_open=gripper_open,
+            gripper_close=gripper_close,
+        )
 
     @action(
         name="pipette_transfer",
@@ -471,43 +534,34 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Make a pipette transfer for the defined volume with UR"""
-        if not home or not source or not target or not tip_loc or not tip_trash:
-            return ActionFailed(errors="home, source, target, tip_loc and tip_trash locations must be provided")
 
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
-            tip_loc.location = get_pose_from_joint_angles(joints=tip_loc.location, robot_model=self.config.ur_model)
-            tip_trash.location = get_pose_from_joint_angles(joints=tip_trash.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
+            tip_loc.representation = get_pose_from_joint_angles(
+                joints=tip_loc.representation, robot_model=self.config.ur_model
+            )
+            tip_trash.representation = get_pose_from_joint_angles(
+                joints=tip_trash.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
             tip_loc = get_pose_from_joint_angles(joints=tip_loc, robot_model=self.config.ur_model)
             tip_trash = get_pose_from_joint_angles(joints=tip_trash, robot_model=self.config.ur_model)
 
-        try:
-            if self.resource_client:
-                # If the pipette resource is not initialized, initialize it
-                self.tool_resource = self.resource_client.init_resource(
-                    PoolResourceDefinition(
-                        resource_name="ur_pipette",
-                        owner=self.resource_owner,
-                    )
-                )
-                self.ur_interface.tool_resource_id = self.tool_resource.resource_id
-
-            self.ur_interface.pipette_transfer(
-                home=home,
-                tip_loc=tip_loc,
-                tip_trash=tip_trash,
-                source=source,
-                target=target,
-                volume=volume,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
-
-        return ActionSucceeded()
+        self.ur_interface.pipette_transfer(
+            home=home,
+            tip_loc=tip_loc,
+            tip_trash=tip_trash,
+            source=source,
+            target=target,
+            volume=volume,
+        )
 
     @action(
         name="pipette_pick_and_move_sample",
@@ -527,12 +581,14 @@ class URNode(RestNode):
         """Picks and moves a sample with UR"""
 
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
-            sample_loc.location = get_pose_from_joint_angles(
-                joints=sample_loc.location, robot_model=self.config.ur_model
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
             )
-            tip_loc.location = (
-                get_pose_from_joint_angles(joints=tip_loc.location, robot_model=self.config.ur_model)
+            sample_loc.representation = get_pose_from_joint_angles(
+                joints=sample_loc.representation, robot_model=self.config.ur_model
+            )
+            tip_loc.representation = (
+                get_pose_from_joint_angles(joints=tip_loc.representation, robot_model=self.config.ur_model)
                 if tip_loc
                 else None
             )
@@ -541,20 +597,17 @@ class URNode(RestNode):
             sample_loc = get_pose_from_joint_angles(joints=sample_loc, robot_model=self.config.ur_model)
             tip_loc = get_pose_from_joint_angles(joints=tip_loc, robot_model=self.config.ur_model) if tip_loc else None
 
-        try:
-            self.ur_interface.pipette_pick_and_move_sample(
-                home=home,
-                safe_waypoint=safe_waypoint,
-                sample_loc=sample_loc,
-                target=target,
-                volume=volume,
-                tip_loc=tip_loc,
-                pipette_speed=pipette_speed,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
+        self.ur_interface.tool_resource_id = self.pipette_resource.resource_id
 
-        return ActionSucceeded()
+        self.ur_interface.pipette_pick_and_move_sample(
+            home=home,
+            safe_waypoint=safe_waypoint,
+            sample_loc=sample_loc,
+            target=target,
+            volume=volume,
+            tip_loc=tip_loc,
+            pipette_speed=pipette_speed,
+        )
 
     @action(
         name="pipette_dispense_and_retrieve",
@@ -571,11 +624,12 @@ class URNode(RestNode):
         pipette_speed: Annotated[Optional[int], "Pipette speed in m/s"] = 150,
     ):
         """Dispenses a sample and retrieves the pipette with UR"""
-
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
-            tip_trash.location = (
-                get_pose_from_joint_angles(joints=tip_trash.location, robot_model=self.config.ur_model)
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
+            tip_trash.representation = (
+                get_pose_from_joint_angles(joints=tip_trash.representation, robot_model=self.config.ur_model)
                 if tip_trash
                 else None
             )
@@ -585,19 +639,16 @@ class URNode(RestNode):
                 get_pose_from_joint_angles(joints=tip_trash, robot_model=self.config.ur_model) if tip_trash else None
             )
 
-        try:
-            self.ur_interface.pipette_dispense_and_retrieve(
-                home=home,
-                safe_waypoint=safe_waypoint,
-                target=target,
-                volume=volume,
-                tip_trash=tip_trash,
-                pipette_speed=pipette_speed,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
+        self.ur_interface.tool_resource_id = self.pipette_resource.resource_id
 
-        return ActionSucceeded()
+        self.ur_interface.pipette_dispense_and_retrieve(
+            home=home,
+            safe_waypoint=safe_waypoint,
+            target=target,
+            volume=volume,
+            tip_trash=tip_trash,
+            pipette_speed=pipette_speed,
+        )
 
     @action(
         name="pick_and_flip_object",
@@ -615,26 +666,23 @@ class URNode(RestNode):
     ):
         """Picks and flips an object 180 degrees with UR"""
 
-        if not home or not target:
-            return ActionFailed(errors="home and target locations must be provided")
         if joint_angle_locations and isinstance(target, LocationArgument):
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(target, list):
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
-        try:
-            self.ur_interface.pick_and_flip_object(
-                home=home,
-                target=target,
-                approach_axis=approach_axis,
-                target_approach_distance=target_approach_distance,
-                gripper_open=gripper_open,
-                gripper_close=gripper_close,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
-        return ActionSucceeded()
+        self.ur_interface.pick_and_flip_object(
+            home=home,
+            target=target,
+            approach_axis=approach_axis,
+            target_approach_distance=target_approach_distance,
+            gripper_open=gripper_open,
+            gripper_close=gripper_close,
+        )
 
     @action(
         name="remove_cap",
@@ -653,27 +701,26 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Remove caps from sample vials with UR"""
-        if not home or not source or not target:
-            return ActionFailed(errors="home, source and target locations must be provided")
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
-        try:
-            self.ur_interface.remove_cap(
-                home=home,
-                source=source,
-                target=target,
-                gripper_open=gripper_open,
-                gripper_close=gripper_close,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
-        return ActionSucceeded()
+        self.ur_interface.remove_cap(
+            home=home,
+            source=source,
+            target=target,
+            gripper_open=gripper_open,
+            gripper_close=gripper_close,
+        )
 
     @action(
         name="place_cap",
@@ -689,27 +736,26 @@ class URNode(RestNode):
         joint_angle_locations: Annotated[bool, "Use joint angles for all the locations"] = True,
     ):
         """Places caps back to sample vials with UR"""
-        if not home or not source or not target:
-            return ActionFailed(errors="home, source and target locations must be provided")
         if joint_angle_locations and isinstance(source, LocationArgument):
-            source.location = get_pose_from_joint_angles(joints=source.location, robot_model=self.config.ur_model)
-            target.location = get_pose_from_joint_angles(joints=target.location, robot_model=self.config.ur_model)
+            source.representation = get_pose_from_joint_angles(
+                joints=source.representation, robot_model=self.config.ur_model
+            )
+            target.representation = get_pose_from_joint_angles(
+                joints=target.representation, robot_model=self.config.ur_model
+            )
         elif joint_angle_locations and isinstance(source, list):
             source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
             target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
 
-        try:
-            self.ur_interface.place_cap(
-                home=home,
-                source=source,
-                target=target,
-                gripper_open=gripper_open,
-                gripper_close=gripper_close,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
+        self.ur_interface.tool_resource_id = self.gripper_resource.resource_id
 
-        return ActionSucceeded()
+        self.ur_interface.place_cap(
+            home=home,
+            source=source,
+            target=target,
+            gripper_open=gripper_open,
+            gripper_close=gripper_close,
+        )
 
     @action(
         name="run_urp_program",
@@ -721,15 +767,10 @@ class URNode(RestNode):
         program_name=Annotated[str, "Program name"],
     ):
         """Run an URP program on the UR"""
-        try:
-            self.ur_interface.run_urp_program(
-                transfer_file_path=transfer_file_path,
-                program_name=program_name,
-            )
-        except Exception as err:
-            return ActionFailed(errors=err)
-
-        return ActionSucceeded()
+        self.ur_interface.run_urp_program(
+            transfer_file_path=transfer_file_path,
+            program_name=program_name,
+        )
 
     @action(
         name="set_digital_io",
@@ -741,30 +782,30 @@ class URNode(RestNode):
         value=Annotated[bool, "True/False"],
     ):
         """Sets a channel IO output on the UR"""
-        try:
-            self.ur_interface.set_digital_io(channel=channel, value=value)
-        except Exception as err:
-            return ActionFailed(errors=err)
-
-        return ActionSucceeded()
+        self.ur_interface.set_digital_io(channel=channel, value=value)
 
     def get_location(self) -> AdminCommandResponse:
         """Return the current position of the ur robot"""
-        try:
-            return AdminCommandResponse(data=self.ur_interface.ur_connection.getj())
-        except Exception:
-            return AdminCommandResponse(success=False)
+        return AdminCommandResponse(data=self.ur_interface.ur_connection.getj())
+
+    def reset(self) -> AdminCommandResponse:
+        """Reset the ur robot"""
+        self.logger.log("Resetting node...")
+        # If resetting startup handler does not work, try re-initializing the dashboard
+        self.ur_interface.disconnect()
+        result = super().reset()
+        self.logger.log("Node reset.")
+        return result
 
     @action(name="e_stop", description="Emergency stop the UR robot")
     def e_stop(self):
         """Emergency stop the UR robot"""
         try:
-            # self.ur_interface.ur_dashboard.stop_program()
             self.ur_interface.ur_dashboard.power_off()
-            self.logger.log_info("EMERRGENCY STOP EXECUTED")
-            return ActionSucceeded()
+            self.logger.log_info("EMERGENCY STOP EXECUTED")
+
         except Exception as err:
-            self.logger.log_error(f"FAILED EMERRGENCY STOP: {err}")
+            self.logger.log_error(f"FAILED EMERGENCY STOP: {err}")
             return ActionFailed(errors=str(err))
 
     def safety_stop(self) -> AdminCommandResponse:

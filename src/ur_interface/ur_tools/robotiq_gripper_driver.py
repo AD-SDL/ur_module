@@ -55,11 +55,16 @@ class RobotiqGripper:
         self._min_force = 0
         self._max_force = 255
 
+    def __del__(self):
+        """Destructor."""
+        if self.socket is not None:
+            self.disconnect()
+
     def connect(
         self,
         hostname: str,
         port: int,
-        socket_timeout: float = 2.0,
+        socket_timeout: float = 60.0,
     ) -> None:
         """Connects to a gripper at the given address.
         :param hostname: Hostname or ip.
