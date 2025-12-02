@@ -191,8 +191,8 @@ class URNode(RestNode):
         tcp_pose: Optional[list] = None,
         velocity: Optional[float] = None,
         acceleration: Optional[float] = None,
-        gripper_speed: Optional[float] = None,
-        gripper_force: Optional[float] = None,
+        gripper_speed: Optional[int] = None,
+        gripper_force: Optional[int] = None,
     ):
         """Configure the robot's movement parameters for subsequent transfers"""
         if tcp_pose is not None:

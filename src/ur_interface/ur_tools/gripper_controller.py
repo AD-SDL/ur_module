@@ -57,7 +57,8 @@ class FingerGripperController:
         """
         Connect to the gripper
         """
-        for i in range(2):
+        retry_count = 5
+        for i in range(5):
             try:
                 # GRIPPER SETUP:
                 self.gripper = RobotiqGripper()
@@ -73,7 +74,7 @@ class FingerGripperController:
                     self.open_gripper()
 
             except Exception as err:
-                print("Gripper connection failed, try {}: {} ".format(i + 1, err))
+                print("Gripper connection failed on retry {}: {} ".format(i + 1, err))
                 self.ur.set_tool_communication(
                     baud_rate=115200,
                     parity=0,
@@ -82,7 +83,8 @@ class FingerGripperController:
                     tx_idle_chars=3.5,
                 )
                 sleep(4)
-
+                if i == retry_count - 1:
+                    raise Exception("Gripper connection failed after {} retries".format(retry_count)) from err
             else:
                 print("Gripper is ready!")
 

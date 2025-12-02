@@ -1,6 +1,5 @@
 node_name: ur_module
 node_id: 01JSQ1E0GM1RGT10CS1ETK9BNH
-node_url: null
 node_description: REST API node for ur module
 node_type: device
 module_name: ur_module
@@ -23,17 +22,3 @@ capabilities:
   - reset
   - shutdown
   - unlock
-commands: {}
-is_template: false
-config_defaults:
-  host: localhost
-  port: 3030
-  ur_ip: 192.168.100.109
-  ur_model: UR5e
-  tcp_pose:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0

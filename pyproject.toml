@@ -8,8 +8,6 @@ authors = [
     {name = "Tobias Ginsburg", email = "tginsburg@anl.gov"},
 ]
 dependencies = [
-    "fastapi>=0.103.2",
-    "uvicorn>=0.21.1",
     "paramiko",
     "scp",
     "sockets",

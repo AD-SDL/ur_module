@@ -4,6 +4,7 @@ services:
     container_name: ur
     image: ghcr.io/ad-sdl/ur_module
     network_mode: host
+    env_file: .env
     environment:
       - USER_ID=${USER_ID:-1000}
       - GROUP_ID=${GROUP_ID:-1000}
