@@ -1,3 +1,4 @@
+# flake8: noqa
 from ur_interface.ur import UR
 
 ur = UR("146.139.45.23")

@@ -101,6 +101,8 @@ class UR:
         self.acceleration = 0.5
         self.velocity = 0.5
         self.robot_current_joint_angles = None
+        self.gripper_speed: int = None
+        self.gripper_force: int = None
 
         try:
             self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
