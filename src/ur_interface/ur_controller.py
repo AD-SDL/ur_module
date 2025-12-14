@@ -15,14 +15,14 @@ from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from urx import Robot
 
-from ur_interface.ur_dashboard import UR_DASHBOARD
 from ur_interface.ur_error_types import GripperError, URConnectionError, URMovementError
 from ur_interface.ur_tools.gripper_controller import FingerGripperController
 from ur_interface.ur_tools.ot_pipette_controller import OTPipetteController
 from ur_interface.ur_tools.screwdriver_controller import ScrewdriverController
 from ur_interface.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
 from ur_interface.ur_tools.wm_tool_changer_controller import WMToolChangerController
-    
+
+
 class URController:
     """
     This is the primary class for UR robots.
@@ -70,6 +70,7 @@ class URController:
         except Exception as e:
             self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
             raise
+
     def connect_ur(self, hostname: str = None) -> Robot:
         """Create connection to the UR robot"""
         for attempt in range(10):
@@ -101,7 +102,6 @@ class URController:
                 self.logger.info("Robot connection closed successfully")
         except Exception as e:
             self.logger.error(f"Error closing robot connection: {e}\n{traceback.format_exc()}")
-
 
     def _setup_logger(self) -> logging.Logger:
         """Setup default logger if none provided"""
@@ -191,17 +191,17 @@ class URController:
             self.logger.error(f"Error getting movement state: {e}\n{traceback.format_exc()}")
             raise URMovementError("Failed to get robot movement state")  # noqa
 
-    def move_to_location(self, home_location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
+    def move_to_location(self, location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
         """Moves the robot to the home location.
 
         Args: home_location: 6 joint value location
         """
         try:
             self.logger.info("Homing the robot...")
-            if isinstance(home_location, LocationArgument):
-                home_loc = home_location.location
+            if isinstance(location, LocationArgument):
+                home_loc = location.location
             else:
-                home_loc = home_location
+                home_loc = location
             if linear_motion:
                 self.ur_connection.movel(home_loc, self.velocity, self.acceleration)
             else:
