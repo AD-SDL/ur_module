@@ -7,7 +7,7 @@ from paramiko import AutoAddPolicy, SSHClient, SSHException
 from scp import SCPClient, SCPException
 
 
-class UR_DASHBOARD:
+class URDashboard:
     """
     This is a python interface to communicate with the UR Dashboard server.
     The UR can be controlled remotely by sending simple commands to the GUI over a TCP/IP socket.

@@ -61,12 +61,7 @@ class URController:
         self.gripper_force: int = None
 
         try:
-            self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
             self.ur_connection = self.connect_ur(hostname=self.hostname, logger=self.logger)
-
-            self.gripper_speed = 255
-            self.gripper_force = 255
-
             self.ur_connection.set_tcp(tcp_pose)
             if base_reference_frame:
                 self._set_base_reference_frame(base_reference_frame)
