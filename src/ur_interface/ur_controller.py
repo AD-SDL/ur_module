@@ -22,52 +22,8 @@ from ur_interface.ur_tools.ot_pipette_controller import OTPipetteController
 from ur_interface.ur_tools.screwdriver_controller import ScrewdriverController
 from ur_interface.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
 from ur_interface.ur_tools.wm_tool_changer_controller import WMToolChangerController
-
-
-class Connection:
-    """Connection to the UR robot to be shared within UR driver"""
-
-    def __init__(self, hostname: str = "146.137.240.38", logger: logging.Logger = None) -> None:
-        """Connection class that creates a connection with the robot using URx Library"""
-        self.hostname = hostname
-        self.logger = logger
-        self.connection = None
-        self.connect_ur()
-
-    def connect_ur(self):
-        """Create connection to the UR robot"""
-        for attempt in range(10):
-            try:
-                self.logger.info(f"Attempting robot connection (attempt {attempt + 1}/10)...")
-                self.connection = Robot(self.hostname)
-
-            except socket.error as e:
-                self.logger.warning(f"Robot connection attempt {attempt + 1} failed: {e}")
-                sleep(1)
-
-            except Exception as e:
-                self.logger.error(f"Unexpected error during robot connection: {e}\n{traceback.format_exc()}")
-                sleep(1)
-
-            else:
-                self.logger.info("Successful UR connection")
-                return
-
-        raise URConnectionError(f"Failed to connect to UR robot at {self.hostname} after 10 attempts")
-
-    def disconnect_ur(self):
-        """
-        Description: Disconnects the socket connection with the UR robot
-        """
-        try:
-            if self.connection:
-                self.connection.close()
-                self.logger.info("Robot connection closed successfully")
-        except Exception as e:
-            self.logger.error(f"Error closing robot connection: {e}\n{traceback.format_exc()}")
-
-
-class UR:
+    
+class URController:
     """
     This is the primary class for UR robots.
     It integrates various interfaces to achieve comprehensive control, encompassing robot initialization via the UR dashboard,
@@ -106,8 +62,7 @@ class UR:
 
         try:
             self.ur_dashboard = UR_DASHBOARD(hostname=self.hostname)
-            self.ur = Connection(hostname=self.hostname, logger=self.logger)
-            self.ur_connection = self.ur.connection
+            self.ur_connection = self.connect_ur(hostname=self.hostname, logger=self.logger)
 
             self.gripper_speed = 255
             self.gripper_force = 255
@@ -120,6 +75,38 @@ class UR:
         except Exception as e:
             self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
             raise
+    def connect_ur(self, hostname: str = None) -> Robot:
+        """Create connection to the UR robot"""
+        for attempt in range(10):
+            try:
+                self.logger.info(f"Attempting robot connection (attempt {attempt + 1}/10)...")
+                robot_connection = Robot(self.hostname)
+
+            except socket.error as e:
+                self.logger.warning(f"Robot connection attempt {attempt + 1} failed: {e}")
+                sleep(1)
+
+            except Exception as e:
+                self.logger.error(f"Unexpected error during robot connection: {e}\n{traceback.format_exc()}")
+                sleep(1)
+
+            else:
+                self.logger.info("Successful UR connection")
+                return robot_connection
+
+        raise URConnectionError(f"Failed to connect to UR robot at {self.hostname} after 10 attempts")
+
+    def disconnect_ur(self):
+        """
+        Description: Disconnects the socket connection with the UR robot
+        """
+        try:
+            if self.ur_connection:
+                self.ur_connection.close()
+                self.logger.info("Robot connection closed successfully")
+        except Exception as e:
+            self.logger.error(f"Error closing robot connection: {e}\n{traceback.format_exc()}")
+
 
     def _setup_logger(self) -> logging.Logger:
         """Setup default logger if none provided"""
@@ -209,7 +196,7 @@ class UR:
             self.logger.error(f"Error getting movement state: {e}\n{traceback.format_exc()}")
             raise URMovementError("Failed to get robot movement state")  # noqa
 
-    def home(self, home_location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
+    def move_to_location(self, home_location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
         """Moves the robot to the home location.
 
         Args: home_location: 6 joint value location

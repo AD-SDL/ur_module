@@ -1,5 +1,6 @@
 """REST-based node for UR robots"""
 
+from enum import Enum
 import traceback
 from typing import Optional, Union
 
@@ -12,11 +13,15 @@ from madsci.node_module.helpers import action
 from madsci.node_module.rest_node_module import RestNode
 from typing_extensions import Annotated
 
-from ur_interface.ur import UR
+from ur_interface.ur_controller import UR
 from ur_interface.ur_error_types import GripperError, URMovementError
 from ur_interface.ur_kinematics import get_pose_from_joint_angles
 from ur_interface.ur_tools.gripper_controller import FingerGripperController
 
+class UREndEffector(str, Enum): 
+    Robotiq2FingerGripper = "ROBOTIQ2FINGERGRIPPER"
+    SCREWDRIVER = "SCREWDRIVER"
+    PIPETTE = "PIPETTE"
 
 class URNodeConfig(RestNodeConfig):
     """Configuration for the UR node module."""
@@ -26,6 +31,7 @@ class URNodeConfig(RestNodeConfig):
     base_reference_frame: Optional[list] = None
     ur_model: str = "UR5e"
     use_resources: bool = True
+    end_effector: Optional[UREndEffector] = None
 
 
 class URNode(RestNode):
@@ -40,7 +46,8 @@ class URNode(RestNode):
         try:
             # Create templates
             if self.config.use_resources:
-                self._create_ur_templates()
+                self._create_ur_resources()
+            self.create_end_effector_controller()
 
             self.logger.log("Node initializing...")
             self.ur_interface = UR(
@@ -59,69 +66,80 @@ class URNode(RestNode):
             self.startup_has_run = True
             self.logger.log("UR node initialized!")
 
-    def _create_ur_templates(self) -> None:
+    def _create_ur_resources(self) -> None:
         """Create all UR-specific resource templates."""
+        if self.config.end_effector == UREndEffector.Robotiq2FingerGripper:
+            
+            gripper_slot = Slot(
+                resource_name="robotiq_finger_gripper",
+                resource_class="URGripper",
+                capacity=1,
+                attributes={
+                    "gripper_type": "robotiq_finger",
+                    "max_grip_force": 235.0,
+                    "min_grip_position": 0,
+                    "max_grip_position": 255,
+                    "description": "UR Robotiq finger gripper slot",
+                },
+            )
 
-        # 1. Gripper slot template
-        gripper_slot = Slot(
-            resource_name="robotiq_finger_gripper",
-            resource_class="URGripper",
-            capacity=1,
-            attributes={
-                "gripper_type": "robotiq_finger",
-                "max_grip_force": 235.0,
-                "min_grip_position": 0,
-                "max_grip_position": 255,
-                "description": "UR Robotiq finger gripper slot",
-            },
-        )
+            self.resource_client.init_template(
+                resource=gripper_slot,
+                template_name="robotiq_finger_gripper_slot",
+                description="Template for UR Robotiq finger gripper slot. Used to track what the gripper is holding.",
+                required_overrides=["resource_name"],
+                tags=["ur", "gripper", "slot", "robotiq"],
+                created_by=self.node_definition.node_id,
+                version="1.0.0",
+            )
 
-        self.resource_client.init_template(
-            resource=gripper_slot,
-            template_name="robotiq_finger_gripper_slot",
-            description="Template for UR Robotiq finger gripper slot. Used to track what the gripper is holding.",
-            required_overrides=["resource_name"],
-            tags=["ur", "gripper", "slot", "robotiq"],
-            created_by=self.node_definition.node_id,
-            version="1.0.0",
-        )
+            # Initialize gripper resource from template
+            self.gripper_resource = self.resource_client.create_resource_from_template(
+                template_name="robotiq_finger_gripper_slot",
+                resource_name=f"ur_gripper_{self.node_definition.node_name}",
+                add_to_database=True,
+            )
+        elif self.config.end_effector == UREndEffector.PIPETTE:
+            pipette_pool = Pool(
+                resource_name="tricontinent_pipette",
+                resource_class="URPipette",
+                capacity=1000.0,
+                attributes={
+                    "pipette_type": "tricontinent",
+                    "min_volume": 1.0,
+                    "max_volume": 1000.0,
+                    "default_speed": 150,
+                    "description": "Tricontinent pipette pool for tracking tips and aspirated liquid",
+                },
+            )
 
-        # Initialize gripper resource from template
-        self.gripper_resource = self.resource_client.create_resource_from_template(
-            template_name="robotiq_finger_gripper_slot",
-            resource_name=f"ur_gripper_{self.node_definition.node_name}",
-            add_to_database=True,
-        )
+            self.resource_client.init_template(
+                resource=pipette_pool,
+                template_name="tricontinent_pipette_pool",
+                description="Template for Tricontinent pipette pool. Tracks pipette tips and aspirated liquids.",
+                required_overrides=["resource_name"],
+                tags=["ur", "pipette", "pool", "liquid-handling"],
+                created_by=self.node_definition.node_id,
+                version="1.0.0",
+            )
+            # Initialize pipette resource from template
+            self.pipette_resource = self.resource_client.create_resource_from_template(
+                template_name="tricontinent_pipette_pool",
+                resource_name=f"ur_pipette_{self.node_definition.node_name}",
+                add_to_database=True,
+            )
+    def create_end_effector_controller(self) -> None:
+        """Create appropriate end-effector controller."""
+        if self.config.end_effector == UREndEffector.Robotiq2FingerGripper:
+            self.logger.log_info("Creating Robotiq 2-finger gripper controller")
+            self.gripper_controller = FingerGripperController(
+                hostname=self.config.ur_ip, ur=self.ur_interface, logger=self.logger
+            )
+        elif self.config.end_effector == UREndEffector.SCREWDRIVER:
+            self.logger.log_info("Creating screwdriver controller")
+        elif self.config.end_effector == UREndEffector.PIPETTE:
+            self.logger.log_info("Creating pipette controller") 
 
-        # 2. Pipette pool template
-        pipette_pool = Pool(
-            resource_name="tricontinent_pipette",
-            resource_class="URPipette",
-            capacity=1000.0,
-            attributes={
-                "pipette_type": "tricontinent",
-                "min_volume": 1.0,
-                "max_volume": 1000.0,
-                "default_speed": 150,
-                "description": "Tricontinent pipette pool for tracking tips and aspirated liquid",
-            },
-        )
-
-        self.resource_client.init_template(
-            resource=pipette_pool,
-            template_name="tricontinent_pipette_pool",
-            description="Template for Tricontinent pipette pool. Tracks pipette tips and aspirated liquids.",
-            required_overrides=["resource_name"],
-            tags=["ur", "pipette", "pool", "liquid-handling"],
-            created_by=self.node_definition.node_id,
-            version="1.0.0",
-        )
-        # Initialize pipette resource from template
-        self.pipette_resource = self.resource_client.create_resource_from_template(
-            template_name="tricontinent_pipette_pool",
-            resource_name=f"ur_pipette_{self.node_definition.node_name}",
-            add_to_database=True,
-        )
 
     def shutdown_handler(self) -> None:
         """Called to shutdown the node. Should be used to close connections to devices or release any other resources."""
