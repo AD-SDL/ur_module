@@ -5,13 +5,19 @@ import threading
 import time
 from enum import Enum
 from typing import OrderedDict, Tuple, Union
-
+from abstract_gripper_interface import Gripper
 
 class RobotiqGripper(Gripper):
     """
     Communicates with the gripper directly, via socket with string commands, leveraging string names for variables.
     """
-
+    tool_params = {
+        "baud_rate": 115200,
+        "parity": 0,
+        "stop_bits": 1,
+        "rx_idle_chars": 1.5,
+        "tx_idle_chars": 3.5
+    }
     # WRITE VARIABLES (CAN ALSO READ)
     ACT = "ACT"  # act : activate (1 while activated, can be reset to clear fault status)
     GTO = "GTO"  # gto : go to (will perform go to with the actions set in pos, for, spe)
@@ -44,8 +50,11 @@ class RobotiqGripper(Gripper):
         STOPPED_INNER_OBJECT = 2
         AT_DEST = 3
 
-    def __init__(self):
+    def __init__(self, hostname: str, port: int = 63352, socket_timeout: float = 60.0):
         """Constructor."""
+        self.hostname = hostname
+        self.port = port
+        self.socket_timeout = socket_timeout
         self.socket = None
         self.command_lock = threading.Lock()
         self._min_position = 0
@@ -62,9 +71,6 @@ class RobotiqGripper(Gripper):
 
     def connect(
         self,
-        hostname: str,
-        port: int,
-        socket_timeout: float = 60.0,
     ) -> None:
         """Connects to a gripper at the given address.
         :param hostname: Hostname or ip.
@@ -73,8 +79,8 @@ class RobotiqGripper(Gripper):
         """
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((hostname, port))
-        self.socket.settimeout(socket_timeout)
+        self.socket.connect((self.hostname, self.port))
+        self.socket.settimeout(self.socket_timeout)
 
     def disconnect(self) -> None:
         """Closes the connection with the gripper."""

@@ -5,11 +5,11 @@ class Gripper:
 
     def connect(self):
         """Connect to the gripper."""
-        raise NotImplementedError("This method should be overridden by subclasses.")
+        pass
 
     def disconnect(self):
         """Disconnect from the gripper."""
-        raise NotImplementedError("This method should be overridden by subclasses.")
+        pass
 
     def open(self, pose: float, speed: float, force: float):
         """Open the gripper to a specified pose with given speed and force."""

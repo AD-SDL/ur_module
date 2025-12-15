@@ -14,12 +14,16 @@ from ur_interface.ur_controller import URController
 from ur_interface.ur_dashboard import URDashboard
 
 from ur_interface.ur_tools.wm_tool_changer_controller import WMToolChangerController
+from ur_interface.ur_tools.grippers.robotiq_gripper_interface import RobotiqGripper
 
 
 class UREndEffector(str, Enum): 
     Robotiq2FingerGripper = "ROBOTIQ2FINGERGRIPPER"
     SCREWDRIVER = "SCREWDRIVER"
     PIPETTE = "PIPETTE"
+end_effectors = {
+    UREndEffector.Robotiq2FingerGripper: RobotiqGripper
+}
 class IntegratedController:
     """
     This is the primary class for UR robots.
@@ -71,23 +75,12 @@ class IntegratedController:
             raise e
     def create_end_effector_controller(self) -> None:
         """Create appropriate end-effector controller."""
-        grippers = {UREndEffector}
-        if self.end_effector in grippers:
-            self.logger.log_info("Creating Robotiq 2-finger gripper controller")
+        self.end_effector = end_effectors[self.end_effector](hostname=self.hostname)
+        self.logger.log_info("Creating Robotiq 2-finger gripper controller")
+        if self.end_effector.tool_params:
             self.ur_controller.ur_connection.set_tool_communication(
-                            baud_rate=115200,
-                            parity=0,
-                            stop_bits=1,
-                            rx_idle_chars=1.5,
-                            tx_idle_chars=3.5,
-                        )
-            self.gripper_controller = Robotiq2FingerGripperController(
-                hostname=self.hostname, port = 63352, logger=self.logger
-            )
-        elif self.config.end_effector == UREndEffector.SCREWDRIVER:
-            self.logger.log_info("Creating screwdriver controller")
-        elif self.config.end_effector == UREndEffector.PIPETTE:
-            self.logger.log_info("Creating pipette controller") 
+                                **self.end_effector.tool_params
+        )
     def pick_tool(
         self,
         home: Union[LocationArgument, list] = None,
