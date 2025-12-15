@@ -63,6 +63,7 @@ class RobotiqGripper(Gripper):
         self._max_speed = 255
         self._min_force = 0
         self._max_force = 255
+        self.connect()
 
     def __del__(self):
         """Destructor."""
@@ -316,3 +317,18 @@ class RobotiqGripper(Gripper):
         final_pos = self._get_var(self.POS)
         final_obj = cur_obj
         return final_pos, RobotiqGripper.ObjectStatus(final_obj)
+    def open(self):
+        self.move_and_wait_for_pos(
+                    255,
+                    255,
+                    255,
+                )
+        time.sleep(0.5)
+    def close(self):
+        self.move_and_wait_for_pos(
+                    0,
+                    255,
+                    255
+                )
+        time.sleep(0.5)
+    
