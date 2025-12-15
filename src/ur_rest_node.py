@@ -17,11 +17,9 @@ from ur_interface.ur_controller import UR
 from ur_interface.ur_error_types import GripperError, URMovementError
 from ur_interface.ur_kinematics import get_pose_from_joint_angles
 from ur_interface.ur_tools.gripper_controller import FingerGripperController
+from ur_interface.integrated_controller import UREndEffector, IntegratedController
 
-class UREndEffector(str, Enum): 
-    Robotiq2FingerGripper = "ROBOTIQ2FINGERGRIPPER"
-    SCREWDRIVER = "SCREWDRIVER"
-    PIPETTE = "PIPETTE"
+
 
 class URNodeConfig(RestNodeConfig):
     """Configuration for the UR node module."""
@@ -50,12 +48,13 @@ class URNode(RestNode):
             self.create_end_effector_controller()
 
             self.logger.log("Node initializing...")
-            self.ur_interface = UR(
+            self.ur_interface = IntegratedController(
                 hostname=self.config.ur_ip,
                 resource_client=self.resource_client if self.config.use_resources else None,
                 tcp_pose=self.config.tcp_pose,
                 base_reference_frame=self.config.base_reference_frame,
-                logger=self.logger,
+                end_effector=self.config.end_effector,
+                logger=self.logger
             )
             self.tool_resource = None
             self.current_location = None
@@ -128,18 +127,7 @@ class URNode(RestNode):
                 resource_name=f"ur_pipette_{self.node_definition.node_name}",
                 add_to_database=True,
             )
-    def create_end_effector_controller(self) -> None:
-        """Create appropriate end-effector controller."""
-        if self.config.end_effector == UREndEffector.Robotiq2FingerGripper:
-            self.logger.log_info("Creating Robotiq 2-finger gripper controller")
-            self.gripper_controller = FingerGripperController(
-                hostname=self.config.ur_ip, ur=self.ur_interface, logger=self.logger
-            )
-        elif self.config.end_effector == UREndEffector.SCREWDRIVER:
-            self.logger.log_info("Creating screwdriver controller")
-        elif self.config.end_effector == UREndEffector.PIPETTE:
-            self.logger.log_info("Creating pipette controller") 
-
+    
 
     def shutdown_handler(self) -> None:
         """Called to shutdown the node. Should be used to close connections to devices or release any other resources."""
@@ -804,7 +792,7 @@ class URNode(RestNode):
 
     def get_location(self) -> AdminCommandResponse:
         """Return the current position of the ur robot"""
-        return AdminCommandResponse(data=self.ur_interface.ur_connection.getj())
+        return AdminCommandResponse(data={"joint_angles": self.ur_interface.ur_connection.getj(), "linear_coordinates": self.ur_interface.getl()})
 
     def reset(self) -> AdminCommandResponse:
         """Reset the ur robot"""

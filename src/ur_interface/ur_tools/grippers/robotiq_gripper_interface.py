@@ -7,7 +7,7 @@ from enum import Enum
 from typing import OrderedDict, Tuple, Union
 
 
-class RobotiqGripper:
+class RobotiqGripper(Gripper):
     """
     Communicates with the gripper directly, via socket with string commands, leveraging string names for variables.
     """
