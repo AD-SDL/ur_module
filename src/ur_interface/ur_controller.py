@@ -15,12 +15,7 @@ from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from urx import Robot
 
-from ur_interface.ur_error_types import GripperError, URConnectionError, URMovementError
-from ur_interface.ur_tools.gripper_controller import FingerGripperController
-from ur_interface.ur_tools.ot_pipette_controller import OTPipetteController
-from ur_interface.ur_tools.screwdriver_controller import ScrewdriverController
-from ur_interface.ur_tools.tricontinent_pipette_controller import TricontinentPipetteController
-from ur_interface.ur_tools.wm_tool_changer_controller import WMToolChangerController
+from ur_interface.ur_error_types import URConnectionError
 
 
 class URController:
@@ -69,7 +64,7 @@ class URController:
 
         except Exception as e:
             self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
-            raise
+            raise e
 
     def connect_ur(self, hostname: str = None) -> Robot:
         """Create connection to the UR robot"""
@@ -102,6 +97,7 @@ class URController:
                 self.logger.info("Robot connection closed successfully")
         except Exception as e:
             self.logger.error(f"Error closing robot connection: {e}\n{traceback.format_exc()}")
+            raise e
 
     def _setup_logger(self) -> logging.Logger:
         """Setup default logger if none provided"""
@@ -116,13 +112,10 @@ class URController:
 
     def disconnect(self):
         """Disconnects the robot from URX and UR Dashboard connections"""
-        try:
-            self.ur.disconnect_ur()
-            self.ur_dashboard.clear_operational_mode()
-            self.ur_dashboard.disconnect()
-            self.logger.info("UR disconnected successfully")
-        except Exception as e:
-            self.logger.error(f"Error during UR disconnect: {e}\n{traceback.format_exc()}")
+        self.ur.disconnect_ur()
+        self.ur_dashboard.clear_operational_mode()
+        self.ur_dashboard.disconnect()
+        self.logger.info("UR disconnected successfully")
 
     def _set_base_reference_frame(self, base_reference_frame: list) -> None:
         """Sets the base reference frame for the robot.
@@ -132,63 +125,57 @@ class URController:
         if not isinstance(base_reference_frame, list) or len(base_reference_frame) != 6:
             raise ValueError("Base reference frame must be a list of 6 values")
 
-        try:
-            # Extract position and rotation components
-            x, y, z, rx_deg, ry_deg, rz_deg = base_reference_frame
+        # Extract position and rotation components
+        x, y, z, rx_deg, ry_deg, rz_deg = base_reference_frame
 
-            # Create translation vector (only if any translation values are non-zero)
-            if any([x, y, z]):
-                translation = m3.Vector(x, y, z)
-            else:
-                translation = m3.Vector(0, 0, 0)
+        # Create translation vector (only if any translation values are non-zero)
+        if any([x, y, z]):
+            translation = m3.Vector(x, y, z)
+        else:
+            translation = m3.Vector(0, 0, 0)
 
-            # Start with identity rotation
-            rotation = m3.Orientation()  # Identity rotation
+        # Start with identity rotation
+        rotation = m3.Orientation()  # Identity rotation
 
-            # Apply only non-zero rotations in order
-            if rx_deg != 0:
-                rx_rad = radians(rx_deg)
-                rotation = rotation * m3.Orientation.new_rot_x(rx_rad)
+        # Apply only non-zero rotations in order
+        if rx_deg != 0:
+            rx_rad = radians(rx_deg)
+            rotation = rotation * m3.Orientation.new_rot_x(rx_rad)
 
-            if ry_deg != 0:
-                ry_rad = radians(ry_deg)
-                rotation = rotation * m3.Orientation.new_rot_y(ry_rad)
+        if ry_deg != 0:
+            ry_rad = radians(ry_deg)
+            rotation = rotation * m3.Orientation.new_rot_y(ry_rad)
 
-            if rz_deg != 0:
-                rz_rad = radians(rz_deg)
-                rotation = rotation * m3.Orientation.new_rot_z(rz_rad)
-            # Create the transform
-            transform = m3.Transform(rotation, translation)
+        if rz_deg != 0:
+            rz_rad = radians(rz_deg)
+            rotation = rotation * m3.Orientation.new_rot_z(rz_rad)
+        # Create the transform
+        transform = m3.Transform(rotation, translation)
 
-            # Set the coordinate system
-            self.ur_connection.set_csys(transform)
-            self.logger.info(f"Base reference frame set to: {base_reference_frame}")
-        except Exception as e:
-            self.logger.error(f"Error setting base reference frame: {e}\n{traceback.format_exc()}")
-            raise
+        # Set the coordinate system
+        self.ur_connection.set_csys(transform)
+        self.logger.info(f"Base reference frame set to: {base_reference_frame}")
 
     def get_movement_state(self) -> str:
         """Gets robot movement status by checking robot joint values.
         Return (str) READY if robot is not moving
                      BUSY if robot is moving
         """
-        try:
-            current_location = self.ur_connection.getj()
-            if self.robot_current_joint_angles is None:
+        current_location = {"joint_angles": self.ur_connection.getj(), "linear_coordinates": self.ur_connection.getl()}
+        if self.robot_current_joint_angles is None:
+            movement_state = "READY"
+        else:
+            if (
+                np.linalg.norm(np.array(current_location["joint_angles"]) - np.array(self.robot_current_joint_angles))
+                < 1e-3
+            ):
                 movement_state = "READY"
             else:
-                if np.linalg.norm(np.array(current_location) - np.array(self.robot_current_joint_angles)) < 1e-3:
-                    movement_state = "READY"
-                else:
-                    movement_state = "BUSY"
+                movement_state = "BUSY"
 
-            self.robot_current_joint_angles = current_location
+        self.robot_current_joint_angles = current_location["joint_angles"]
 
-            return movement_state, current_location
-
-        except Exception as e:
-            self.logger.error(f"Error getting movement state: {e}\n{traceback.format_exc()}")
-            raise URMovementError("Failed to get robot movement state")  # noqa
+        return movement_state, current_location
 
     def move_to_location(self, location: Union[LocationArgument, list], linear_motion: bool = False) -> None:
         """Moves the robot to the home location.
@@ -197,7 +184,7 @@ class URController:
         """
         try:
             self.logger.info("Homing the robot...")
-            
+
             if linear_motion:
                 if isinstance(location, LocationArgument):
                     location = location.representation.linear_coordinates
@@ -210,7 +197,7 @@ class URController:
         except Exception as e:
             self.logger.error(f"Error in moving the robot: {e}\n{traceback.format_exc()}")
             raise e
-   
+
     def set_digital_io(self, channel: int = None, value: bool = None) -> None:
         """Sets digital I/O outputs to open an close the channel. This helps controlling the external tools
 
@@ -222,5 +209,3 @@ class URController:
             self.logger.error("Channel or value is not specified")
             return
         self.ur_connection.set_digital_out(channel, value)
-
-    

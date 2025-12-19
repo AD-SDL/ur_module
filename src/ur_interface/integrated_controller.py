@@ -1,33 +1,29 @@
-from copy import deepcopy
-from enum import Enum
 import logging
 import traceback
+from copy import deepcopy
+from enum import Enum
 from typing import Optional, Union
 
-import math3d as m3
-import numpy as np
 from madsci.client.resource_client import ResourceClient
 from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 
 from ur_interface.ur_controller import URController
 from ur_interface.ur_dashboard import URDashboard
-
 from ur_interface.ur_tools.grippers.abstract_gripper_interface import Gripper
-from ur_interface.ur_tools.wm_tool_changer_controller import WMToolChangerController
-from ur_interface.ur_tools.grippers.robotiq_gripper_interface import RobotiqGripper
+from ur_interface.ur_tools.grippers.robotiq_2_finger_gripper_interface import Robotiq2FingerGripper
 
 
-class UREndEffector(str, Enum): 
+class UREndEffector(str, Enum):
     ROBOTIQ2FINGERGRIPPER = "ROBOTIQ2FINGERGRIPPER"
     SCREWDRIVER = "SCREWDRIVER"
     PIPETTE = "PIPETTE"
     WMTOOLCHANGER = "WMTOOLCHANGER"
 
-end_effectors = {
-    UREndEffector.ROBOTIQ2FINGERGRIPPER: RobotiqGripper,
-    UREndEffector.WMTOOLCHANGER: WMToolChangerController
-}
+
+end_effectors = {UREndEffector.ROBOTIQ2FINGERGRIPPER: Robotiq2FingerGripper}
+
+
 class IntegratedController:
     """
     This is the primary class for UR robots.
@@ -43,7 +39,7 @@ class IntegratedController:
         tool_resource_id: str = None,
         tcp_pose: list = [0, 0, 0, 0, 0, 0],
         base_reference_frame: list = None,
-        logger: Optional[logging.Logger] = None
+        logger: Optional[logging.Logger] = None,
     ):
         """Constructor for the UR class.
         :param hostname: Hostname or ip.
@@ -74,16 +70,15 @@ class IntegratedController:
         except Exception as e:
             self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
             raise e
+
     def create_end_effector_controller(self) -> None:
         """Create appropriate end-effector controller."""
-        self.end_effector = end_effectors[self.end_effector](hostname=self.hostname)
         self.logger.log_info("Creating Robotiq 2-finger gripper controller")
         if self.end_effector.tool_params:
-            self.ur_controller.ur_connection.set_tool_communication(
-                                **self.end_effector.tool_params
-        )
-    
-    def pick(
+            self.ur_controller.ur_connection.set_tool_communication(**self.end_effector.tool_params)
+        self.end_effector = end_effectors[self.end_effector](hostname=self.hostname)
+
+    def gripper_pick(
         self,
         source: Union[LocationArgument, list],
         home: Union[LocationArgument, list, None] = None,
@@ -107,8 +102,7 @@ class IntegratedController:
             else:
                 raise Exception("Please provide an appropriate source location")
             self.ur_controller.move_to_location(home_location, linear_motion=True)
-            
-            
+
         if not approach_distance:
             approach_distance = 0.05
 
@@ -146,9 +140,7 @@ class IntegratedController:
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
         self.logger.info("Pick operation completed successfully")
 
-
-
-    def place(
+    def gripper_place(
         self,
         target: Union[LocationArgument, list],
         home: Union[LocationArgument, list, None] = None,
@@ -157,7 +149,7 @@ class IntegratedController:
     ):
         """Pick up from source position"""
         if not isinstance(self.end_effector, Gripper):
-            raise Exception("End-effector is not a gripper, cannot perform pick operation")
+            raise Exception("End-effector is not a gripper, cannot perform place operation")
         if isinstance(target, LocationArgument):
             target_location = target.representation.linear_coordinates
         elif isinstance(target, list):
@@ -172,8 +164,7 @@ class IntegratedController:
             else:
                 raise Exception("Please provide an appropriate source location")
             self.ur_controller.move_to_location(above_goal, linear_motion=True)
-            
-            
+
         if not approach_distance:
             approach_distance = 0.05
 
@@ -211,9 +202,7 @@ class IntegratedController:
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
         self.logger.info("Pick operation completed successfully")
 
-    
-
-    def transfer(
+    def gripper_transfer(
         self,
         home: Union[LocationArgument, list] = None,
         source: Union[LocationArgument, list] = None,
@@ -240,6 +229,3 @@ class IntegratedController:
             approach_distance=target_approach_distance,
         )
         self.logger.info("Place completed")
-
-        
-    
