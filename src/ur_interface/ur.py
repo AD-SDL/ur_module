@@ -15,6 +15,12 @@ from madsci.common.types.auth_types import OwnershipInfo
 from madsci.common.types.location_types import LocationArgument
 from urx import Robot
 
+from ur_interface.scripts.appriltag_alignment import (
+    AprilTagCamera,
+    auto_align_12idb_remote_heater,
+    auto_align_12idb_standard_holder,
+)
+from ur_interface.scripts.pallet_position_calculator import calculate_pallet_position
 from ur_interface.ur_dashboard import UR_DASHBOARD
 from ur_interface.ur_error_types import GripperError, URConnectionError, URMovementError
 from ur_interface.ur_tools.gripper_controller import FingerGripperController
@@ -557,6 +563,209 @@ class UR:
                 self.home(home)
             except Exception as e:
                 self.logger.error(f"Error returning to home after gripper place: {e}\n{traceback.format_exc()}")
+
+    def transfer_from_pallet(
+        self,
+        pallet_reference: list,
+        pallet_index: int,
+        pallet_x_gap_mm: float,
+        pallet_y_gap_mm: float,
+        pallet_num_x: int,
+        pallet_num_y: int,
+        target: list,
+        home: Union[list, None] = None,
+        source_approach_distance: Optional[float] = None,
+        target_approach_distance: Optional[float] = None,
+        source_approach_axis: Optional[str] = None,
+        target_approach_axis: Optional[str] = None,
+    ) -> dict:
+        """Transfer object from a position in a pallet/grid to a target location
+
+        Args:
+            pallet_reference: [x, y, z, rx, ry, rz] of index 0 (reference position)
+            pallet_index: Which position to pick from (0 to num_x*num_y - 1)
+            pallet_x_gap_mm: Spacing between columns (mm)
+            pallet_y_gap_mm: Spacing between rows (mm)
+            pallet_num_x: Number of columns in pallet
+            pallet_num_y: Number of rows in pallet
+            target: [x, y, z, rx, ry, rz] where to place the object
+            home: Optional home position (joint or cartesian)
+            source_approach_distance: Clearance above pallet (meters, default: 0.05)
+            target_approach_distance: Clearance above target (meters, default: 0.05)
+            source_approach_axis: Approach axis for pallet (default: 'z')
+            target_approach_axis: Approach axis for target (default: 'z')
+        """
+        try:
+            self.logger.info(f"Transferring from pallet index {pallet_index} to target")
+
+            # Calculate pallet position for this index
+            try:
+                pallet_position = calculate_pallet_position(
+                    reference_position=pallet_reference,
+                    index=pallet_index,
+                    x_gap_mm=pallet_x_gap_mm,
+                    y_gap_mm=pallet_y_gap_mm,
+                    num_x=pallet_num_x,
+                    num_y=pallet_num_y,
+                )
+            except ValueError as e:
+                raise e
+
+            self.logger.info(f"Pallet index {pallet_index} position: {pallet_position[:3]}")
+
+            # Use existing gripper_transfer!
+            self.gripper_transfer(
+                home=home,
+                source=pallet_position,  # FROM pallet
+                target=target,  # TO target
+                source_approach_axis=source_approach_axis,
+                target_approach_axis=target_approach_axis,
+                source_approach_distance=source_approach_distance,
+                target_approach_distance=target_approach_distance,
+            )
+
+            self.logger.info(f"Transfer from pallet index {pallet_index} completed successfully")
+
+        except Exception as e:
+            self.logger.error(f"Error in transfer_from_pallet: {e}")
+            raise e
+
+    def transfer_to_pallet(
+        self,
+        source: list,
+        pallet_reference: list,
+        pallet_index: int,
+        pallet_x_gap_mm: float,
+        pallet_y_gap_mm: float,
+        pallet_num_x: int,
+        pallet_num_y: int,
+        home: Union[list, None] = None,
+        source_approach_distance: Optional[float] = None,
+        target_approach_distance: Optional[float] = None,
+        source_approach_axis: Optional[str] = None,
+        target_approach_axis: Optional[str] = None,
+    ) -> dict:
+        """Transfer object from a source location to a position in a pallet/grid
+
+        Args:
+            source: [x, y, z, rx, ry, rz] where to pick the object from
+            pallet_reference: [x, y, z, rx, ry, rz] of index 0 (reference position)
+            pallet_index: Which position to place at (0 to num_x*num_y - 1)
+            pallet_x_gap_mm: Spacing between columns (mm)
+            pallet_y_gap_mm: Spacing between rows (mm)
+            pallet_num_x: Number of columns in pallet
+            pallet_num_y: Number of rows in pallet
+            home: Optional home position
+            source_approach_distance: Clearance above source (meters, default: 0.05)
+            target_approach_distance: Clearance above pallet (meters, default: 0.05)
+            source_approach_axis: Approach axis for source (default: 'z')
+            target_approach_axis: Approach axis for pallet (default: 'z')
+        """
+        try:
+            self.logger.info(f"Transferring from source to pallet index {pallet_index}")
+
+            # Calculate pallet position for this index
+            try:
+                pallet_position = calculate_pallet_position(
+                    reference_position=pallet_reference,
+                    index=pallet_index,
+                    x_gap_mm=pallet_x_gap_mm,
+                    y_gap_mm=pallet_y_gap_mm,
+                    num_x=pallet_num_x,
+                    num_y=pallet_num_y,
+                )
+            except ValueError as e:
+                raise e
+
+            self.logger.info(f"Pallet index {pallet_index} position: {pallet_position[:3]}")
+
+            # Use existing gripper_transfer!
+            self.gripper_transfer(
+                home=home,
+                source=source,  # FROM source
+                target=pallet_position,  # TO pallet
+                source_approach_axis=source_approach_axis,
+                target_approach_axis=target_approach_axis,
+                source_approach_distance=source_approach_distance,
+                target_approach_distance=target_approach_distance,
+            )
+
+            self.logger.info(f"Transfer to pallet index {pallet_index} completed successfully")
+
+        except Exception as e:
+            self.logger.error(f"Error in transfer_to_pallet: {e}")
+            raise e
+
+    def auto_align_12idb_remote_heater(self, camera_index: int = 0, test_run: bool = True) -> dict:
+        """Automatic alignment to 12IDB remote heater
+
+        Camera is created and managed automatically within this method.
+        User just calls the method - everything else is handled internally!
+
+        Args:
+            camera_index: Camera device index (default: 0)
+            test_run: If True, runs test pickup/dropoff after alignment
+
+        """
+        # Create camera
+        camera = AprilTagCamera(camera_index=camera_index)
+        gripper_controller = FingerGripperController(
+            hostname=self.hostname,
+            ur=self.ur_connection,
+            resource_client=self.resource_client,
+            gripper_resource_id=self.tool_resource_id,
+            logger=self.logger,
+        )
+
+        self.logger.info("Connecting to gripper...")
+        gripper_controller.connect_gripper()
+        try:
+            # Connect camera
+            camera.connect()
+
+            # Run alignment (camera managed internally)
+            result = auto_align_12idb_remote_heater(
+                ur_connection=self.ur_connection,
+                camera=camera,
+                gripper=gripper_controller,
+                home=getattr(self, "home", None),
+                home_position=getattr(self, "home_position", None),
+                test_run=test_run,
+            )
+            return result
+
+        finally:
+            # Always disconnect camera (even if error occurs)
+            camera.disconnect()
+
+    def auto_align_12idb_standard_holder(self, test_run: bool = True) -> dict:
+        """Automatic alignment to 12IDB standard holder
+
+        No camera needed - uses force-guided positioning only.
+
+        Args:
+            test_run: If True, runs test pickup/dropoff
+
+
+        """
+        gripper_controller = FingerGripperController(
+            hostname=self.hostname,
+            ur=self.ur_connection,
+            resource_client=self.resource_client,
+            gripper_resource_id=self.tool_resource_id,
+            logger=self.logger,
+        )
+
+        self.logger.info("Connecting to gripper...")
+        gripper_controller.connect_gripper()
+
+        return auto_align_12idb_standard_holder(
+            ur_connection=self.ur_connection,
+            gripper=gripper_controller,
+            home=getattr(self, "home", None),
+            home_position=getattr(self, "home_position", None),
+            test_run=test_run,
+        )
 
     def gripper_screw_transfer(
         self,
