@@ -757,6 +757,172 @@ class URNode(RestNode):
             gripper_close=gripper_close,
         )
 
+    @action(name="transfer_from_pallet", description="Transfer object from a pallet grid position to a target location")
+    def transfer_from_pallet(
+        self,
+        pallet_reference: Annotated[Union[LocationArgument, list], "Reference position (index 0) [x,y,z,rx,ry,rz]"],
+        pallet_index: Annotated[int, "Which position to pick from (0 to num_x*num_y - 1)"],
+        pallet_x_gap_mm: Annotated[float, "Spacing between columns in mm"],
+        pallet_y_gap_mm: Annotated[float, "Spacing between rows in mm"],
+        pallet_num_x: Annotated[int, "Number of columns in pallet"],
+        pallet_num_y: Annotated[int, "Number of rows in pallet"],
+        target: Annotated[Union[LocationArgument, list], "Target position [x,y,z,rx,ry,rz]"],
+        home: Annotated[Union[LocationArgument, list, None], "Optional home position"] = None,
+        source_approach_distance: Annotated[Optional[float], "Clearance above pallet in meters"] = None,
+        target_approach_distance: Annotated[Optional[float], "Clearance above target in meters"] = None,
+        source_approach_axis: Annotated[Optional[str], "Approach axis for pallet (x/y/z)"] = None,
+        target_approach_axis: Annotated[Optional[str], "Approach axis for target (x/y/z)"] = None,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all locations"] = True,
+    ):
+        """Transfer object from a pallet grid position to a target location"""
+        try:
+            # Convert joint angles to poses if needed
+            if joint_angle_locations and isinstance(pallet_reference, LocationArgument):
+                pallet_reference.representation = get_pose_from_joint_angles(
+                    joints=pallet_reference.representation, robot_model=self.config.ur_model
+                )
+                target.representation = get_pose_from_joint_angles(
+                    joints=target.representation, robot_model=self.config.ur_model
+                )
+            elif joint_angle_locations and isinstance(pallet_reference, list) and isinstance(target, list):
+                pallet_reference = get_pose_from_joint_angles(joints=pallet_reference, robot_model=self.config.ur_model)
+                target = get_pose_from_joint_angles(joints=target, robot_model=self.config.ur_model)
+
+            if joint_angle_locations and home and isinstance(home, list):
+                home = get_pose_from_joint_angles(joints=home, robot_model=self.config.ur_model)
+
+            self.ur_interface.transfer_from_pallet(
+                pallet_reference=pallet_reference
+                if isinstance(pallet_reference, list)
+                else pallet_reference.representation,
+                pallet_index=pallet_index,
+                pallet_x_gap_mm=pallet_x_gap_mm,
+                pallet_y_gap_mm=pallet_y_gap_mm,
+                pallet_num_x=pallet_num_x,
+                pallet_num_y=pallet_num_y,
+                target=target if isinstance(target, list) else target.representation,
+                home=home,
+                source_approach_distance=source_approach_distance,
+                target_approach_distance=target_approach_distance,
+                source_approach_axis=source_approach_axis,
+                target_approach_axis=target_approach_axis,
+            )
+
+            return ActionSucceeded(data={"message": f"Transfer from pallet index {pallet_index} completed"})
+
+        except Exception as err:
+            self.logger.log_error(f"Error in transfer_from_pallet: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
+
+    @action(name="transfer_to_pallet", description="Transfer object from a source location to a pallet grid position")
+    def transfer_to_pallet(
+        self,
+        source: Annotated[Union[LocationArgument, list], "Source position [x,y,z,rx,ry,rz]"],
+        pallet_reference: Annotated[Union[LocationArgument, list], "Reference position (index 0) [x,y,z,rx,ry,rz]"],
+        pallet_index: Annotated[int, "Which position to place at (0 to num_x*num_y - 1)"],
+        pallet_x_gap_mm: Annotated[float, "Spacing between columns in mm"],
+        pallet_y_gap_mm: Annotated[float, "Spacing between rows in mm"],
+        pallet_num_x: Annotated[int, "Number of columns in pallet"],
+        pallet_num_y: Annotated[int, "Number of rows in pallet"],
+        home: Annotated[Union[LocationArgument, list, None], "Optional home position"] = None,
+        source_approach_distance: Annotated[Optional[float], "Clearance above source in meters"] = None,
+        target_approach_distance: Annotated[Optional[float], "Clearance above pallet in meters"] = None,
+        source_approach_axis: Annotated[Optional[str], "Approach axis for source (x/y/z)"] = None,
+        target_approach_axis: Annotated[Optional[str], "Approach axis for pallet (x/y/z)"] = None,
+        joint_angle_locations: Annotated[bool, "Use joint angles for all locations"] = True,
+    ):
+        """Transfer object from a source location to a pallet grid position"""
+        try:
+            # Convert joint angles to poses if needed
+            if joint_angle_locations and isinstance(source, LocationArgument):
+                source.representation = get_pose_from_joint_angles(
+                    joints=source.representation, robot_model=self.config.ur_model
+                )
+                pallet_reference.representation = get_pose_from_joint_angles(
+                    joints=pallet_reference.representation, robot_model=self.config.ur_model
+                )
+            elif joint_angle_locations and isinstance(source, list) and isinstance(pallet_reference, list):
+                source = get_pose_from_joint_angles(joints=source, robot_model=self.config.ur_model)
+                pallet_reference = get_pose_from_joint_angles(joints=pallet_reference, robot_model=self.config.ur_model)
+
+            if joint_angle_locations and home and isinstance(home, list):
+                home = get_pose_from_joint_angles(joints=home, robot_model=self.config.ur_model)
+
+            self.ur_interface.transfer_to_pallet(
+                source=source if isinstance(source, list) else source.representation,
+                pallet_reference=pallet_reference
+                if isinstance(pallet_reference, list)
+                else pallet_reference.representation,
+                pallet_index=pallet_index,
+                pallet_x_gap_mm=pallet_x_gap_mm,
+                pallet_y_gap_mm=pallet_y_gap_mm,
+                pallet_num_x=pallet_num_x,
+                pallet_num_y=pallet_num_y,
+                home=home,
+                source_approach_distance=source_approach_distance,
+                target_approach_distance=target_approach_distance,
+                source_approach_axis=source_approach_axis,
+                target_approach_axis=target_approach_axis,
+            )
+
+            return ActionSucceeded(data={"message": f"Transfer to pallet index {pallet_index} completed"})
+
+        except Exception as err:
+            self.logger.log_error(f"Error in transfer_to_pallet: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
+
+    @action(
+        name="auto_align_12idb_remote_heater",
+        description="Automatic alignment to 12IDB remote heater using AprilTag detection",
+    )
+    def auto_align_12idb_remote_heater(
+        self,
+        camera_index: Annotated[int, "Camera device index"] = 0,
+        test_run: Annotated[bool, "Run test pickup/dropoff after alignment"] = True,
+    ):
+        """Automatically align to 12IDB remote heater using AprilTag vision"""
+        try:
+            self.logger.log("Starting remote heater alignment...")
+
+            result = self.ur_interface.auto_align_12idb_remote_heater(camera_index=camera_index, test_run=test_run)
+
+            if result["status"] == "success":
+                self.logger.log(f"Alignment successful! Position: {result['aligned_position'][:3]}")
+                self.logger.log(f"Tilt compensation: {result.get('tilt_compensation', 0):.2f}°")
+                return ActionSucceeded(data=result)
+            else:
+                self.logger.log_error(f"Alignment failed: {result['message']}")
+                return ActionFailed(errors=result["message"])
+
+        except Exception as err:
+            self.logger.log_error(f"Error in auto_align_12idb_remote_heater: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
+
+    @action(
+        name="auto_align_12idb_standard_holder",
+        description="Automatic alignment to 12IDB standard holder using force-guided positioning",
+    )
+    def auto_align_12idb_standard_holder(
+        self,
+        test_run: Annotated[bool, "Run test pickup/dropoff after alignment"] = True,
+    ):
+        """Automatically align to 12IDB standard holder using force detection"""
+        try:
+            self.logger.log("Starting standard holder alignment...")
+
+            result = self.ur_interface.auto_align_12idb_standard_holder(test_run=test_run)
+
+            if result["status"] == "success":
+                self.logger.log(f"Alignment successful! Position: {result['aligned_position'][:3]}")
+                return ActionSucceeded(data=result)
+            else:
+                self.logger.log_error(f"Alignment failed: {result['message']}")
+                return ActionFailed(errors=result["message"])
+
+        except Exception as err:
+            self.logger.log_error(f"Error in auto_align_12idb_standard_holder: {err}\n{traceback.format_exc()}")
+            return ActionFailed(errors=str(err))
+
     @action(
         name="run_urp_program",
         description="Runs a URP program on the UR",
