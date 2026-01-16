@@ -35,6 +35,7 @@ class IntegratedController:
         self,
         hostname: str = None,
         resource_client: ResourceClient = None,
+        end_effector_resource_id: str = None,
         resource_owner: OwnershipInfo = None,
         tool_resource_id: str = None,
         tcp_pose: list = [0, 0, 0, 0, 0, 0],
@@ -58,6 +59,7 @@ class IntegratedController:
         self.acceleration = 0.5
         self.velocity = 0.5
         self.robot_current_joint_angles = None
+        self.end_effector_resource_id = end_effector_resource_id
 
         try:
             self.ur_dashboard = URDashboard(hostname=self.hostname)
@@ -139,6 +141,9 @@ class IntegratedController:
         self.logger.debug("Moving back to above goal position")
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
         self.logger.info("Pick operation completed successfully")
+        if self.resource_client is not None:
+            object, _ = self.resource_client.pop(source.resource_id)
+            self.resource_client.push(self.end_effector_resource_id, object)
 
     def gripper_place(
         self,
@@ -197,6 +202,9 @@ class IntegratedController:
         self.ur_controller.move_to_location(target_location, linear_motion=True)
 
         self.end_effector.close()
+        if self.resource_client is not None:
+            object, _ = self.resource_client.pop(target_location.resource_id)
+            self.resource_client.push(self.end_effector_resource_id, object)
 
         self.logger.debug("Moving back to above goal position")
         self.ur_controller.move_to_location(above_goal, linear_motion=True)

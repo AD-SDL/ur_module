@@ -1,10 +1,8 @@
 """REST-based node for UR robots"""
 
-import traceback
 from typing import Optional, Union
 
 from madsci.client.resource_client import ResourceClient
-from madsci.common.types.action_types import ActionFailed
 from madsci.common.types.admin_command_types import AdminCommandResponse
 from madsci.common.types.location_types import LocationArgument
 from madsci.common.types.node_types import RestNodeConfig
@@ -38,14 +36,15 @@ class URNode(RestNode):
     def startup_handler(self) -> None:
         """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
         self.resource_client = None
+        self.end_effector_resource_id = None
         if self.config.resource_manager_url is not None:
             self.resource_client = ResourceClient(self.config.resource_manager_url)
             self._create_ur_resources()
-        self.create_end_effector_controller()
         self.logger.log("Node initializing...")
         self.integrated_controller = IntegratedController(
             hostname=self.config.ur_ip,
             resource_client=self.resource_client if self.config.use_resources else None,
+            end_effector_resource_id=self.end_effector_resource_id,
             tcp_pose=self.config.tcp_pose,
             base_reference_frame=self.config.base_reference_frame,
             end_effector=self.config.end_effector,
@@ -83,7 +82,7 @@ class URNode(RestNode):
             )
 
             # Initialize gripper resource from template
-            self.gripper_resource = self.resource_client.create_resource_from_template(
+            self.end_effector_resource_id = self.resource_client.create_resource_from_template(
                 template_name="robotiq_finger_gripper_slot",
                 resource_name=f"ur_gripper_{self.node_definition.node_name}",
                 add_to_database=True,
@@ -112,7 +111,7 @@ class URNode(RestNode):
                 version="1.0.0",
             )
             # Initialize pipette resource from template
-            self.pipette_resource = self.resource_client.create_resource_from_template(
+            self.end_effector_resource_id = self.resource_client.create_resource_from_template(
                 template_name="tricontinent_pipette_pool",
                 resource_name=f"ur_pipette_{self.node_definition.node_name}",
                 add_to_database=True,
@@ -226,13 +225,6 @@ class URNode(RestNode):
             source_approach_axis=source_approach_axis,
             gripper_close=gripper_close,
         )
-        try:
-            if self.resource_client is not None:
-                object, _ = self.resource_client.pop(source.resource_id)
-                self.resource_client.push(self.gripper_resource, object)
-        except Exception as e:
-            self.logger.log_error(f"Error during gripper pick: {e}")
-            return ActionFailed(error=traceback.format_exc())
 
     @action
     def gripper_place(
@@ -252,13 +244,6 @@ class URNode(RestNode):
             target_approach_axis=target_approach_axis,
             gripper_open=gripper_open,
         )
-        try:
-            if self.resource_client is not None:
-                object, _ = self.resource_client.pop(self.gripper_resource)
-                self.resource_client.push(target.resource_id, object)
-        except Exception as e:
-            self.logger.log_error(f"Error during gripper place: {e}")
-            return ActionFailed(error=traceback.format_exc())
 
     @action(name="e_stop", description="Emergency stop the UR robot")
     def e_stop(self):
