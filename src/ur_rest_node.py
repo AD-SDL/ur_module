@@ -25,7 +25,7 @@ class URNodeConfig(RestNodeConfig):
     tcp_pose: list = [0, 0, 0, 0, 0, 0]
     base_reference_frame: Optional[list] = None
     ur_model: str = "UR5e"
-    use_resources: bool = True
+    use_resources: bool = False
 
 
 class URNode(RestNode):
@@ -38,6 +38,7 @@ class URNode(RestNode):
     def startup_handler(self) -> None:
         """Called to (re)initialize the node. Should be used to open connections to devices or initialize any other resources."""
         try:
+            print(self.config.use_resources)
             # Create templates
             if self.config.use_resources:
                 self._create_ur_templates()
@@ -808,7 +809,7 @@ class URNode(RestNode):
                 target_approach_axis=target_approach_axis,
             )
 
-            return ActionSucceeded(data={"message": f"Transfer from pallet index {pallet_index} completed"})
+            return ActionSucceeded(datapoints={"message": f"Transfer from pallet index {pallet_index} completed"})
 
         except Exception as err:
             self.logger.log_error(f"Error in transfer_from_pallet: {err}\n{traceback.format_exc()}")
@@ -865,7 +866,7 @@ class URNode(RestNode):
                 target_approach_axis=target_approach_axis,
             )
 
-            return ActionSucceeded(data={"message": f"Transfer to pallet index {pallet_index} completed"})
+            return ActionSucceeded(datapoints={"message": f"Transfer to pallet index {pallet_index} completed"})
 
         except Exception as err:
             self.logger.log_error(f"Error in transfer_to_pallet: {err}\n{traceback.format_exc()}")
@@ -889,7 +890,7 @@ class URNode(RestNode):
             if result["status"] == "success":
                 self.logger.log(f"Alignment successful! Position: {result['aligned_position'][:3]}")
                 self.logger.log(f"Tilt compensation: {result.get('tilt_compensation', 0):.2f}°")
-                return ActionSucceeded(data=result)
+                return ActionSucceeded(datapoints=result)
             else:
                 self.logger.log_error(f"Alignment failed: {result['message']}")
                 return ActionFailed(errors=result["message"])
@@ -914,7 +915,7 @@ class URNode(RestNode):
 
             if result["status"] == "success":
                 self.logger.log(f"Alignment successful! Position: {result['aligned_position'][:3]}")
-                return ActionSucceeded(data=result)
+                return ActionSucceeded(datapoints=result)
             else:
                 self.logger.log_error(f"Alignment failed: {result['message']}")
                 return ActionFailed(errors=result["message"])

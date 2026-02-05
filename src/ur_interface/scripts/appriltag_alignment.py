@@ -308,7 +308,7 @@ def _center_camera2apriltag(camera: AprilTagCamera, ur_connection, max_trials: i
 
 
 # =============================================================================
-# Public API - Only These Two Methods
+# Public API - Major Two Methods
 # =============================================================================
 
 
@@ -506,7 +506,7 @@ def auto_align_12idb_remote_heater(
         return {
             "status": "success",
             "message": "Heater alignment completed",
-            "aligned_position": aligned_position.tolist() if hasattr(aligned_position, "tolist") else aligned_position,
+            "aligned_position": aligned_position,
             "tilt_compensation": ang,
         }
 
@@ -635,7 +635,7 @@ def auto_align_12idb_standard_holder(
         return {
             "status": "success",
             "message": "Standard holder alignment completed",
-            "aligned_position": aligned_position.tolist() if hasattr(aligned_position, "tolist") else aligned_position,
+            "aligned_position": aligned_position,
         }
 
     except Exception as e:
