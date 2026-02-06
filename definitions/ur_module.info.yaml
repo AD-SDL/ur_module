@@ -161,6 +161,12 @@ actions:
         argument_type: float
         required: false
         default: 0.6
+      joint_angle_locations:
+        name: joint_angle_locations
+        description: Use joint angles for the location
+        argument_type: bool
+        required: false
+        default: true
     locations:
       target:
         name: target

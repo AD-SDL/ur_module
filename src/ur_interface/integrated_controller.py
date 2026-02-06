@@ -1,3 +1,5 @@
+"""Controller for integrating UR with various attachments"""
+
 import logging
 import traceback
 from copy import deepcopy
@@ -10,11 +12,13 @@ from madsci.common.types.location_types import LocationArgument
 
 from ur_interface.ur_controller import URController
 from ur_interface.ur_dashboard import URDashboard
-from ur_interface.ur_tools.grippers.abstract_gripper_interface import Gripper
+from ur_interface.ur_tools.grippers.abstract_gripper_interfaces import Gripper
 from ur_interface.ur_tools.grippers.robotiq_2_finger_gripper_interface import Robotiq2FingerGripper
 
 
 class UREndEffector(str, Enum):
+    """Possible end effectors for the UR arm"""
+
     ROBOTIQ2FINGERGRIPPER = "ROBOTIQ2FINGERGRIPPER"
     SCREWDRIVER = "SCREWDRIVER"
     PIPETTE = "PIPETTE"
@@ -35,6 +39,7 @@ class IntegratedController:
         self,
         hostname: str = None,
         resource_client: ResourceClient = None,
+        end_effector: UREndEffector = None,
         end_effector_resource_id: str = None,
         resource_owner: OwnershipInfo = None,
         tool_resource_id: str = None,
@@ -55,7 +60,6 @@ class IntegratedController:
         self.tool_resource_id = tool_resource_id
         self.resource_owner = resource_owner
         self.logger = logger or self._setup_logger()
-
         self.acceleration = 0.5
         self.velocity = 0.5
         self.robot_current_joint_angles = None
@@ -68,63 +72,64 @@ class IntegratedController:
             )
 
             self.ur_controller.ur_connection.set_tcp(tcp_pose)
-            self.create_end_effector_controller()
+            self.create_end_effector_controller(end_effector)
         except Exception as e:
             self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
             raise e
 
-    def create_end_effector_controller(self) -> None:
+    def create_end_effector_controller(self, end_effector: Optional[UREndEffector]) -> None:
         """Create appropriate end-effector controller."""
         self.logger.log_info("Creating Robotiq 2-finger gripper controller")
-        if self.end_effector.tool_params:
-            self.ur_controller.ur_connection.set_tool_communication(**self.end_effector.tool_params)
-        self.end_effector = end_effectors[self.end_effector](hostname=self.hostname)
+        if end_effector is not None:
+            self.end_effector = end_effectors[end_effector](hostname=self.hostname)
+            if self.end_effector.tool_params:
+                self.ur_controller.ur_connection.set_tool_communication(**self.end_effector.tool_params)
 
     def gripper_pick(
         self,
         source: Union[LocationArgument, list],
         home: Union[LocationArgument, list, None] = None,
-        approach_axis: str = None,
-        approach_distance: float = None,
+        source_approach_axis: str = None,
+        source_approach_distance: float = None,
     ):
         """Pick up from source position"""
         if not isinstance(self.end_effector, Gripper):
             raise Exception("End-effector is not a gripper, cannot perform pick operation")
         if isinstance(source, LocationArgument):
-            source_location = source.representation.linear_coordinates
+            source_location = source.representation["linear_coordinates"]
         elif isinstance(source, list):
             source_location = source
         else:
             raise Exception("Please provide an appropriate source location")
         if home is not None:
             if isinstance(home, LocationArgument):
-                home_location = home.representation.joint_angles
+                home_location = home.representation["joint_angles"]
             elif isinstance(home, list):
                 home_location = home
             else:
                 raise Exception("Please provide an appropriate source location")
-            self.ur_controller.move_to_location(home_location, linear_motion=True)
+            self.ur_controller.move_to_location(home_location)
 
-        if not approach_distance:
-            approach_distance = 0.05
+        if not source_approach_distance:
+            source_approach_distance = 0.05
 
         axis = None
 
-        if not approach_axis or approach_axis.lower() == "z":
+        if not source_approach_axis or source_approach_axis.lower() == "z":
             axis = 2
-        elif approach_axis.lower() == "y":
+        elif source_approach_axis.lower() == "y":
             axis = 1
-        elif approach_axis.lower() == "-y":
+        elif source_approach_axis.lower() == "-y":
             axis = 1
-            approach_distance = -approach_distance
-        elif approach_axis.lower() == "x":
+            source_approach_distance = -source_approach_distance
+        elif source_approach_axis.lower() == "x":
             axis = 0
-        elif approach_axis.lower() == "-x":
+        elif source_approach_axis.lower() == "-x":
             axis = 0
-            approach_distance = -approach_distance
+            source_approach_distance = -source_approach_distance
 
         above_goal = deepcopy(source_location)
-        above_goal[axis] += approach_distance
+        above_goal[axis] += source_approach_distance
 
         self.logger.info(f"Starting pick operation from source: {source_location}")
 
@@ -133,7 +138,7 @@ class IntegratedController:
         self.logger.debug("Moving to above goal position")
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
 
-        self.logger.debug("Moving to goal position")
+        self.logger.info("Moving to goal position")
         self.ur_controller.move_to_location(source_location, linear_motion=True)
 
         self.end_effector.close()
@@ -149,51 +154,49 @@ class IntegratedController:
         self,
         target: Union[LocationArgument, list],
         home: Union[LocationArgument, list, None] = None,
-        approach_axis: str = None,
-        approach_distance: float = None,
+        target_approach_axis: str = None,
+        target_approach_distance: float = None,
     ):
         """Pick up from source position"""
         if not isinstance(self.end_effector, Gripper):
             raise Exception("End-effector is not a gripper, cannot perform place operation")
         if isinstance(target, LocationArgument):
-            target_location = target.representation.linear_coordinates
+            target_location = target.representation["linear_coordinates"]
         elif isinstance(target, list):
             target_location = target
         else:
             raise Exception("Please provide an appropriate source location")
         if home is not None:
             if isinstance(home, LocationArgument):
-                home_location = home.representation.joint_angles
+                home = home.representation["joint_angles"]
             elif isinstance(home, list):
-                home_location = home
+                home = home
             else:
                 raise Exception("Please provide an appropriate source location")
-            self.ur_controller.move_to_location(above_goal, linear_motion=True)
+            self.ur_controller.move_to_location(home)
 
-        if not approach_distance:
-            approach_distance = 0.05
+        if not target_approach_distance:
+            target_approach_distance = 0.05
 
         axis = None
 
-        if not approach_axis or approach_axis.lower() == "z":
+        if not target_approach_axis or target_approach_axis.lower() == "z":
             axis = 2
-        elif approach_axis.lower() == "y":
+        elif target_approach_axis.lower() == "y":
             axis = 1
-        elif approach_axis.lower() == "-y":
+        elif target_approach_axis.lower() == "-y":
             axis = 1
-            approach_distance = -approach_distance
-        elif approach_axis.lower() == "x":
+            target_approach_distance = -target_approach_distance
+        elif target_approach_axis.lower() == "x":
             axis = 0
-        elif approach_axis.lower() == "-x":
+        elif target_approach_axis.lower() == "-x":
             axis = 0
-            approach_distance = -approach_distance
+            target_approach_distance = -target_approach_distance
 
         above_goal = deepcopy(target_location)
-        above_goal[axis] += approach_distance
+        above_goal[axis] += target_approach_distance
 
         self.logger.info(f"Starting pick operation from source: {target_location}")
-
-        self.end_effector.open()
 
         self.logger.debug("Moving to above goal position")
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
@@ -201,7 +204,7 @@ class IntegratedController:
         self.logger.debug("Moving to goal position")
         self.ur_controller.move_to_location(target_location, linear_motion=True)
 
-        self.end_effector.close()
+        self.end_effector.open()
         if self.resource_client is not None:
             object, _ = self.resource_client.pop(target_location.resource_id)
             self.resource_client.push(self.end_effector_resource_id, object)
@@ -210,30 +213,6 @@ class IntegratedController:
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
         self.logger.info("Pick operation completed successfully")
 
-    def gripper_transfer(
-        self,
-        home: Union[LocationArgument, list] = None,
-        source: Union[LocationArgument, list] = None,
-        target: Union[LocationArgument, list] = None,
-        source_approach_axis: str = None,
-        target_approach_axis: str = None,
-        source_approach_distance: float = None,
-        target_approach_distance: float = None,
-    ) -> None:
-        """Handles the transfer request"""
-        self.logger.info("Starting transfer operation")
-        self.pick(
-            source=source,
-            home=home,
-            approach_axis=source_approach_axis,
-            approach_distance=source_approach_distance,
-        )
-        self.logger.info("Pick completed")
-
-        self.place(
-            target=target,
-            home=home,
-            approach_axis=target_approach_axis,
-            approach_distance=target_approach_distance,
-        )
-        self.logger.info("Place completed")
+    def disconnect(self) -> None:
+        """disconnect arm"""
+        self.ur_controller.disconnect()

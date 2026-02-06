@@ -56,7 +56,7 @@ class URController:
         self.gripper_force: int = None
 
         try:
-            self.ur_connection = self.connect_ur(hostname=self.hostname, logger=self.logger)
+            self.ur_connection = self.connect_ur()
             self.ur_connection.set_tcp(tcp_pose)
             if base_reference_frame:
                 self._set_base_reference_frame(base_reference_frame)
@@ -66,7 +66,7 @@ class URController:
             self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
             raise e
 
-    def connect_ur(self, hostname: str = None) -> Robot:
+    def connect_ur(self) -> Robot:
         """Create connection to the UR robot"""
         for attempt in range(10):
             try:
@@ -156,7 +156,7 @@ class URController:
         self.ur_connection.set_csys(transform)
         self.logger.info(f"Base reference frame set to: {base_reference_frame}")
 
-    def get_movement_state(self) -> str:
+    def get_movement_state(self):
         """Gets robot movement status by checking robot joint values.
         Return (str) READY if robot is not moving
                      BUSY if robot is moving
@@ -187,11 +187,11 @@ class URController:
 
             if linear_motion:
                 if isinstance(location, LocationArgument):
-                    location = location.representation.linear_coordinates
+                    location = location.representation["linear_coordinates"]
                 self.ur_connection.movel(location, self.velocity, self.acceleration)
             else:
                 if isinstance(location, LocationArgument):
-                    location = location.representation.joint_angles
+                    location = location.representation["joint_angles"]
                 self.ur_connection.movej(location, self.velocity, self.acceleration)
             self.logger.info("Robot moved")
         except Exception as e:

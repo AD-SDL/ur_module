@@ -1,9 +1,17 @@
-"""Abstract finger gripper interface definitions."""
+"""Abstract gripper interface definitions."""
 
 from abc import ABC, abstractmethod
 
 
-class FingerGripper(ABC):
+class Gripper(ABC):
+    """Abstract gripper interface."""
+
+    @abstractmethod
+    def activate(self):
+        """activates the gripper"""
+
+
+class FingerGripper(Gripper):
     """Abstract gripper interface."""
 
     @abstractmethod
@@ -13,4 +21,3 @@ class FingerGripper(ABC):
     @abstractmethod
     def close(self, pose: float, speed: float, force: float):
         """Close the gripper to a specified pose with given speed and force."""
-        raise NotImplementedError("This method should be overridden by subclasses.")

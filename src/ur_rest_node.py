@@ -43,7 +43,7 @@ class URNode(RestNode):
         self.logger.log("Node initializing...")
         self.integrated_controller = IntegratedController(
             hostname=self.config.ur_ip,
-            resource_client=self.resource_client if self.config.use_resources else None,
+            resource_client=self.resource_client if self.config.resource_manager_url else None,
             end_effector_resource_id=self.end_effector_resource_id,
             tcp_pose=self.config.tcp_pose,
             base_reference_frame=self.config.base_reference_frame,
@@ -57,7 +57,7 @@ class URNode(RestNode):
 
     def _create_ur_resources(self) -> None:
         """Create all UR-specific resource templates."""
-        if self.config.end_effector == UREndEffector.Robotiq2FingerGripper:
+        if self.config.end_effector == UREndEffector.ROBOTIQ2FINGERGRIPPER:
             gripper_slot = Slot(
                 resource_name="robotiq_finger_gripper",
                 resource_class="URGripper",
@@ -135,7 +135,7 @@ class URNode(RestNode):
             if self.integrated_controller:
                 # Getting robot state
                 self.integrated_controller.ur_dashboard.get_overall_robot_status()
-                movement_state, self.current_location = self.integrated_controller.ur_controller()
+                movement_state, self.current_location = self.integrated_controller.ur_controller.get_movement_state()
             else:
                 self.logger.log_error("UR interface is not initialized")
                 return
@@ -171,24 +171,14 @@ class URNode(RestNode):
     def move(
         self,
         target: Annotated[LocationArgument, "Linear location to move to"],
-        acceleration: Annotated[Optional[float], "Acceleration"] = 0.6,
-        velocity: Annotated[Optional[float], "Velocity"] = 0.6,
         linear_motion: Annotated[bool, "Use linear motion"] = True,
     ):
         """Move the robot to target location"""
 
         self.logger.log(f"Move location: {target.representation}")
-        self.integrated_controller.ur_controller.move_to_location(
-            target=target,
-            acceleration=acceleration,
-            velocity=velocity,
-            linear_motion=linear_motion,
-        )
+        self.integrated_controller.ur_controller.move_to_location(location=target, linear_motion=linear_motion)
 
-    @action(
-        name="gripper_transfer",
-        description="Execute a transfer in between source and target locations using Robotiq grippers",
-    )
+    @action
     def gripper_transfer(
         self,
         home: Annotated[Union[LocationArgument, list], "Home location"],
@@ -198,13 +188,11 @@ class URNode(RestNode):
         target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
         target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
-        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
-        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
 
-        self.gripper_pick(home, source, source_approach_axis, source_approach_distance, gripper_close)
-        self.gripper_place(home, target, target_approach_axis, target_approach_distance, gripper_open)
+        self.gripper_pick(home, source, source_approach_axis, source_approach_distance)
+        self.gripper_place(home, target, target_approach_axis, target_approach_distance)
 
     @action
     def gripper_pick(
@@ -213,7 +201,6 @@ class URNode(RestNode):
         source: Annotated[LocationArgument, "Location to transfer sample from"],
         source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
-        gripper_close: Annotated[Optional[int], "Set a min value for the gripper close state"] = 255,
     ):
         """Use the gripper to pick a piece of labware from the specified source"""
         self.logger.log_info(f"Picking from source: {source.representation}")
@@ -223,7 +210,6 @@ class URNode(RestNode):
             source=source,
             source_approach_distance=source_approach_distance,
             source_approach_axis=source_approach_axis,
-            gripper_close=gripper_close,
         )
 
     @action
@@ -233,7 +219,6 @@ class URNode(RestNode):
         target: Annotated[LocationArgument, "Location to transfer sample to"],
         target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
         target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
-        gripper_open: Annotated[Optional[int], "Set a max value for the gripper open state"] = 0,
     ):
         """Use the gripper to place a piece of labware at the target."""
 
@@ -242,14 +227,7 @@ class URNode(RestNode):
             target=target,
             target_approach_distance=target_approach_distance,
             target_approach_axis=target_approach_axis,
-            gripper_open=gripper_open,
         )
-
-    @action(name="e_stop", description="Emergency stop the UR robot")
-    def e_stop(self):
-        """Emergency stop the UR robot"""
-        self.integrated_controller.ur_dashboard.power_off()
-        self.logger.log_info("EMERGENCY STOP EXECUTED")
 
     def reset(self) -> AdminCommandResponse:
         """Reset the ur robot"""
