@@ -374,34 +374,3 @@ class URDashboard:
         Return (str): Socket response
         """
         return self.send_command("stop")
-
-
-if __name__ == "__main__":
-    """Tests"""
-    robot = UR_DASHBOARD("146.137.240.38")
-
-    robot.get_loaded_program()
-    robot.run_program()
-    # robot.transfer_program("/home/rpl/workspace/ur_module/src/ur_interface/scripts/urp_programs/interpreter_mode.urp","/programs/interpreter_mode.urp")
-    # robot.get_program_state()
-    # robot.load_program("/programs/interpreter_mode.urp")
-    # if "File not found" in a:
-    #     print(a)
-    # robot.get_overall_robot_status()
-    # robot.get_operational_mode()
-    # robot.robot_mode()
-    # robot.close_popup()
-    # robot.initialize()
-    # robot.get_program_run_status()
-    # robot.load_program("/home/rpl/test.txt")
-    # robot.get_loaded_program()
-    # robot.power_on()
-    # robot.brake_release()
-    # robot.power_off()
-    # robot.brake_release()
-    # robot.self.get_safety_status()
-    # robot.quit()
-    # robot.clear_operational_mode()
-    # robot.transfer_program("/home/rpl/test.urp", "/programs/katerina.urp")
-    # robot.load_program("/programs/katerina.urp")
-    # robot.run_program()
