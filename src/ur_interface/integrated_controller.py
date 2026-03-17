@@ -10,24 +10,24 @@ from madsci.common.types.auth_types import OwnershipInfo
 
 from ur_interface.ur_controller import URController
 from ur_interface.ur_dashboard import URDashboard
-from ur_interface.ur_tools.grippers.abstract_gripper_interfaces import Gripper
 from ur_interface.ur_tools.grippers.finger_gripper_functions_mixin import FingerGripperMixin
 from ur_interface.ur_tools.grippers.robotiq_2_finger_gripper_interface import Robotiq2FingerGripper
-
+from ur_interface.ur_tools.pipettes.pipette_functions_mixin import PipetteMixin
+from ur_interface.ur_tools.pipettes.opentrons_pipette_epics_interface import EpicsOpentronsPipette
 
 class UREndEffector(str, Enum):
     """Possible end effectors for the UR arm"""
 
     ROBOTIQ2FINGERGRIPPER = "ROBOTIQ2FINGERGRIPPER"
     SCREWDRIVER = "SCREWDRIVER"
-    PIPETTE = "PIPETTE"
+    OPENTRONSPIPETTE = "OPENTRONSPIPETTE"
     WMTOOLCHANGER = "WMTOOLCHANGER"
 
 
-end_effectors = {UREndEffector.ROBOTIQ2FINGERGRIPPER: Robotiq2FingerGripper}
+end_effectors = {UREndEffector.ROBOTIQ2FINGERGRIPPER: Robotiq2FingerGripper, UREndEffector.OPENTRONSPIPETTE: EpicsOpentronsPipette} 
 
 
-class IntegratedController(FingerGripperMixin):
+class IntegratedController(FingerGripperMixin, PipetteMixin):
     """
     This is the primary class for UR robots.
     It integrates various interfaces to achieve comprehensive control, encompassing robot initialization via the UR dashboard,
@@ -39,6 +39,7 @@ class IntegratedController(FingerGripperMixin):
         hostname: str = None,
         resource_client: ResourceClient = None,
         end_effector: UREndEffector = None,
+        end_effector_params: dict = {},
         end_effector_resource_id: str = None,
         resource_owner: OwnershipInfo = None,
         tool_resource_id: str = None,
@@ -56,6 +57,7 @@ class IntegratedController(FingerGripperMixin):
 
         self.hostname = hostname
         self.resource_client = resource_client
+        self.end_effector_params = end_effector_params
         self.tool_resource_id = tool_resource_id
         self.resource_owner = resource_owner
         self.logger = logger or self._setup_logger()
@@ -76,9 +78,8 @@ class IntegratedController(FingerGripperMixin):
             self.logger.error(f"Failed to initialize UR: {e}\n{traceback.format_exc()}")
             raise e
 
-    def create_end_effector_controller(self, end_effector: Optional[UREndEffector]) -> None:
+    def create_end_effector_controller(self, end_effector: UREndEffector) -> None:
         """Create appropriate end-effector controller."""
-        self.logger.log_info("Creating Robotiq 2-finger gripper controller")
+        self.end_effector = end_effectors[end_effector](**self.end_effector_params)
         if self.end_effector.tool_params:
             self.ur_controller.ur_connection.set_tool_communication(**self.end_effector.tool_params)
-        self.end_effector = end_effectors[self.end_effector](hostname=self.hostname)

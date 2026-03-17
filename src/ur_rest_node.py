@@ -229,6 +229,105 @@ class URNode(RestNode):
             target_approach_axis=target_approach_axis,
         )
 
+    @action
+    def pipette_transfer(
+        self,
+        volume: Annotated[float, "Volume to transfer in microliters"],
+        home: Annotated[Union[LocationArgument, list], "Home location"],
+        source: Annotated[Union[LocationArgument, list], "Location to transfer sample from"],
+        target: Annotated[Union[LocationArgument, list], "Location to transfer sample to"],
+        source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+    ):
+        """Make a transfer using the finger gripper. This function uses linear motions to perform the pick and place movements."""
+
+        self.pipette_aspirate_from_source_location(volume, home, source, source_approach_axis, source_approach_distance)
+        self.pipette_dispense_to_target_location(volume, home, target, target_approach_axis, target_approach_distance)
+
+    @action
+    def pipette_aspirate_from_source_location(
+        self,
+        volume: Annotated[float, "Volume to aspirate in microliters"],
+        home: Annotated[LocationArgument, "Home location"],
+        source: Annotated[LocationArgument, "Location to transfer sample from"],
+        source_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        source_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+    ):
+        """Use the gripper to pick a piece of labware from the specified source"""
+        self.logger.log_info(f"Picking from source: {source.representation}")
+
+        self.integrated_controller.pipette_aspirate_from_source_location(
+            volume=volume,
+            home=home,
+            source=source,
+            source_approach_distance=source_approach_distance,
+            source_approach_axis=source_approach_axis,
+        )
+
+    @action
+    def pipette_dispense_to_target_location(
+        self,
+        volume: Annotated[float, "Volume to dispense in microliters"],
+        home: Annotated[LocationArgument, "Home location"],
+        target: Annotated[LocationArgument, "Location to transfer sample to"],
+        target_approach_axis: Annotated[Optional[str], "Source location approach axis, (X/Y/Z)"] = "z",
+        target_approach_distance: Annotated[Optional[float], "Approach distance in meters"] = 0.05,
+    ):
+        """Use the gripper to place a piece of labware at the target."""
+
+        self.integrated_controller.pipette_dispense_to_target_location(
+            volume=volume,
+            home=home,
+            target=target,
+            target_approach_distance=target_approach_distance,
+            target_approach_axis=target_approach_axis,
+        )
+
+
+    #Simple Actions
+    @action
+    def activate_freedrive(self, timeout: int=120):
+        """Enable freedrive mode on the UR robot."""
+        self.integrated_controller.ur_controller.ur_connection.set_freedrive(True, timeout)
+        self.logger.log_info("Freedrive mode enabled on UR robot")
+
+    @action
+    def deactivate_freedrive(self, timeout: int=120):
+        """Disable freedrive mode on the UR robot."""
+        self.integrated_controller.ur_controller.ur_connection.set_freedrive(False)
+        self.logger.log_info("Freedrive mode disabled on UR robot")
+    
+    @action
+    def open_gripper(self):
+        """Open the gripper"""
+        self.integrated_controller.end_effector.open()
+        self.logger.log_info("Gripper opened")
+    
+    @action
+    def close_gripper(self):
+        """Close the gripper"""
+        self.integrated_controller.end_effector.close()
+        self.logger.log_info("Gripper closed")
+    
+    @action
+    def pippette_aspirate(self, volume: Annotated[float, "Volume to aspirate in microliters"]):
+        """Aspirate liquid using the pipette"""
+        self.integrated_controller.end_effector.aspirate(volume)
+        self.logger.log_info(f"Aspirated {volume} microliters of liquid")
+    
+    @action
+    def pippette_dispense(self, volume: Annotated[float, "Volume to dispense in microliters"]):
+        """Dispense liquid using the pipette"""
+        self.integrated_controller.end_effector.dispense(volume)
+        self.logger.log_info(f"Dispensed {volume} microliters of liquid")
+
+
+    
+    
+    
+
     def reset(self) -> AdminCommandResponse:
         """Reset the ur robot"""
         self.logger.log("Resetting node...")

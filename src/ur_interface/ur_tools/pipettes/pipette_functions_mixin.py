@@ -3,20 +3,21 @@ from typing import Union
 
 from madsci.common.types.location_types import LocationArgument
 
-from ur_interface.ur_tools.grippers.abstract_gripper_interface import Gripper
+from ur_interface.ur_tools.pipettes.abstract_pipette_interfaces import Pipette
 
 
-class FingerGripperMixin:
-    def gripper_pick(
+class PipetteMixin:
+    def pipette_aspirate_from_source_location(
         self,
+        volume: float,
         source: Union[LocationArgument, list],
         home: Union[LocationArgument, list, None] = None,
         approach_axis: str = None,
         approach_distance: float = None,
     ):
         """Pick up from source position"""
-        if not isinstance(self.end_effector, Gripper):
-            raise Exception("End-effector is not a gripper, cannot perform pick operation")
+        if not isinstance(self.end_effector, Pipette):
+            raise Exception("End-effector is not a pipette, cannot perform aspirate operation")
         if isinstance(source, LocationArgument):
             source_location = source.representation.linear_coordinates
         elif isinstance(source, list):
@@ -63,24 +64,25 @@ class FingerGripperMixin:
         self.logger.debug("Moving to goal position")
         self.ur_controller.move_to_location(source_location, linear_motion=True)
 
-        self.end_effector.close()
+        self.end_effector.aspirate(volume)
 
         self.logger.debug("Moving back to above goal position")
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
         self.logger.info("Pick operation completed successfully")
-        if self.resource_client is not None:
-            object, _ = self.resource_client.pop(source.resource_id)
-            self.resource_client.push(self.end_effector_resource_id, object)
+        # if self.resource_client is not None:
+        #     object, _ = self.resource_client.pop(source_location.resource_id)
+        #     self.resource_client.push(self.end_effector_resource_id, object)
 
-    def gripper_place(
+    def pipette_dispense_to_target_location(
         self,
+        volume: float,
         target: Union[LocationArgument, list],
         home: Union[LocationArgument, list, None] = None,
         approach_axis: str = None,
         approach_distance: float = None,
     ):
         """Pick up from source position"""
-        if not isinstance(self.end_effector, Gripper):
+        if not isinstance(self.end_effector, Pipette):
             raise Exception("End-effector is not a gripper, cannot perform place operation")
         if isinstance(target, LocationArgument):
             target_location = target.representation.linear_coordinates
@@ -120,7 +122,7 @@ class FingerGripperMixin:
 
         self.logger.info(f"Starting pick operation from source: {target_location}")
 
-        self.end_effector.open()
+       
 
         self.logger.debug("Moving to above goal position")
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
@@ -128,7 +130,7 @@ class FingerGripperMixin:
         self.logger.debug("Moving to goal position")
         self.ur_controller.move_to_location(target_location, linear_motion=True)
 
-        self.end_effector.close()
+        self.end_effector.dispense(volume)
         if self.resource_client is not None:
             object, _ = self.resource_client.pop(target_location.resource_id)
             self.resource_client.push(self.end_effector_resource_id, object)
@@ -137,8 +139,9 @@ class FingerGripperMixin:
         self.ur_controller.move_to_location(above_goal, linear_motion=True)
         self.logger.info("Pick operation completed successfully")
 
-    def gripper_transfer(
+    def pipette_transfer(
         self,
+        volume: float,
         home: Union[LocationArgument, list] = None,
         source: Union[LocationArgument, list] = None,
         target: Union[LocationArgument, list] = None,
@@ -149,7 +152,8 @@ class FingerGripperMixin:
     ) -> None:
         """Handles the transfer request"""
         self.logger.info("Starting transfer operation")
-        self.gripper_pick(
+        self.pipette_aspirate_from_source_location(
+            volume=volume,
             source=source,
             home=home,
             approach_axis=source_approach_axis,
@@ -157,7 +161,8 @@ class FingerGripperMixin:
         )
         self.logger.info("Pick completed")
 
-        self.gripper_place(
+        self.pipette_dispense_to_target_location(
+            volume=volume,
             target=target,
             home=home,
             approach_axis=target_approach_axis,
