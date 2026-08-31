@@ -6,12 +6,15 @@ import time
 from enum import Enum
 from typing import OrderedDict, Tuple, Union
 
+from ur_interface.ur_tools.grippers.abstract_gripper_interfaces import FingerGripper
 
-class RobotiqGripper:
+
+class Robotiq2FingerGripper(FingerGripper):
     """
     Communicates with the gripper directly, via socket with string commands, leveraging string names for variables.
     """
 
+    tool_params = {"baud_rate": 115200, "parity": 0, "stop_bits": 1, "rx_idle_chars": 1.5, "tx_idle_chars": 3.5}
     # WRITE VARIABLES (CAN ALSO READ)
     ACT = "ACT"  # act : activate (1 while activated, can be reset to clear fault status)
     GTO = "GTO"  # gto : go to (will perform go to with the actions set in pos, for, spe)
@@ -44,8 +47,11 @@ class RobotiqGripper:
         STOPPED_INNER_OBJECT = 2
         AT_DEST = 3
 
-    def __init__(self):
+    def __init__(self, hostname: str, port: int = 63352, socket_timeout: float = 60.0):
         """Constructor."""
+        self.hostname = hostname
+        self.port = port
+        self.socket_timeout = socket_timeout
         self.socket = None
         self.command_lock = threading.Lock()
         self._min_position = 0
@@ -54,6 +60,9 @@ class RobotiqGripper:
         self._max_speed = 255
         self._min_force = 0
         self._max_force = 255
+        self.speed = 255
+        self.force = 255
+        self.connect()
 
     def __del__(self):
         """Destructor."""
@@ -62,9 +71,6 @@ class RobotiqGripper:
 
     def connect(
         self,
-        hostname: str,
-        port: int,
-        socket_timeout: float = 60.0,
     ) -> None:
         """Connects to a gripper at the given address.
         :param hostname: Hostname or ip.
@@ -73,8 +79,8 @@ class RobotiqGripper:
         """
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((hostname, port))
-        self.socket.settimeout(socket_timeout)
+        self.socket.connect((self.hostname, self.port))
+        self.socket.settimeout(self.socket_timeout)
 
     def disconnect(self) -> None:
         """Closes the connection with the gripper."""
@@ -200,7 +206,7 @@ class RobotiqGripper:
     def is_active(self):
         """Returns whether the gripper is active."""
         status = self._get_var(self.STA)
-        return RobotiqGripper.GripperStatus(status) == RobotiqGripper.GripperStatus.ACTIVE
+        return self.GripperStatus(status) == self.GripperStatus.ACTIVE
 
     def get_min_position(self) -> int:
         """Returns the minimum position the gripper can reach (open position)."""
@@ -236,19 +242,19 @@ class RobotiqGripper:
         """
         # first try to open in case we are holding an object
         (position, status) = self.move_and_wait_for_pos(self.get_open_position(), 64, 1)
-        if RobotiqGripper.ObjectStatus(status) != RobotiqGripper.ObjectStatus.AT_DEST:
+        if self.ObjectStatus(status) != self.ObjectStatus.AT_DEST:
             raise RuntimeError(f"Calibration failed opening to start: {str(status)}")
 
         # try to close as far as possible, and record the number
         (position, status) = self.move_and_wait_for_pos(self.get_closed_position(), 64, 1)
-        if RobotiqGripper.ObjectStatus(status) != RobotiqGripper.ObjectStatus.AT_DEST:
+        if self.ObjectStatus(status) != self.ObjectStatus.AT_DEST:
             raise RuntimeError(f"Calibration failed because of an object: {str(status)}")
         assert position <= self._max_position
         self._max_position = position
 
         # try to open as far as possible, and record the number
         (position, status) = self.move_and_wait_for_pos(self.get_open_position(), 64, 1)
-        if RobotiqGripper.ObjectStatus(status) != RobotiqGripper.ObjectStatus.AT_DEST:
+        if self.ObjectStatus(status) != self.ObjectStatus.AT_DEST:
             raise RuntimeError(f"Calibration failed because of an object: {str(status)}")
         assert position >= self._min_position
         self._min_position = position
@@ -303,10 +309,32 @@ class RobotiqGripper:
 
         # wait until not moving
         cur_obj = self._get_var(self.OBJ)
-        while RobotiqGripper.ObjectStatus(cur_obj) == RobotiqGripper.ObjectStatus.MOVING:
+        while self.ObjectStatus(cur_obj) == self.ObjectStatus.MOVING:
             cur_obj = self._get_var(self.OBJ)
 
         # report the actual position and the object status
         final_pos = self._get_var(self.POS)
         final_obj = cur_obj
-        return final_pos, RobotiqGripper.ObjectStatus(final_obj)
+        return final_pos, self.ObjectStatus(final_obj)
+
+    def open(self):
+        """open the gripper"""
+        self.move_and_wait_for_pos(
+            0,
+            self.speed,
+            self.force,
+        )
+        time.sleep(0.5)
+
+    def close(self):
+        """close the gripper"""
+        self.move_and_wait_for_pos(255, self.speed, self.force)
+        time.sleep(0.5)
+
+    def set_speed(self, speed: int):
+        """set gripper speed"""
+        self.speed = speed
+
+    def set_force(self, force: int):
+        """set gripper force"""
+        self.force = force
